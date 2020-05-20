@@ -1,0 +1,6 @@
+pytest
+pytest-runner
+pytest-cov
+wheel
+black
+flake8
