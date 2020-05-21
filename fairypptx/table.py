@@ -1,8 +1,11 @@
 """Table class 
 
-Features
----------------------------
+* `DFTable` enables you to get `pandas.DataFrame` from `Table` Object.
 * 
+
+Desire:
+----------
+* Currenly, `Table` / `DFTable` cannot be read from tthe existing table. 
 
 """
 
