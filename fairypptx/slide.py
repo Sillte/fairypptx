@@ -58,8 +58,8 @@ class Slides:
             return Slides(slides)
     
     def __iter__(self):
-        for index in self._indices:
-            yield self[index]
+        for i, index in range(self._indices):
+            yield self[i]
 
     def __len__(self):
         print(self.api)

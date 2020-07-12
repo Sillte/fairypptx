@@ -127,13 +127,21 @@ class RowsColumnsMixin(ObjectClassMixin):
         then, values are substituted to the added Rows. 
         """
         assert values is None, "Current Limitation."
-        obj = self.items.normalize(obj)
-        if isinstance(obj, int):
+        if obj == len(self):
+            # `normalize` cause `IndexError`.
+            # Parameters of `api` is  None.
+            ret = self.items.cls(self.api.Add())
+            if values:
+                ret.shape = values
+            return ret
+        elif isinstance(obj, int):
+            obj = self.items.normalize(obj)
             ret = self.items.cls(self.api.Add(obj + 1))
             if values:
                 ret.shape = values
             return ret
-        else:
+        else:   # indices of Sequence.
+            obj = self.items.normalize(obj)
             # It's necessary to `insert` in decreading order.
             indices = np.sort(obj)[::-1]
             orders = np.argsort(obj)[::-1]

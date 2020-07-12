@@ -33,6 +33,13 @@ def test_insert():
     assert table.size == (6, 2)
     assert table[1, 1].text == "Hello"
 
+    # It's possible to append to the last column.
+    table = Table.empty((3, 2))
+    column = table.columns.insert(2)
+    assert table.size == (3, 3)
+    column[0].shape.text = "Last-Column"
+    assert table[0, 2].text == "Last-Column"
+
     # Check `insert` - for Sequence of int.
     table = Table.empty((5, 2))
     shape = table.shape
@@ -85,6 +92,5 @@ def test_tighten():
     
 
 if __name__ == "__main__":
-    pass
     # test_tighten()
     pytest.main([__file__, "--capture=no"])
