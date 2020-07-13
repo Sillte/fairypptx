@@ -15,7 +15,7 @@ class ParagraphTextRangeFormatter:
     """Following to authors' imagination,    
 
     -----------------------
-    Target: (font, paragraphformat).
+    Target: (Font, Paragraphformat).
 
     Input: Construct the dict of dict
         Key: paragraphtype -> (indentlevel, lineindex) 

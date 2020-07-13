@@ -21,7 +21,7 @@ from fairypptx._markdown import fonttag_parser
 
 
 def write(shape, text, default_fontsize=18):
-    """ Write ``text`` into ``shape``
+    """ Write ``text`` into ``shape``.
     """
     parser = _construct_parser(text)
     box_editor = BoxEditor(shape, default_fontsize=default_fontsize)

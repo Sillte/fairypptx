@@ -37,6 +37,15 @@ class Markdown:
             raise TypeError(f"Invalid Argument: `{arg}`", type(arg))
     def __str__(self):
         return interpret(self.textrange.shape)
+    
+    @property
+    def shape(self):
+        if self.textrange:
+            return self.textrange.shape 
+        else:
+            # This path is related to derivation of UserString of this class.
+            # See the Wonder section of the class.
+            raise ValueError("This markdown does not belong to `TextRange/Shape`")
 
 
     @classmethod
@@ -50,6 +59,11 @@ class Markdown:
 
         arg = _to_content(arg)
         shape = Shape(write(shape, arg))
+
+        # Change of the alignment.
+        # shape.textrange.api.ParagraphFormat.Alignment = constants.ppAlignLeft
+        shape.textrange.paragraphformat = {"Alignment": constants.ppAlignLeft}
+
         shape.tighten()
         return Markdown(shape.textrange)
 

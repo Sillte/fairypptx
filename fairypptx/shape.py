@@ -22,11 +22,8 @@ from fairypptx._shape import LocationAdjuster
 from fairypptx import registory_utils
 
 
-
 class Shapes:
-    """Shapes
-    However, this may not behave like all of the shapes 
-    is handled this class.   
+    """Shapes.
     It accepts a subset of Slide.Shapes Object. 
 
     Note
@@ -156,7 +153,6 @@ class Shapes:
 
     def _construct(self, arg):
         """
-        [TODO] When `arg` is None, what kind of specification is desirable?
         """
         if is_object(arg, "ShapeRange"):
             raise NotImplementedError()
@@ -203,8 +199,6 @@ class Shapes:
                     indices = [index for index, elem in enumerate(shapes_object) if elem.Id in shape_ids]
                     return shapes_object, indices
                 elif Selection.Type == constants.ppSelectionText:
-                    """
-                    """
                     # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
                     shape_object = Selection.ShapeRange(1)
                     shapes_object = shape_object.Parent.Shapes
