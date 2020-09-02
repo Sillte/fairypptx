@@ -1,3 +1,4 @@
+from collections import defaultdict
 from fairypptx import constants
 from fairypptx.color import Color
 from fairypptx.object_utils import ObjectDictMixin, getattr
@@ -9,22 +10,27 @@ class FillFormat(ObjectDictMixin):
     (2020-04-19) Currently, it is far from perfect.
     Only ``Patterned`` / ``Solid`` is handled.
     """
+
     data = dict()
     data["Type"] = constants.msoFillSolid
     data["ForeColor.RGB"] = 0
     data["Visible"] = constants.msoFalse
     data["Transparency"] = 0
-    
-    readonly = ["Type", "Pattern"] # readonly parameters.
+
+    readonly = ["Type", "Pattern"]  # readonly parameters.
 
     common_keys = ["Type", "Visible"]
-    type_to_keys = dict()
+    type_to_keys = defaultdict(list)
     type_to_keys[constants.msoFillSolid] = ["ForeColor.RGB", "Visible", "Transparency"]
-    type_to_keys[constants.msoFillPatterned] = ["Pattern", "ForeColor.RGB", "BackColor.RGB"]
+    type_to_keys[constants.msoFillPatterned] = [
+        "Pattern",
+        "ForeColor.RGB",
+        "BackColor.RGB",
+    ]
 
     def __init__(self, arg=None, **kwargs):
         super().__init__(arg, **kwargs)
-        assert "Type"  in self.data
+        assert "Type" in self.data
         assert self.data["Type"] in self.type_to_keys, "Current Implementation."
 
     def to_dict(self, api_object):
@@ -51,7 +57,7 @@ class FillFormatProperty:
         print(type(value))
         if value is None:
             Fill.Visible = constants.msoFalse
-        elif isinstance(value, FillFormat): 
+        elif isinstance(value, FillFormat):
             value.apply(Fill)
         else:
             Fill.Visible = constants.msoTrue
@@ -59,4 +65,3 @@ class FillFormatProperty:
             Fill.ForeColor.RGB = color.as_int()
             Fill.Transparency = 1.0 - color.alpha
             Fill.Solid()
-

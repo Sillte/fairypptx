@@ -6,8 +6,9 @@ from fairypptx.application import Application
 from fairypptx import constants
 
 from fairypptx.box import Box
-from fairypptx.inner import storage 
+from fairypptx.inner import storage
 from fairypptx.object_utils import get_type, is_object, upstream
+
 
 class Slides:
     """Slides.
@@ -20,6 +21,7 @@ class Slides:
     * `Add` / `Delete` operations may break this class.
 
     """
+
     def __init__(self, arg=None, *, app=None):
         if app is None:
             self.app = Application()
@@ -33,7 +35,7 @@ class Slides:
         return self._api
 
     def add(self, index=None, layout=None):
-        # Add and AddSlide exist. 
+        # Add and AddSlide exist.
         # You may consider the branch processing.
 
         if index is None:
@@ -47,7 +49,7 @@ class Slides:
 
     def __len__(self):
         return len(self._indices)
-   
+
     def __getitem__(self, key):
         if isinstance(key, int):
             index = self._indices[key]
@@ -56,7 +58,7 @@ class Slides:
             indices = self._indices[key]
             slides = [Slide(self.api.Item(index + 1)) for index in indices]
             return Slides(slides)
-    
+
     def __iter__(self):
         for i, index in range(self._indices):
             yield self[i]
@@ -108,7 +110,28 @@ class Slide:
     @property
     def shapes(self):
         from fairypptx.shape import Shapes
+
         return Shapes(self.api.Shapes)
+
+    @property
+    def decomposed_shapes(self):
+        """Return Shapes, but grouped shape is decomposed.
+        """
+        from fairypptx.shape import Shapes, Shape
+
+        shapes = self.shapes
+        print("len(shapes)", len(shapes))
+        assert len(shapes)
+
+        def _inner(shape):
+            if shape.api.Type == constants.msoGroup:
+                return sum((_inner(Shape(elem)) for elem in shape.api.GroupItems), [])
+            else:
+                return [shape]
+
+        shape_list = sum((_inner(elem) for elem in shapes), [])
+        assert shape_list
+        return Shapes(shape_list)
 
     @property
     def presentation(self):
@@ -119,15 +142,13 @@ class Slide:
         """Return the size of the slide (Width, Height).
         """
         pres = self.presentation
-        return (pres.api.PageSetup.SlideWidth,
-                pres.api.PageSetup.SlideHeight)
+        return (pres.api.PageSetup.SlideWidth, pres.api.PageSetup.SlideHeight)
 
     @property
     def box(self):
         width, height = self.size
         d = {"Left": 0, "Top": 0, "Width": width, "Height": height}
         return Box(d)
-
 
     @property
     def image(self):
@@ -140,12 +161,14 @@ class Slide:
             box(Box, shape): Specify the range of cropping.
         """
         assert box is None, "Current Implemenation."
-        
+
         path = storage.get_path(".png")
         self.api.Export(path, "PNG")
         image = Image.open(path).convert(mode).copy()
         return image
 
+    def select(self):
+        self.api.Select()
 
     def _fetch_api(self, arg):
         if is_object(arg, "Slide"):
@@ -175,4 +198,3 @@ class Slide:
             raise ValueError(f"Cannot find an appropriate `slide`.")
 
         raise ValueError(f"Cannot interpret `arg`; {arg}.")
-

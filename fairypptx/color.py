@@ -9,7 +9,7 @@ Internally, ``alpha`` is kept in [0, 1] and RGB are kept in [0, 255].
 """
 
 import os
-from collections import Sequence 
+from collections.abc import Sequence 
 import json
 _this_folder = os.path.dirname(os.path.abspath(__file__))
 

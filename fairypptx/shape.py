@@ -9,7 +9,7 @@ from fairypptx.color import Color
 from fairypptx.box import Box, intersection_over_cover
 from fairypptx.application import Application
 from fairypptx.slide import Slide
-from fairypptx.inner import storage 
+from fairypptx.inner import storage
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream, stored
 
@@ -31,33 +31,34 @@ class Shapes:
     * `Add` / `Delete` operations may break the indices of this class.
 
     """
+
     def __init__(self, arg=None, *, app=None):
         if app is None:
             self.app = Application()
         else:
             self.app = app
 
-        self._api, self._indices = self._construct(arg)
+        self._api, self._object_list = self._construct(arg)
 
         # Sorting mechanism desirable.
+
     @property
     def api(self):
         return self._api
 
     def __len__(self):
-        return len(self._indices)
-   
+        return len(self._object_list)
+
     def __iter__(self):
         for index in range(len(self)):
             yield self[index]
 
     def __getitem__(self, key):
         if isinstance(key, int):
-            index = self._indices[key]
-            return Shape(self.api.Item(index + 1))
+            return Shape(self._object_list[key])
         elif isinstance(key, slice):
-            indices = self._indices[key]
-            shapes = [Shape(self.api.Item(index + 1)) for index in indices]
+            shape_objects = self._object_list[key]
+            shapes = [Shape(shape_object) for shape_object in shape_objects]
             return Shapes(shapes)
 
         raise KeyError(f"`key`: {key}")
@@ -74,6 +75,24 @@ class Shapes:
         self.select()
         shape_object = self.app.api.ActiveWindow.Selection.ShapeRange.Group()
         return Shape(shape_object)
+
+    @property
+    def decomposed(self):
+        """Return Shapes. Each shape of the return is not `msoGroup`.
+        """
+
+        def _inner(shape):
+            print(shape.api.Type)
+            if shape.api.Type == constants.msoGroup:
+                return sum((_inner(Shape(elem)) for elem in shape.api.GroupItems), [])
+            else:
+                return [shape]
+
+        shape_list = sum((_inner(elem) for elem in self), [])
+        result = Shapes(shape_list)
+        assert len(result) == len(shape_list)
+
+        return result
 
     def select(self):
         """ Select.
@@ -92,17 +111,19 @@ class Shapes:
         if axis is None:
             boxes = [shape.box for shape in self]
             y_ratio = intersection_over_cover(boxes, axis=0)
-            x_ratio= intersection_over_cover(boxes, axis=1)
+            x_ratio = intersection_over_cover(boxes, axis=1)
             print("x_ratio", x_ratio)
             print("y_ratio", y_ratio)
-            if y_ratio < x_ratio: 
+            if y_ratio < x_ratio:
                 align_cmd = constants.msoAlignCenters
             else:
                 align_cmd = constants.msoAlignMiddles
 
-        shape_object = self.app.api.ActiveWindow.Selection.ShapeRange.Align(align_cmd, msoFalse)
+        shape_object = self.app.api.ActiveWindow.Selection.ShapeRange.Align(
+            align_cmd, msoFalse
+        )
 
-    def __getattr__(self, name): 
+    def __getattr__(self, name):
         if "_api" not in self.__dict__:
             raise AttributeError
         if name.startswith("_"):
@@ -121,28 +142,31 @@ class Shapes:
                 if all(value == values[0] for value in values):
                     return value
                 else:
-                    raise ValueError(("Non-equivalent values over the Shapes.", 
-                                      f"Maybe `{name}` returns Object?", 
-                                      f"values=`{values}`"))
+                    raise ValueError(
+                        (
+                            "Non-equivalent values over the Shapes.",
+                            f"Maybe `{name}` returns Object?",
+                            f"values=`{values}`",
+                        )
+                    )
         raise AttributeError(f"Cannot find the attribute `{name}`.")
-                
 
     def __setattr__(self, name, value):
         if "_api" not in self.__dict__:
             object.__setattr__(self, name, value)
-            return 
+            return
 
         # Especially for ``_indices``.
         if name.startswith("_"):
             object.__setattr__(self, name, value)
-            return 
+            return
 
         if name in self.__dict__ or name in type(self).__dict__:
             object.__setattr__(self, name, value)
-            return 
+            return
         if hasattr(self.api, name):
             setattr(self.api, name, value)
-            return 
+            return
 
         if self:
             for shape in self:
@@ -163,52 +187,65 @@ class Shapes:
             indices = [elem.SlideIndex - 1 for elem in slide_objects]
             return slides_object, indices
         elif is_object(arg, "Shapes"):
-            return arg, tuple(range(arg.Count))
+            object_list = [arg.Item(index + 1) for index in range(arg.Count)]
+            return arg, object_list
         elif is_object(arg, "Slide"):
-            return arg.Shapes, tuple(range(arg.Shapes.Count))
+            object_list = [arg.Item(index + 1) for index in range(arg.Shapes.Count)]
+            return arg.Shapes, object_list
         elif isinstance(arg, Shapes):
-            return arg.api, arg.indices
+            return arg.api, arg._object_list
         elif isinstance(arg, Sequence):
+
             def _to_object(instance):
                 if is_object(instance):
-                    return instance 
-                return instance.api 
+                    return instance
+                return instance.api
+
+            assert arg, "Empty Shapes is not currently allowed."
             shape_objects = [_to_object(elem) for elem in arg]
             slide_ids = set(elem.Parent.SlideID for elem in shape_objects)
-            assert len(slide_ids) == 1, "All the shapes must belong to the same slide."
+            print("Slide_ids", len(slide_ids), len(shape_objects))
+            assert len(slide_ids) <= 1, "All the shapes must belong to the same slide."
             shape_ids = set(elem.Id for elem in shape_objects)
             slide_object = shape_objects[0].Parent
-            indices = [index for index, elem in enumerate(slide_object.Shapes) 
-                       if elem.Id in shape_ids]
-            return slide_object.Shapes, indices
-                
+            return slide_object.Shapes, shape_objects
+
         if arg is None:
             App = self.app.api
             try:
                 Selection = App.ActiveWindow.Selection
-            except COMError as e: 
+            except COMError as e:
                 # May be `ActiveWindow` does not exist. (esp at an empty file.)
                 pass
             else:
                 if Selection.Type == constants.ppSelectionShapes:
                     shape_objects = [shape for shape in Selection.ShapeRange]
                     shape_ids = set(shape.Id for shape in shape_objects)
-                    shapes_objects = [shape_object.Parent.Shapes for shape_object in shape_objects]
+                    shapes_objects = [
+                        shape_object.Parent.Shapes for shape_object in shape_objects
+                    ]
                     assert len(set(shapes_objects)) == 1
                     shapes_object = shapes_objects[0]
-                    indices = [index for index, elem in enumerate(shapes_object) if elem.Id in shape_ids]
+                    indices = [
+                        index
+                        for index, elem in enumerate(shapes_object)
+                        if elem.Id in shape_ids
+                    ]
                     return shapes_object, indices
                 elif Selection.Type == constants.ppSelectionText:
                     # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
                     shape_object = Selection.ShapeRange(1)
                     shapes_object = shape_object.Parent.Shapes
-                    indices = [index for index, elem in enumerate(shapes_object) if elem.Id == shape_object.Id]
+                    indices = [
+                        index
+                        for index, elem in enumerate(shapes_object)
+                        if elem.Id == shape_object.Id
+                    ]
                     assert len(indices) == 1
                     return shapes_object, indices
             slide = Slide()
             return slide.api.Shapes, range(slide.api.Shapes.Count)
         raise ValueError(f"Cannot interpret `arg`; {arg}.")
-
 
 
 class Shape:
@@ -241,6 +278,7 @@ class Shape:
     def textrange(self):
         # Return `TextRange`.
         from fairypptx import TextRange
+
         return TextRange(self.api.TextFrame.TextRange)
 
     @textrange.setter
@@ -253,7 +291,9 @@ class Shape:
         if isinstance(arg, Image.Image):
             path = storage.get_path(".png")
             arg.save(path)
-            shape_object = shapes.api.AddPicture(path, msoFalse, msoTrue, Left=0, Top=0, Width=100, Height=100)
+            shape_object = shapes.api.AddPicture(
+                path, msoFalse, msoTrue, Left=0, Top=0, Width=100, Height=100
+            )
             shape = Shape(shape_object)
         elif isinstance(arg, (str, UserString)):
             shape = cls.make_textbox(arg, **kwargs)
@@ -290,11 +330,9 @@ class Shape:
 
     def register(self, key, disk=True):
         stylist = ShapeStylist(self)
-        registory_utils.register(self.__class__.__name__,
-                                 key,
-                                 stylist,
-                                 extension=".pkl",
-                                 disk=disk)
+        registory_utils.register(
+            self.__class__.__name__, key, stylist, extension=".pkl", disk=disk
+        )
 
     def tighten(self, *, oneline=False):
         """Tighten the Shape according to Text.
@@ -304,8 +342,10 @@ class Shape:
         """
         if self.api.HasTextframe:
             if oneline is True:
-                self.api.TextFrame.TextRange.Text = self.text.replace("\r", "").replace("\n", "")
-            with stored(self.api,("TextFrame.AutoSize", "TextFrame.WordWrap")):
+                self.api.TextFrame.TextRange.Text = self.text.replace("\r", "").replace(
+                    "\n", ""
+                )
+            with stored(self.api, ("TextFrame.AutoSize", "TextFrame.WordWrap")):
                 self.api.TextFrame.Autosize = constants.ppAutoSizeShapeToFitText
                 self.api.TextFrame.WordWrap = constants.msoFalse
         return self
@@ -319,14 +359,13 @@ class Shape:
             object_utils.getattr(other, attr, p1)
         return self
 
-
     def to_image(self, mode="RGBA"):
         path = storage.get_path(".png")
         self.api.Export(path, constants.ppShapeFormatPNG)
         image = Image.open(path)
         return image.convert(mode)
 
-    def __getattr__(self, name): 
+    def __getattr__(self, name):
         if "_api" not in self.__dict__:
             raise AttributeError
         return getattr(self.__dict__["_api"], name)
@@ -340,7 +379,7 @@ class Shape:
         elif hasattr(self.api, name):
             setattr(self.api, name, value)
         else:
-            # TODO: Maybe require modification. 
+            # TODO: Maybe require modification.
             object.__setattr__(self, name, value)
 
     def _fetch_api(self, arg):
@@ -354,6 +393,7 @@ class Shape:
                 raise ValueError("No Shapes.")
             return shapes[0].api
         raise ValueError(f"Cannot interpret `arg`; {arg}.")
+
 
 from fairypptx._shape.replace import replace
 
