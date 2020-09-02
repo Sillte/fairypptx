@@ -176,8 +176,6 @@ class Shapes:
         raise ValueError(f"Cannot find an appropriate attribute by `{name}.`")
 
     def _construct(self, arg):
-        """
-        """
         if is_object(arg, "ShapeRange"):
             raise NotImplementedError()
             slide_objects = [arg.Item(index + 1) for index in range(arg.Count)]
@@ -195,7 +193,6 @@ class Shapes:
         elif isinstance(arg, Shapes):
             return arg.api, arg._object_list
         elif isinstance(arg, Sequence):
-
             def _to_object(instance):
                 if is_object(instance):
                     return instance
@@ -204,7 +201,6 @@ class Shapes:
             assert arg, "Empty Shapes is not currently allowed."
             shape_objects = [_to_object(elem) for elem in arg]
             slide_ids = set(elem.Parent.SlideID for elem in shape_objects)
-            print("Slide_ids", len(slide_ids), len(shape_objects))
             assert len(slide_ids) <= 1, "All the shapes must belong to the same slide."
             shape_ids = set(elem.Id for elem in shape_objects)
             slide_object = shape_objects[0].Parent
@@ -220,31 +216,20 @@ class Shapes:
             else:
                 if Selection.Type == constants.ppSelectionShapes:
                     shape_objects = [shape for shape in Selection.ShapeRange]
-                    shape_ids = set(shape.Id for shape in shape_objects)
                     shapes_objects = [
                         shape_object.Parent.Shapes for shape_object in shape_objects
                     ]
                     assert len(set(shapes_objects)) == 1
                     shapes_object = shapes_objects[0]
-                    indices = [
-                        index
-                        for index, elem in enumerate(shapes_object)
-                        if elem.Id in shape_ids
-                    ]
-                    return shapes_object, indices
+                    return shapes_object, shape_objects
                 elif Selection.Type == constants.ppSelectionText:
                     # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
                     shape_object = Selection.ShapeRange(1)
-                    shapes_object = shape_object.Parent.Shapes
-                    indices = [
-                        index
-                        for index, elem in enumerate(shapes_object)
-                        if elem.Id == shape_object.Id
-                    ]
-                    assert len(indices) == 1
-                    return shapes_object, indices
+                    shapes_object = shape_object.Parent
+                    return shapes_object, [shape_object]
             slide = Slide()
-            return slide.api.Shapes, range(slide.api.Shapes.Count)
+            shape_objects = [elem for elem in slide.api.Shapes]
+            return slide.api.Shapes, shape_objects
         raise ValueError(f"Cannot interpret `arg`; {arg}.")
 
 

@@ -31,7 +31,6 @@ class FillFormat(ObjectDictMixin):
     def __init__(self, arg=None, **kwargs):
         super().__init__(arg, **kwargs)
         assert "Type" in self.data
-        assert self.data["Type"] in self.type_to_keys, "Current Implementation."
 
     def to_dict(self, api_object):
         type_value = getattr(api_object, "Type")
@@ -42,10 +41,21 @@ class FillFormat(ObjectDictMixin):
         type_value = self.data["Type"]
         if type_value == constants.msoFillSolid:
             api_object.Solid()
-        if type_value == constants.msoFillPatterned:
+        elif type_value == constants.msoFillPatterned:
             api_object.Patterned(self.data["Pattern"])
+        else:
+            raise ValueError(f"Currently `type_value`={type_value} cannot be handled.")
 
         super().apply(api_object)
+
+    @property
+    def color(self):
+        rgb_value = self.get("ForeColor.RGB", None)
+        # Currently, `ForeColor.RGB` is required.
+        if rgb_value:
+            return Color(rgb_value)
+        else:
+            raise ValueError("For this FillFormat, `ForeColor.RGB` is undefined.")
 
 
 class FillFormatProperty:

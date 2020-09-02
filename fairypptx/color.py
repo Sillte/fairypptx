@@ -76,6 +76,13 @@ class Color:
         return code.upper()
 
 
+    def __str__(self):
+        if self.alpha == 1:
+            return f"Color({self.rgb})"
+        else:
+            return f"Color({self.rgba})"
+
+
 def _normalize(color_tuple, alpha):
     """ Normalize the range of values.
     """

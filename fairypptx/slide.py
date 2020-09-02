@@ -44,7 +44,6 @@ class Slides:
         if layout is None:
             # Mechanisum of customization is preferred.
             layout = constants.ppLayoutBlank
-        print(self.api)
         return Slide(self.api.Add(index + 1, layout))
 
     def __len__(self):
@@ -64,7 +63,6 @@ class Slides:
             yield self[i]
 
     def __len__(self):
-        print(self.api)
         return self.api.Count
 
     def _construct(self, arg):
@@ -119,18 +117,13 @@ class Slide:
         """
         from fairypptx.shape import Shapes, Shape
 
-        shapes = self.shapes
-        print("len(shapes)", len(shapes))
-        assert len(shapes)
-
         def _inner(shape):
             if shape.api.Type == constants.msoGroup:
                 return sum((_inner(Shape(elem)) for elem in shape.api.GroupItems), [])
             else:
                 return [shape]
 
-        shape_list = sum((_inner(elem) for elem in shapes), [])
-        assert shape_list
+        shape_list = sum((_inner(elem) for elem in self.shapes), [])
         return Shapes(shape_list)
 
     @property
