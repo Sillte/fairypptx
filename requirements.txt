@@ -4,3 +4,4 @@ matplotlib
 comtypes
 Pillow
 pywin32
+premailer

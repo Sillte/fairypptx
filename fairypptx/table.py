@@ -119,6 +119,12 @@ class Table:
         shape_object = Shapes().api.AddTable(NumRows=row, NumColumns=col)
         return Table(shape_object.Table)
 
+    def tighten(self):
+        for row in self.rows:
+            row.tighten()
+        for column in self.columns:
+            column.tighten()
+
 
 
 class DFTable:

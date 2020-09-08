@@ -177,16 +177,16 @@ class Shapes:
 
     def _construct(self, arg):
         if is_object(arg, "ShapeRange"):
-            raise NotImplementedError()
-            slide_objects = [arg.Item(index + 1) for index in range(arg.Count)]
-            slides_objects = [slide.Parent.Slides for slide in slide_objects]
-            assert len(set(map(id, slides_objects))) == 1, "Slide must be"
-            slides_object = slides_objects[0]
-            indices = [elem.SlideIndex - 1 for elem in slide_objects]
-            return slides_object, indices
+            shape_objects = [elem for elem in arg]
+            shapes_objects = [
+                shape_object.Parent.Shapes for shape_object in shape_objects
+            ]
+            assert len(set(shapes_objects)) == 1, "All the shapes must belong to the same slide."
+            return shapes_objects[0], shape_objects
         elif is_object(arg, "Shapes"):
             object_list = [arg.Item(index + 1) for index in range(arg.Count)]
             return arg, object_list
+
         elif is_object(arg, "Slide"):
             object_list = [arg.Item(index + 1) for index in range(arg.Shapes.Count)]
             return arg.Shapes, object_list
@@ -312,12 +312,18 @@ class Shape:
             stylist = registory_utils.fetch(self.__class__.__name__, style)
             stylist(self)
             return self
+        raise TypeError(f"Currently, type {type(style)} is not accepted.")
 
     def register(self, key, disk=True):
         stylist = ShapeStylist(self)
         registory_utils.register(
             self.__class__.__name__, key, stylist, extension=".pkl", disk=disk
         )
+
+    def get_styles(self):
+        """Return available styles.
+        """
+        return registory_utils.keys(self.__class__.__name__)
 
     def tighten(self, *, oneline=False):
         """Tighten the Shape according to Text.
