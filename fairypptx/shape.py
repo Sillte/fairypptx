@@ -39,6 +39,7 @@ class Shapes:
             self.app = app
 
         self._api, self._object_list = self._construct(arg)
+        assert object_utils.get_type(self._api) == "Shapes"
 
         # Sorting mechanism desirable.
 
@@ -225,7 +226,7 @@ class Shapes:
                 elif Selection.Type == constants.ppSelectionText:
                     # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
                     shape_object = Selection.ShapeRange(1)
-                    shapes_object = shape_object.Parent
+                    shapes_object = shape_object.Parent.Shapes
                     return shapes_object, [shape_object]
             slide = Slide()
             shape_objects = [elem for elem in slide.api.Shapes]
