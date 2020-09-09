@@ -51,7 +51,7 @@ def push(arg, *, is_path=None):
     data.to_clipboard()
 
 
-def push_fragment(fragment: str, html=None, url=None):
+def push_fragment(fragment: str, html: str = None, url=None):
     """Push the part of HTML to `Clipboard`.
     Args:
         fragment: the part of html.
@@ -103,6 +103,11 @@ def _to_content(arg):
 class _ClipboardHTML:
     """It is a data structure to handle the Clipboard HTML data.
 
+
+    CAUTION
+    -------
+    `start_index` and `end_index` are NOT index of `str`, but index of encoded bytes.
+
     Note
     -------------------------------
     Currently, `Selection` is not handled.
@@ -111,12 +116,17 @@ class _ClipboardHTML:
     def __init__(
         self, html, start_index=None, end_index=None, source=None, version=None
     ):
-        self.html = html
+        if isinstance(html, str):
+            self.en_html = html.encode("utf8")
+        elif isinstance(html, bytes):  # utf8 is assumed.
+            self.en_html = html
+        else:
+            raise TypeError(r"`html` must be `str` or utf-8 encoded `bytes`.")
         if start_index is None:
             start_index = 0
         self.start_index = start_index
         if end_index is None:
-            end_index = len(self.html)
+            end_index = len(self.en_html)
         self.end_index = end_index
         if source is None:
             source = "_ClipboardHTML"
@@ -134,15 +144,37 @@ class _ClipboardHTML:
         return str(d)
 
     @property
+    def html(self):
+        return self.en_html.decode("utf8")
+
+    @property
     def fragment(self):
         """Return the target fragment of html."""
-        return self.html[self.start_index : self.end_index].strip(CONTROL_CHARS)
+
+        # Maybe `strip` of CONTROL_CHARS is unnecesarry.
+        return (
+            self.en_html[self.start_index : self.end_index]
+            .decode("utf8")
+            .strip(CONTROL_CHARS)
+        )
+
+    @classmethod
+    def from_fragment(cls, fragment, html=None, url=None):
+        if html is None:
+            html = _gen_default_html(fragment)
+        if url is None:
+            url = Path(__file__).name
+        en_html = html.encode()
+        en_frament = html.encode()
+        start_index = en_html.find(en_fragment)
+        end_index = start_index + len(en_fragment)
+        return _ClipboardHTML(en_html, start_index, end_index, source=url)
 
     @classmethod
     def from_clipboard(cls):
         src = _get_clipboard_data(CF_HTML).decode("utf8")
 
-        # Decomopse `description` and `header`.
+        # Decompose `description` and `header`.
         s_index = src.find("SourceURL")
         assert s_index != -1
         while src[s_index] != "\n":
@@ -157,11 +189,11 @@ class _ClipboardHTML:
             header_dict[key] = value
 
         kwargs = dict()
-        kwargs["html"] = body
+        kwargs["html"] = body.encode("utf8")
         s_fragment = int(header_dict["StartHTML"])
         e_fragment = int(header_dict["EndHTML"])
-        kwargs["start_index"] = s_fragment - len(description)
-        kwargs["end_index"] = e_fragment - len(description)
+        kwargs["start_index"] = s_fragment - len(description.encode())
+        kwargs["end_index"] = e_fragment - len(description.encode())
         kwargs["version"] = header_dict["Version"]
         kwargs["source"] = header_dict["SourceURL"]
 
@@ -182,19 +214,19 @@ class _ClipboardHTML:
     def _to_clipboard_content(self):
         template = (
             "Version:0.9\r\n"
-            "StartHTML:%010d\r\n"
-            "EndHTML:%010d\r\n"
-            "StartFragment:%010d\r\n"
-            "EndFragment:%010d\r\n"
+            "StartHTML:%09d\r\n"
+            "EndHTML:%09d\r\n"
+            "StartFragment:%09d\r\n"
+            "EndFragment:%09d\r\n"
             "SourceURL:%s\r\n"
         )
         dummy = template % (0, 0, 0, 0, self.source)
-        n_description = len(dummy)
+        n_description = len(dummy.encode())
         description = template % (
             n_description,
-            n_description + len(self.html) + 1,
+            n_description + len(self.en_html),
             n_description + self.start_index,
-            n_description + self.end_index + 1,
+            n_description + self.end_index,
             self.source,
         )
         return description + self.html
@@ -226,6 +258,27 @@ def test_basic():
     output = pull()
     assert sample_html == output
 
+    sample_jp_html = "<p>貴方は潜伏背徳者ですか？ Quoted from Are you a werewolf? </p>"
+    push(sample_jp_html, is_path=False)
+    output = pull()
+    assert sample_jp_html == output
+
+
+def test_source_jp():
+    """
+    Case where `source` is multi-byte,
+    """
+    html = "<p>これでいいのかな..</p>"
+    source = "マルチバイトsource"
+
+    data = _ClipboardHTML(html, source=source)
+    data.to_clipboard()
+
+    c_data = _ClipboardHTML.from_clipboard()
+    assert c_data.fragment == html
+    assert c_data.source == source
+
 
 if __name__ == "__main__":
     test_basic()
+    test_source_jp()
