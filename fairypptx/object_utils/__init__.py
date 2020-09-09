@@ -174,7 +174,9 @@ class ObjectDictMixin(UserDict):
     ------------------------------
     * conversion between `Object` and UserDict.
     * fetch / register of Object / UserDict.
-
+    * key access to Object API. 
+        - [TODO] `key` of `dict` must be case incensitive.
+            - It leads to th duplicated (key, value).  
 
     Note
     ----------------------------------
@@ -193,7 +195,48 @@ class ObjectDictMixin(UserDict):
             self.name = name
         else:
             self.name = self.cls.__name__
-        self.data = self._construct(arg, **kwargs)
+        self.data, self._api = self._construct(arg, **kwargs)
+
+    @property
+    def api(self):
+        return self._api
+
+    def detached(self):
+        """Return this class without `_api`.
+        """
+        return self.cls(self)
+
+    def __setitem__(self, key, item):
+        super().__setitem__(key, item)
+        if self._api:
+            if not hasattr(self._api, key):
+                api_type = get_type(self._api)
+                raise KeyError(f"`{key}` does not exist in `{api_type}`.")
+            setattr(self._api, key, item)
+        else:
+            # When `api` is not given, this behaves as normal `UserDict`. 
+            pass
+
+    def __setattr__(self, name, value):
+
+        # Without `_api`, the behaviro is the same as `UserDict`.
+        if "_api" not in self.__dict__:
+            object.__setattr__(self, name, value)
+            return 
+        if self._api is None:
+            object.__setattr__(self, name, value)
+            return 
+
+        if name in self.__dict__ or name in type(self).__dict__:
+            object.__setattr__(self, name, value)
+        elif hasattr(self.api, name):
+            setattr(self.api, name, value)
+            self[name] = value
+        else:
+            # TODO: Maybe require modification. 
+            object.__setattr__(self, name, value)
+
+
 
     def to_dict(self, api_object):
         """Convert `Object` to `dict`.
@@ -230,17 +273,19 @@ class ObjectDictMixin(UserDict):
 
     def _construct(self, arg, **kwargs):
         name = self._get_name()
+        api = None
         if arg is None:
             data = dict(self.cls.data)
         elif is_object(arg, name):
             data = self.to_dict(arg)
+            api = arg
         elif isinstance(arg, Mapping):
             data = dict(arg)
         else:
             raise ValueError(f"Cannot interpret `{arg}`.")
         # If specified, update is performed.
         data.update(kwargs)
-        return data
+        return data, api
 
     @classmethod
     def _get_name(cls):
