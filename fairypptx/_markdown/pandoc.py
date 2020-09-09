@@ -10,8 +10,16 @@ so that `pandoc --help` is executed from commandline.
 Comment 
 -------------------
 Though, `css` is handled in functions of this module. 
-It is mainly intended to that this script is used for usecases other than at POWERPOINT.   
+It is mainly intended to that this script is used for use-cases other than at POWERPOINT.   
 This is because copy of HTML to Powerpoint does not reflect CSS sufficiently.   
+
+
+Necessity of premailer
+-----------------------
+
+Maybe `premailer` is not necessary for `PowerPoint`, 
+however, for e-mails this function may be necessary. 
+* See https://github.com/premailer/premailer
 
 """
 
