@@ -13,9 +13,10 @@ def test_getitem():
         shape = shapes.add(1)
         shape.Left = index * 50
         shape.Top = 50
+        shape.text = f"index{str(index)}"
+        shape.text.font["Size"] = 12
         shape.Width = 50
         shape.Height = 50
-        shape.text = f"index{str(index)}"
     assert len(shapes) == 0, "Change of shapes is not transmitted to ``faritypptx.Shapes``."
     assert len(slide.shapes) == count, "Added shapes."
 
