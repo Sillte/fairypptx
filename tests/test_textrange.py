@@ -4,8 +4,14 @@ from fairypptx import TextRange
 from fairypptx import Shape
 from fairypptx import constants
 
-@pytest.mark.parametrize("mode, s1, s2, expected", [("after", "First", "Suffix", "FirstSuffix"),
-                                                    ("before", "First", "Prefix", "PrefixFirst")])
+
+@pytest.mark.parametrize(
+    "mode, s1, s2, expected",
+    [
+        ("after", "First", "Suffix", "FirstSuffix"),
+        ("before", "First", "Prefix", "PrefixFirst"),
+    ],
+)
 def test_insert_mode(mode, s1, s2, expected):
     shape = Shape.make(constants.msoShapeRectangle)
     shape.text = s1
@@ -22,6 +28,7 @@ def test_insert_mode(mode, s1, s2, expected):
     # Paragraphs's is not changed.
     assert len(tr.paragraphs) == 1
     assert shape.api.TextFrame.TextRange.Text == expected
+
 
 def test_paragraph():
     """
@@ -87,7 +94,7 @@ def test_paragraph():
 def test_properties():
     """
     * Characters
-    * Words 
+    * Words
     * Runs
     * Sentences
     * Paragraphs
@@ -98,7 +105,7 @@ def test_properties():
     shape = Shape.make(constants.msoShapeRectangle)
     shape.text = ""
     tr = TextRange(shape)
-    
+
     # Characters / Words
     sample = "two  word"
     shape.text = sample
@@ -154,6 +161,7 @@ def test_properties():
     assert len(tr.runs) == 3
     shape.tighten()
 
+
 def test_font_access():
     shape = Shape.make(constants.msoShapeRectangle)
     shape.text = "Test Sentence."
@@ -165,6 +173,7 @@ def test_font_access():
     assert tr.api.Font.Bold == constants.msoTrue
     shape.tighten()
 
+
 def test_font():
     shape = Shape.make(constants.msoShapeRectangle)
     shape.text = "TestFont"
@@ -175,6 +184,10 @@ def test_font():
     font["Size"] = 15
     tr.font = font
     assert tr.api.Font.Size == 15
+
+
+    #shape.textrange.font.color = 0 
+
 
 def test_paragraphformat():
     tr = TextRange.make_itemization(["P-ITEM1", "P-ITEM2", "P-ITEM3"])
@@ -192,7 +205,7 @@ def test_make_itemization():
     assert len(tr.paragraphs) == 3
     assert tr.api.ParagraphFormat.Bullet.Type == True
     # Access is possible.
-    tr.paragraphs[-1].api.IndentLevel = 2 
+    tr.paragraphs[-1].api.IndentLevel = 2
     assert hasattr(tr, "api")
     tr.shape.tighten()
 

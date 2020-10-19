@@ -107,6 +107,14 @@ def test_getattr():
 
     # If `default` is set, it returns `default`
     assert object_utils.getattr(shape, "NON-Attribute", 797) == 797
+
+
+def test_hasattr():
+    shape = Shape.make(1)
+    assert object_utils.hasattr(shape.api, "Left") == True
+    assert object_utils.hasattr(shape.api, "NONATTRIBUTE") == False
+    assert object_utils.hasattr(shape.api, "TextFrame.TextRange.Text") == True
+    assert object_utils.hasattr(shape.api, "TextFrame.TextRange.None") == False
     
 
 if __name__ == "__main__":
