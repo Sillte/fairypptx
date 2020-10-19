@@ -1,6 +1,7 @@
 import re
 import pytest
 from fairypptx import TextRange
+from fairypptx import Color
 from fairypptx import Shape
 from fairypptx import constants
 
@@ -185,8 +186,17 @@ def test_font():
     tr.font = font
     assert tr.api.Font.Size == 15
 
+    # Setting method 1
+    # Directory set it using `Object` instance.
+    shape.textrange.font.api.Color.RGB = 1
+    assert shape.textrange.font.color == Color(1)
 
-    #shape.textrange.font.color = 0 
+    # Setting method2 using `ObjectMixinDict`.
+    shape.textrange.font["Color.RGB"] = 3
+    assert shape.textrange.font.color == Color(3)
+
+    shape.textrange.font.color = 4
+    assert shape.textrange.font["Color.RGB"] == 4
 
 
 def test_paragraphformat():

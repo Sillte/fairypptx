@@ -75,6 +75,9 @@ class Color:
             code += format(int(self.alpha * 255), "X")
         return code.upper()
 
+    def __eq__(self, other):
+        return self.rgba == Color(other).rgba
+
 
     def __str__(self):
         if self.alpha == 1:

@@ -22,6 +22,7 @@ from collections import UserDict, UserString
 from collections.abc import Mapping 
 
 from fairypptx import constants
+from fairypptx.color import Color
 from fairypptx import object_utils
 from fairypptx.object_utils import ObjectDictMixin
 from fairypptx import registory_utils
@@ -94,6 +95,14 @@ class Font(ObjectDictMixin):
     data["Subscript"] = constants.msoFalse
     data["Underline"] = constants.msoFalse
     data["Color.RGB"] = 0
+
+    @property
+    def color(self):
+        return Color(self.data["Color.RGB"])
+
+    @color.setter
+    def color(self, value):
+        self["Color.RGB"] = Color(value).as_int()
 
 
 class ParagraphFormat(ObjectDictMixin):
