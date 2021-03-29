@@ -29,7 +29,6 @@ class Cell(ObjectClassMixin):
         return (self.shape.text == "")
 
 
-
 class RowColumnMixin(ObjectClassMixin):
     """Common Implementation for Row and Column
     """
@@ -64,6 +63,15 @@ class RowColumnMixin(ObjectClassMixin):
 
     def is_empty(self):
         return all(elem.is_empty() for elem in self.cells)
+
+    def tolist(self):
+        """
+        Note:
+        (2021-03-28) Currently, only `text` is converted.  
+        """
+        dtype = None
+        cells = [Cell(self.api.Cells.Item(index + 1)) for index in range(len(self))]
+        return [cell.text for cell in cells]
 
 class Row(RowColumnMixin):
 

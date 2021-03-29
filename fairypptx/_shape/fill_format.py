@@ -55,8 +55,7 @@ class FillFormat(ObjectDictMixin):
         if rgb_value:
             return Color(rgb_value)
         else:
-            raise ValueError("For this FillFormat, `ForeColor.RGB` is undefined.")
-
+            return None
 
 class FillFormatProperty:
     def __get__(self, shape, objtype=None):

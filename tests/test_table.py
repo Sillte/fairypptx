@@ -15,7 +15,7 @@ def test_df_table():
     df = pd.DataFrame(np.arange(12).reshape(3, 4))
     df.index = pd.MultiIndex.from_tuples([("ア", "A"), ("ア", "B"), ("ア", "C")])
     df.columns = ["W", "X", "Y", "Z"]
-    table = DFTable(df)
+    table = DFTable.make(df)
     read_df = table.df
     assert df.equals(read_df)
 
