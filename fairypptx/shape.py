@@ -257,6 +257,10 @@ class Shape:
         return Box(self.api)
 
     @property
+    def size(self):
+        return (self.api.Width, self.api.Height)
+
+    @property
     def slide(self):
         return Slide(upstream(self.api, "Slide"), app=self.app)
 
@@ -281,6 +285,8 @@ class Shape:
                 path, msoFalse, msoTrue, Left=0, Top=0, Width=100, Height=100
             )
             shape = Shape(shape_object)
+            shape.width = arg.size[0] 
+            shape.height = arg.size[1]
         elif isinstance(arg, (str, UserString)):
             shape = cls.make_textbox(arg, **kwargs)
             # TODO: Idetally, interpret of `str` is necessary.

@@ -94,7 +94,7 @@ class Box(UserDict):
         n_key = key.capitalize()
         if n_key in self.data:
             return self.data[n_key]
-        return super().__getattr__(key)
+        raise AttributeError(f"`key` {key} is not Found.")
 
     @property
     def x_interval(self):
