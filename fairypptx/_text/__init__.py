@@ -104,6 +104,14 @@ class Font(ObjectDictMixin):
     def color(self, value):
         self["Color.RGB"] = Color(value).as_int()
 
+    @property
+    def size(self):
+        return self["Size"]
+
+    @size.setter
+    def size(self, value):
+        self["Size"] = value
+
 
 class ParagraphFormat(ObjectDictMixin):
     """Represents the Font Information. 
