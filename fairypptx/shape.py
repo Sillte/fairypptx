@@ -19,6 +19,7 @@ from fairypptx._shape import LineFormat, LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape.stylist import ShapeStylist
 from fairypptx._shape import LocationAdjuster
+from fairypptx._shape.location import ShapesAdjuster, ShapesAligner
 from fairypptx import registory_utils
 
 
@@ -103,26 +104,15 @@ class Shapes:
             shape.api.Select(msoFalse)
         return self
 
-    def align(self, axis=None, mode="center"):
+    def align(self, axis=None, mode="start"):
+        """Align (Make the edge coordination). 
         """
-        Side Effect:
-            `Selection` changes.
-        """
-        self.select()
-        if axis is None:
-            boxes = [shape.box for shape in self]
-            y_ratio = intersection_over_cover(boxes, axis=0)
-            x_ratio = intersection_over_cover(boxes, axis=1)
-            print("x_ratio", x_ratio)
-            print("y_ratio", y_ratio)
-            if y_ratio < x_ratio:
-                align_cmd = constants.msoAlignCenters
-            else:
-                align_cmd = constants.msoAlignMiddles
+        return ShapesAligner(axis=axis, mode=mode)(self)
 
-        shape_object = self.app.api.ActiveWindow.Selection.ShapeRange.Align(
-            align_cmd, msoFalse
-        )
+    def adjust(self, axis=None):
+        """Adjust (keeping the equivalent distance.)
+        """
+        return ShapesAdjuster(axis=axis)(self)
 
     def __getattr__(self, name):
         if "_api" not in self.__dict__:
@@ -309,9 +299,19 @@ class Shape:
         return shape
 
     @classmethod
-    def make_arrow(cls, arg=None, **kwargs):
+    def make_arrow(cls, arg=None, direction="right", **kwargs):
         assert arg is None, "Current"
-        shape = cls.make(constants.msoShapeRightArrow)
+        direction = direction.lower()
+        if direction == "right":
+            shape = cls.make(constants.msoShapeRightArrow)
+        elif direction == "left":
+            shape = cls.make(constants.msoShapeLeftArrow)
+        elif direction == "up":
+            shape = cls.make(constants.msoShapeUpArrow)
+        elif direction == "down":
+            shape = cls.make(constants.msoShapeDownArrow)
+        else:
+            raise ValueError(f"Invalid direction.")
         return shape
 
     def like(self, style):
