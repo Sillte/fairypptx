@@ -20,6 +20,7 @@ from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape.stylist import ShapeStylist
 from fairypptx._shape import LocationAdjuster
 from fairypptx._shape.location import ShapesAdjuster, ShapesAligner
+from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner
 from fairypptx import registory_utils
 
 
@@ -104,6 +105,15 @@ class Shapes:
             shape.api.Select(msoFalse)
         return self
 
+    def align_cluster(self,
+                      axis=None,
+                      mode="start",
+                      iou_thresh=0.10):
+        """ Perform alignment. `align` is applied 
+        by the unit of group(cluster).
+        """
+        return ClusterAligner(axis=axis, mode=mode, iou_thresh=iou_thresh)(self)
+
     def align(self, axis=None, mode="start"):
         """Align (Make the edge coordination). 
         """
@@ -130,16 +140,17 @@ class Shapes:
             except AttributeError:
                 pass
             else:
-                if all(value == values[0] for value in values):
-                    return value
-                else:
-                    raise ValueError(
-                        (
-                            "Non-equivalent values over the Shapes.",
-                            f"Maybe `{name}` returns Object?",
-                            f"values=`{values}`",
-                        )
-                    )
+                return values
+                #if all(value == values[0] for value in values):
+                #    return value
+                #else:
+                #    raise ValueError(
+                #        (
+                #            "Non-equivalent values over the Shapes.",
+                #            f"Maybe `{name}` returns Object?",
+                #            f"values=`{values}`",
+                #        )
+                #    )
         raise AttributeError(f"Cannot find the attribute `{name}`.")
 
     def __setattr__(self, name, value):

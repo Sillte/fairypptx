@@ -3,7 +3,8 @@
 """
 
 import numpy as np
-from fairypptx.box import Box
+from collections import defaultdict
+from fairypptx.box import Box, intersection_over_cover
 from typing import Union
 
 class LocationAdjuster:
@@ -287,4 +288,104 @@ class ShapesAligner:
             self._align_horizontally(shapes, mode)
         else:
             raise RuntimeError("Bug.")
+
+
+class ClusterMaker:
+    def __init__(self, axis=None, iou_thresh=0.1):
+        self.axis = axis
+        self.iou_thresh = iou_thresh
+
+    def _yield_axis(self, axis, shapes):
+        if axis == "width":
+            axis = 1
+        if axis == "height":
+            axis = 0
+        if axis is None:
+            clusters_0 = self._cluster(shapes, axis=0)
+            clusters_1 = self._cluster(shapes, axis=1)
+            if len(clusters_0) <= len(clusters_1):
+                axis = 0
+            else:
+                axis = 1
+        assert axis in {0, 1}
+        return axis
+
+    @classmethod
+    def suggest_axis(cls, shapes, iou_thresh=0.1):
+        """ Suggest the appropriate axis.
+        Typically, as the number of clusters is smaller, better.
+        """
+        clusters_0 = cls(axis=0, iou_thresh=iou_thresh)(shapes) 
+        clusters_1 = cls(axis=1, iou_thresh=iou_thresh)(shapes) 
+        if len(clusters_0) <= len(clusters_1):
+            return 0
+        else:
+            return 1
+
+    def _cluster(self, shapes, axis=0):
+        assert axis in {0, 1}
+        c_axis = 0 if axis == 1 else 1
+        def _is_same_cluster(shape1, shape2):
+            box1 = shape1.box
+            box2 = shape2.box
+            rate = intersection_over_cover(box1, box2, axis=c_axis)
+            return self.iou_thresh <= rate
+
+        def sort_key(shape):
+            if axis == 0:
+                return shape.box.left
+            else:
+                return shape.box.top
+        shapes = sorted(shapes, key=sort_key)
+        boxes = [shape.box for shape in shapes]
+        selected = set()
+        g_indices = defaultdict(list)
+        n_shape = len(shapes)
+        for i1 in range(n_shape):
+            if i1 in selected:
+                continue 
+            selected.add(i1)
+            g_indices[i1].append(i1)
+            for i2 in range(i1 + 1, n_shape):
+                if i2 in selected:
+                    continue
+                if _is_same_cluster(shapes[i1], shapes[i2]):
+                    selected.add(i2)
+                    g_indices[i1].append(i2)
+        keys = sorted(g_indices, key=lambda i: sort_key(shapes[i]))
+        from fairypptx import Shapes  # To thwart cyclic reference.
+        clusters = [Shapes([shapes[i] for i in g_indices[key]]) for key in keys]
+        return clusters
+
+    def __call__(self, shapes):
+        axis = self._yield_axis(self.axis, shapes)
+        return self._cluster(shapes, axis)
+
+class ClusterAligner:
+    def __init__(self, axis=None, mode=None, iou_thresh=0.10):
+        self.axis = axis
+        self.mode = mode
+        self.iou_thresh = iou_thresh
+
+    def _yield_axis(self, axis, shapes):
+        if axis == "width":
+            axis = 1
+        if axis == "height":
+            axis = 0
+        if axis is None:
+            # `c_axis` should be the one whose number of gropu is smaller.
+            c_axis = ClusterMaker.suggest_axis(shapes, iou_thresh=self.iou_thresh)
+            axis = 0 if c_axis == 1 else 1
+        assert axis in {0, 1}
+        return axis
+
+    def __call__(self, shapes):
+        axis = self._yield_axis(self.axis, shapes)
+        c_axis = 0 if axis == 1 else 1
+        aligner = ShapesAligner(axis=axis, mode=self.mode)
+        cluster_maker = ClusterMaker(axis=c_axis, iou_thresh=self.iou_thresh)
+        clusters = cluster_maker(shapes)
+        for cluster in clusters: 
+            aligner(cluster)
+        return clusters
 
