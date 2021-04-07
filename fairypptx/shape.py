@@ -283,7 +283,7 @@ class Shape:
             path = storage.get_path(".png")
             arg.save(path)
             shape_object = shapes.api.AddPicture(
-                path, msoFalse, msoTrue, Left=0, Top=0, Width=100, Height=100
+                path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1],
             )
             shape = Shape(shape_object)
             shape.width = arg.size[0] 
