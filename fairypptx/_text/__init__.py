@@ -97,6 +97,32 @@ class Font(ObjectDictMixin):
     data["Color.RGB"] = 0
 
     @property
+    def bold(self):
+        return self["Bold"] != constants.msoFalse
+
+    @bold.setter
+    def bold(self, value):
+        if value is True:
+            self["Bold"] = constants.msoTrue
+        elif value is False:
+            self["Bold"] = constants.msoFalse
+        else:
+            self["Bold"] = value
+
+    @property
+    def underline(self):
+        return self["Underline"] != constants.msoFalse
+
+    @bold.setter
+    def underline(self, value):
+        if value is True:
+            self["Underline"] = constants.msoTrue
+        elif value is False:
+            self["Underline"] = constants.msoFalse
+        else:
+            self["Underline"] = value
+
+    @property
     def color(self):
         return Color(self.data["Color.RGB"])
 

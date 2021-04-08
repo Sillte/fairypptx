@@ -404,7 +404,10 @@ class Shape:
         raise ValueError(f"Cannot interpret `arg`; {arg}.")
 
 
+# High-level APIs are loaded here.
+#
 from fairypptx._shape.replace import replace
+from fairypptx._shape.editor import ShapesEncloser, TitleProvider
 
 if __name__ == "__main__":
     pass
