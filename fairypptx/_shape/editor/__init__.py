@@ -5,10 +5,12 @@ As you can easily assumes, `editor` is a high-level api, so
 * On contrary, the more premitive sub-modules should not call this.  
 """
 
-
+import numpy as np 
+import _ctypes
 from fairypptx import constants
 from fairypptx.shape import Shape, Shapes
 from fairypptx.shape import Box
+from fairypptx.table import Table
 
 
 class ShapesEncloser:
@@ -132,6 +134,148 @@ class TitleProvider:
             return max(fontsizes)
         else:
             return 18
+
+
+class ShapesResizer:
+    """Resize `Shapes`. 
+
+    Args:
+        size: 2-tuple. (width, height).
+            The expected width and height. 
+        fontsize: (float)
+            The fontsize of the expected minimum over the shapes.
+    """
+
+    def __init__(self, size=None, *, fontsize=None):
+        self.size = size
+        self.fontsize = fontsize
+
+    def _to_minimum_fontsize(self, textrange):
+        fontsizes = set()
+        for run in textrange.runs:
+            if run.text:
+                fontsizes.add(run.font.size)
+        if fontsizes:
+            return min(fontsizes)
+        else:
+            return None
+
+    def _get_minimum_fontsize(self, shapes):
+        fontsizes = set()
+        for shape in shapes:
+            if shape.is_table():
+                table = Table(shape)
+                for row in table.rows:
+                    for cell in row:
+                        textrange = cell.shape.textrange
+                        fontsize = self._to_minimum_fontsize(textrange)
+                        if fontsize:
+                            fontsizes.add(fontsize)
+            else:
+                try:
+                    fontsize = self._to_minimum_fontsize(shape.textrange)
+                except _ctypes.COMError as e:
+                    pass
+                else:
+                    if fontsize:
+                        fontsizes.add(fontsize)
+        if fontsizes:
+            return min(fontsizes)
+        else:
+            return None
+
+    def _set_fontsize(self, textrange, ratio):
+        for run in textrange.runs:
+            run.api.Font.Size = round(run.font.size * ratio)
+
+    def _yield_size(self, shapes):
+        """Determine the the return of `size`.
+
+        * Priority
+        1. `fontsize`
+        2. `size`.
+        """
+        size = self.size
+        fontsize = self.fontsize
+        
+        # For fallback.
+        if size is None and fontsize is None:
+            fontsize = self._get_minimum_fontsize(shapes.slide.shapes)
+            if fontsize is None:
+                fontsize = 12
+
+        if fontsize is not None:
+            c_box = ShapesEncloser.circumscribed_box(shapes)
+            c_fontsize = self._get_minimum_fontsize(shapes)
+            ratio = fontsize / c_fontsize
+            size = ratio 
+
+
+        if isinstance(size, (int , float)):
+            c_box = ShapesEncloser.circumscribed_box(shapes)
+            c_width = c_box.x_length
+            c_height = c_box.y_length
+            n_width = c_width * size
+            n_height = c_height * size
+        elif isinstance(size, (list, tuple)):
+            n_width, n_height = size
+        else:
+            raise ValueError("Invalid size.", size)
+
+        return n_width, n_height
+
+
+    def __call__(self, shapes):
+        """Perform `resize` for all the shapes.  
+
+        Not only it changes the size of `Shape`, 
+        but also changes the size of `Font` proportionaly. 
+
+        Note:
+        It works only for shapes whose rotation is 0.
+        """
+
+        # If the given is `Shape`, then, `Shape` is returned.
+        is_shape = False
+        if isinstance(shapes, Shape):
+            shapes = Shapes([shapes])
+            is_shape = True
+        shapes = Shapes(shapes)
+
+        if not shapes:
+            return shapes
+
+        n_width, n_height = self._yield_size(shapes)
+        c_box = ShapesEncloser.circumscribed_box(shapes)
+        width, height = c_box.x_length, c_box.y_length
+
+        pivot = (c_box.top, c_box.left)  # [y_min, x_min]
+        ratios = (n_height / height, n_width / width)
+        ratio = np.mean(ratios)
+        print("ratio", ratio)
+        for shape in shapes:
+            # Processings for all the shapes.
+            shape.api.Left = (shape.api.Left - pivot[1]) * ratios[1]  + pivot[1]
+            shape.api.Width = shape.api.Width * ratios[1]
+            shape.api.Top = (shape.api.Top - pivot[0]) * ratios[0]  + pivot[0]
+            shape.api.Height = shape.api.Height * ratios[0]
+
+            # For Table.
+            if shape.is_table():
+                table = Table(shape)
+                for row in table.rows:
+                    for cell in row:
+                        self._set_fontsize(cell.shape.textrange, ratio)
+            else:
+                try:
+                    self._set_fontsize(shape.textrange, ratio)
+                except _ctypes.COMError as e:
+                    pass
+
+        if not is_shape:
+            return Shapes(shapes)
+        else:
+            return shapes[0]
 
 
 if __name__ == "__main__":

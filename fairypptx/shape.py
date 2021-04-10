@@ -374,6 +374,13 @@ class Shape:
         image = Image.open(path)
         return image.convert(mode)
 
+
+    def is_table(self):
+        """Return whether this Shape is Table or not.
+        """
+        return self.api.Type == constants.msoTable
+
+
     def __getattr__(self, name):
         if "_api" not in self.__dict__:
             raise AttributeError
@@ -407,7 +414,7 @@ class Shape:
 # High-level APIs are loaded here.
 #
 from fairypptx._shape.replace import replace
-from fairypptx._shape.editor import ShapesEncloser, TitleProvider
+from fairypptx._shape.editor import ShapesEncloser, TitleProvider, ShapesResizer
 
 if __name__ == "__main__":
     pass
