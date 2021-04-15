@@ -363,9 +363,9 @@ class Shape:
         attrs = ["Left", "Top"]
         ps1 = [object_utils.getattr(self, attr) for attr in attrs]
         ps2 = [object_utils.getattr(other, attr) for attr in attrs]
-        for attr, p1, p2 in zip(attr, ps1, ps2):
-            object_utils.getattr(self, attr, p2)
-            object_utils.getattr(other, attr, p1)
+        for attr, p1, p2 in zip(attrs, ps1, ps2):
+            object_utils.setattr(self, attr, p2)
+            object_utils.setattr(other, attr, p1)
         return self
 
     def to_image(self, mode="RGBA"):

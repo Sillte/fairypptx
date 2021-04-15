@@ -8,7 +8,7 @@ from fairypptx.presentation import Presentation  # NOQA
 from fairypptx.slide import Slides, Slide  # NOQA
 from fairypptx.shape import Shapes, Shape # NOQA
 from fairypptx.text import TextFrame, TextRange, Text # NOQA
-from fairypptx.table import Table # NOQA
+from fairypptx.table import Table, DFTable # NOQA
 
 from fairypptx.markdown import Markdown
 
