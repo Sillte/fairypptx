@@ -112,7 +112,7 @@ class Slide:
         return Shapes(self.api.Shapes)
 
     @property
-    def decomposed_shapes(self):
+    def leaf_shapes(self):
         """Return Shapes, but grouped shape is decomposed.
         """
         from fairypptx.shape import Shapes, Shape

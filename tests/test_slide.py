@@ -10,7 +10,7 @@ def test_to_image():
     assert isinstance(image, Image.Image)
 
 
-def test_decomposed_shapes():
+def test_leaf_shapes():
     slide = Slides().add(layout=constants.ppLayoutBlank)
     slide.select()
     s1 = slide.shapes.add(1)
@@ -19,7 +19,7 @@ def test_decomposed_shapes():
     s2.text = "S2"
     sg = Shapes([s1, s2])
     grouped = sg.group()
-    shapes = slide.decomposed_shapes
+    shapes = slide.leaf_shapes
     assert {shape.text for shape in shapes} == {"S1", "S2"}
 
 
