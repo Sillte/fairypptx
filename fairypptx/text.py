@@ -250,3 +250,6 @@ class TextRange:
             # TODO: Maybe require modification. 
             object.__setattr__(self, name, value)
 
+
+# To solve the priority of importing.
+from fairypptx._text.editor import MarginMaintainer 
