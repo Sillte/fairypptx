@@ -32,13 +32,13 @@ def test_getitem():
     for shape in shapes:
         shape.line = 5
 
-def test_decomposed():
+def test_leafs():
     slide = Slides().add(layout=constants.ppLayoutBlank)
     s1 = Shape.make("S1")
     s2 = Shape.make("S2")
     sg = Shapes([s1, s2])
     grouped = sg.group()
-    shapes = Shapes([grouped]).decomposed
+    shapes = Shapes([grouped]).leafs
     assert len(shapes) == 2
     texts = {str(shape.text) for shape in shapes}
     assert texts == {"S1", "S2"}

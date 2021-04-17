@@ -80,7 +80,7 @@ class Shapes:
         return Shape(shape_object)
 
     @property
-    def decomposed(self):
+    def leafs(self):
         """Return Shapes. Each shape of the return is not `msoGroup`.
         """
 
