@@ -321,6 +321,8 @@ class Shape:
             shape = cls.make(constants.msoShapeUpArrow)
         elif direction == "down":
             shape = cls.make(constants.msoShapeDownArrow)
+        elif direction == "both":
+            shape = cls.make(constants.msoShapeLeftRightArrow)
         else:
             raise ValueError(f"Invalid direction.")
         return shape
@@ -415,6 +417,7 @@ class Shape:
 #
 from fairypptx._shape.replace import replace
 from fairypptx._shape.editor import ShapesEncloser, TitleProvider, ShapesResizer
+from fairypptx._shape.selector import ShapesSelector as Selector
 
 if __name__ == "__main__":
     pass
