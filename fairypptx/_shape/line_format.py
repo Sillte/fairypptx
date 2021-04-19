@@ -32,7 +32,7 @@ class LineFormat(ObjectDictMixin):
 
     def to_dict(self, api_object):
         # Minimum specification
-        if getattr(api_object, "Visible") == constants.msoTrue:
+        if getattr(api_object, "Visible") != constants.msoTrue:
             return {"Visible": constants.msoFalse }
 
         keys = self.common_keys
