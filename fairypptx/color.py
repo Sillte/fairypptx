@@ -31,7 +31,7 @@ class Color:
             color_tuple = arg._rgb + (arg._alpha, )
         
         else:
-            raise ValueError(f"Cannot dechipher `{arg}` ")
+            raise ValueError(f"Cannot dechipher `{arg}` ", type(arg))
 
 
         if len(color_tuple) == 3:
@@ -77,6 +77,9 @@ class Color:
 
     def __eq__(self, other):
         return self.rgba == Color(other).rgba
+
+    def __hash__(self):
+        return hash(self.rgba)
 
 
     def __str__(self):
