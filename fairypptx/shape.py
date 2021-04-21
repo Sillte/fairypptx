@@ -416,7 +416,7 @@ class Shape:
 # High-level APIs are loaded here.
 #
 from fairypptx._shape.replace import replace
-from fairypptx._shape.editor import ShapesEncloser, TitleProvider, ShapesResizer
+from fairypptx._shape.editor import ShapesEncloser, TitleProvider, BoundingResizer
 from fairypptx._shape.selector import ShapesSelector as Selector
 
 if __name__ == "__main__":

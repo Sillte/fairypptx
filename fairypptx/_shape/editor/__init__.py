@@ -136,8 +136,8 @@ class TitleProvider:
             return 18
 
 
-class ShapesResizer:
-    """Resize `Shapes`. 
+class BoundingResizer:
+    """Resize the bounding box of `Shapes`.
 
     Args:
         size: 2-tuple. (width, height).
