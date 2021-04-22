@@ -135,6 +135,47 @@ class TitleProvider:
         else:
             return 18
 
+class ShapesResizer:
+    """Shapes Resizer.
+
+    This class resize the given shapes to the equivalent size.
+
+
+    Related Class.
+    -----------
+    `shapes.BoundingResizer`: the bounding box of the shapes is resized.
+
+    """
+
+    def __init__(self, size="max"):
+        self.size = size
+
+    def _yield_size(self, shapes):
+        """Determine the return of size,
+        based on the given parameters.
+        """
+        size = self.size
+
+        if isinstance(size, (list, tuple)):
+            width, height = size
+        elif isinstance(size, Shape):
+            shape = size
+            width, height = shape.width, shape.height
+        elif isinstance(size, str):
+            if size == "max":
+                width = max(shape.width for shape in shapes)
+                height = max(shape.height for shape in shapes)
+            else:
+                raise NotImplementedError("This error message must be displayed in `__init``. ") 
+        return width, height
+
+    def __call__(self, shapes):
+        width, height = self._yield_size(shapes)
+        for shape in shapes:
+            shape.width = width
+            shape.height = height
+        return shapes
+
 
 class BoundingResizer:
     """Resize the bounding box of `Shapes`.

@@ -19,7 +19,6 @@ from fairypptx._shape import LineFormat, LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape.stylist import ShapeStylist
 from fairypptx._shape import LocationAdjuster
-from fairypptx._shape.location import ShapesAdjuster, ShapesAligner
 from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner
 from fairypptx import registory_utils
 
@@ -103,6 +102,11 @@ class Shapes:
         self.app.api.ActiveWindow.Selection.Unselect()
         for shape in self:
             shape.api.Select(msoFalse)
+        return self
+
+    def tighten(self):
+        for shape in self:
+            shape.tighten()
         return self
 
     def align_cluster(self,
@@ -416,7 +420,8 @@ class Shape:
 # High-level APIs are loaded here.
 #
 from fairypptx._shape.replace import replace
-from fairypptx._shape.editor import ShapesEncloser, TitleProvider, BoundingResizer
+from fairypptx._shape.editor import (
+        ShapesEncloser, TitleProvider, BoundingResizer, ShapesResizer)
 from fairypptx._shape.selector import ShapesSelector as Selector
 
 if __name__ == "__main__":

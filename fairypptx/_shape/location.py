@@ -288,6 +288,7 @@ class ShapesAligner:
             self._align_horizontally(shapes, mode)
         else:
             raise RuntimeError("Bug.")
+        return shapes
 
 
 class ClusterMaker:
