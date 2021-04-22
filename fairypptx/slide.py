@@ -5,6 +5,7 @@ from fairypptx.presentation import Presentation
 from fairypptx.application import Application
 from fairypptx import constants
 
+from fairypptx.color import Color
 from fairypptx.box import Box
 from fairypptx.inner import storage
 from fairypptx.object_utils import get_type, is_object, upstream
@@ -144,6 +145,14 @@ class Slide:
         return Box(d)
 
     @property
+    def width(self):
+        return self.size[0]
+
+    @property
+    def height(self):
+        return self.size[1]
+
+    @property
     def image(self):
         return self.to_image()
 
@@ -162,6 +171,18 @@ class Slide:
 
     def select(self):
         self.api.Select()
+
+
+    @property
+    def colors(self):
+        """Return list of `fairy. 
+        """
+        colors = set()
+        for shape in self.shapes:
+            color = shape.fill.color
+            if color is not None:
+                colors.add(shape.fill.color)
+        return list(colors)
 
     def _fetch_api(self, arg):
         if is_object(arg, "Slide"):
