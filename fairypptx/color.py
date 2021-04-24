@@ -114,18 +114,19 @@ def _int_to_color(color_int):
 def make_hue_circle(seed_color, n_color=5):
     """ Make ``Hue Circle`` with ``seed``.
     Args:
-        seed_color: 3-length tuple. (R, G, B) 
+        seed_color: Color-like object.
         n_color: the number of color.
 
     Returns:
         ``list`` of colors.
     """
     seed_color = Color(seed_color)
+    alpha = seed_color.alpha
     r, g, b = map(lambda x: x / 255, seed_color.rgb)
     h, l, s = colorsys.rgb_to_hls(r, g, b)
     hs = [(h + d / n_color) % 1.0 for d in range(n_color)]
     colors = [colorsys.hls_to_rgb(h, l, s) for h in hs]
-    colors = [Color(color) for color in colors]
+    colors = [Color((*color, alpha)) for color in colors]
     return colors
 
 

@@ -221,7 +221,10 @@ class Shapes:
                 pass
             else:
                 if Selection.Type == constants.ppSelectionShapes:
-                    shape_objects = [shape for shape in Selection.ShapeRange]
+                    if not Selection.HasChildShapeRange:
+                        shape_objects = [shape for shape in Selection.ShapeRange]
+                    else:
+                        shape_objects = [shape for shape in Selection.ChildShapeRange]
                     shapes_objects = [
                         shape_object.Parent.Shapes for shape_object in shape_objects
                     ]
@@ -386,6 +389,11 @@ class Shape:
         """
         return self.api.Type == constants.msoTable
 
+    def is_leaf(self):
+        """Return whether this is NOT Grouped Object.
+        """
+        return self.api.Type != constants.msoGroup
+        
 
     def __getattr__(self, name):
         if "_api" not in self.__dict__:
