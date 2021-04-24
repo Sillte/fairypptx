@@ -390,3 +390,72 @@ class ClusterAligner:
             aligner(cluster)
         return clusters
 
+
+class ShapesArranger:
+    def __init__(self, *, axis=0, margin=0.5):
+        self.margin = margin
+        self.axis = axis
+
+    def __call__(self, shapes):
+        if self.axis == 0:
+            return self._vertial_arrange(shapes)
+        elif self.axis == 1: 
+            return self._horizontal_arrange(shapes)
+        else:
+            raise NotImplementedError("Invalid.`axis`.")
+
+    def _vertial_arrange(self, shapes):
+        box = self.circumscribed_box(shapes)
+        left, top = box.left, box.top
+        heights = [shape.height for shape in shapes]
+        y = top
+        for shape in shapes:
+            margin = self._to_margin(self.margin, shape, axis=0)
+            shape.left = left
+            shape.top = y
+            y += (shape.height + margin)
+        return shapes
+
+    def _horizontal_arrange(self, shapes):
+        box = self.circumscribed_box(shapes)
+        left, top = box.left, box.top
+        heights = [shape.height for shape in shapes]
+        x = left
+        for shape in shapes:
+            margin = self._to_margin(self.margin, shape, axis=1)
+            shape.left = x
+            shape.top = top
+            x += (shape.width + margin)
+        return shapes
+
+    def _to_margin(self, margin, shape, axis=0):
+        """Return the pixel margin.
+        If margin is less than 5, it is regarded as ratio of the length of shape.
+        Otherwise, it is regarded as the pixels. 
+        """
+        assert axis in {0, 1}
+        if 5.0 <= margin:
+            return margin
+        else: 
+            if axis == 0:
+                return shape.height * margin
+            else:
+                return shape.width * margin
+
+    def _to_axis(self, axis):
+        if axis == "width":
+            axis = 1
+        elif axis == "height":
+            axis = 0
+        assert axis in {0, 1}
+        return axis
+
+    @classmethod
+    def circumscribed_box(cls, shapes):
+        boxes = [shape.box for shape in shapes]
+        c_left = min(box.left for box in boxes)
+        c_top = min(box.top for box in boxes)
+        c_right = max(box.right for box in boxes)
+        c_bottom = max(box.bottom for box in boxes)
+        c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
+        return c_box

@@ -11,6 +11,7 @@ Internally, ``alpha`` is kept in [0, 1] and RGB are kept in [0, 255].
 import os
 from collections.abc import Sequence 
 import json
+import colorsys
 _this_folder = os.path.dirname(os.path.abspath(__file__))
 
 # _config_folder = os.path.join(_this_folder, "config")
@@ -27,11 +28,11 @@ class Color:
             color_tuple = _int_to_color(arg)
         elif isinstance(arg, Sequence):
             color_tuple = arg
-        elif isinstance(arg, Color):
-            color_tuple = arg._rgb + (arg._alpha, )
-        
         else:
-            raise ValueError(f"Cannot dechipher `{arg}` ", type(arg))
+            try:
+                color_tuple = arg.rgba
+            except AttributeError:
+                raise ValueError(f"Cannot decipher `{arg}` ", type(arg))
 
 
         if len(color_tuple) == 3:
@@ -101,7 +102,7 @@ def _normalize(color_tuple, alpha):
 
 def _hex_to_color(color_str):
     color_str = color_str.strip("#")
-    assert len(color_str) in {6, 8}, "Invaid Hex Color Code"
+    assert len(color_str) in {6, 8}, "Invalid Hex Color Code"
     strings = map(lambda pair: "".join(pair), zip(*[iter(color_str)] * 2))
     return tuple(map(lambda s: int(s, 16), strings))
 
@@ -109,9 +110,28 @@ def _int_to_color(color_int):
     rgb_tuple = tuple((color_int >> (index * 8)) & (2**8 -1) for index in range(3))
     return rgb_tuple
 
+
+def make_hue_circle(seed_color, n_color=5):
+    """ Make ``Hue Circle`` with ``seed``.
+    Args:
+        seed_color: 3-length tuple. (R, G, B) 
+        n_color: the number of color.
+
+    Returns:
+        ``list`` of colors.
+    """
+    seed_color = Color(seed_color)
+    r, g, b = map(lambda x: x / 255, seed_color.rgb)
+    h, l, s = colorsys.rgb_to_hls(r, g, b)
+    hs = [(h + d / n_color) % 1.0 for d in range(n_color)]
+    colors = [colorsys.hls_to_rgb(h, l, s) for h in hs]
+    colors = [Color(color) for color in colors]
+    return colors
+
+
 if __name__ == "__main__":
-    fc = FairyColor(4343)
+    fc = Color(4343)
     number= fc.rgb_as_int()
-    fc = FairyColor("red")
+    fc = Color("red")
     color_tuple= fc.rgb_as_tuple()
     print(color_tuple)
