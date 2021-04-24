@@ -431,6 +431,8 @@ from fairypptx._shape.replace import replace
 from fairypptx._shape.editor import (
         ShapesEncloser, TitleProvider, BoundingResizer, ShapesResizer)
 from fairypptx._shape.selector import ShapesSelector as Selector
+from fairypptx._shape.maker import PaletteMaker
+
 
 if __name__ == "__main__":
     pass
