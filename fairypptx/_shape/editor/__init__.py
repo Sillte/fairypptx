@@ -123,6 +123,7 @@ class TitleProvider:
         shape.tighten()
         shape.api.Top = c_box.top - shape.height
         shape.api.Left = c_box.left 
+        return shape
 
     def _yield_fontsize(self, fontsize, shapes):
         if fontsize is not None:
@@ -293,7 +294,6 @@ class BoundingResizer:
         pivot = (c_box.top, c_box.left)  # [y_min, x_min]
         ratios = (n_height / height, n_width / width)
         ratio = np.mean(ratios)
-        print("ratio", ratio)
         for shape in shapes:
             # Processings for all the shapes.
             shape.api.Left = (shape.api.Left - pivot[1]) * ratios[1]  + pivot[1]

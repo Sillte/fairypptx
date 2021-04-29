@@ -2,45 +2,121 @@
 
 """
 
+from typing import Union
 import numpy as np
 from collections import defaultdict
 from fairypptx.box import Box, intersection_over_cover
-from typing import Union
+from fairypptx.slide import GridHandler
 
-class LocationAdjuster:
-    """ Focusing on shape, 
-    determine the size of shape. 
+
+class ShapesLocator:
+    """Locate `Shape` / `Shapes`
+
+    Args:
+        mode
+        `blank`:
+               To the center of maximum black are in the slide.
+        `center`:
+               To the center of the slide.
     """
-    def __init__(self, shape):
-        self.shape = shape
 
-    def center(self):
-        target_width = self.shape.box.width
-        target_height = self.shape.box.height
-        slide = self.shape.slide
-        slide_width = slide.box.width
-        slide_height = slide.box.height
+    def __init__(self, mode: str = "blank"):
+        self.mode = mode.lower()
+
+    def __call__(self, arg):
+        shapes = self._to_shapes(arg)
+        if self.mode == "center":
+            self._to_center(shapes)
+        elif self.mode == "blank":
+            self._to_blank_area(shapes)
+        else:
+            raise ValueError(f"Invalid mode `{mode}`.")
+        return arg 
+
+    def _to_shapes(self, arg):
+        """Convert to `Shapes`."""
+        from fairypptx.shape import Shape, Shapes
+        from fairypptx.object_utils import is_object
+        from typing import Sequence
+
+        if isinstance(arg, Shapes):
+            return arg
+        elif isinstance(arg, Sequence):
+            return Shapes(arg)
+        elif isinstance(arg, Shape):
+            return Shapes([arg])
+        elif is_object(arg, "Shapes"):
+            return Shapes(arg)
+        elif is_object(arg, "Shape"):
+            return Shapes(arg)
+        raise ValueError(f"Cannot interpret `{arg}`.")
+
+    def _to_blank_area(self, shapes):
+        shapes = self._to_shapes(shapes)
+        remove_ids = set(shape.api.Id for shape in shapes)
+        grid_handler = GridHandler(shapes.slide)
+        target_shapes = [
+            shape
+            for shape in grid_handler.slide.shapes
+            if shape.api.Id not in remove_ids
+        ]
+
+        r_occupations = grid_handler.make_occupations(target_shapes)
+        canvas = grid_handler.get_maximum_box(r_occupations)
+
+        box = shapes.circumscribed_box
+        x_margin = max((canvas.width - box.width) / 2, 0)
+        y_margin = max((canvas.height - box.height) / 2, 0)
+
+        dx = (canvas.left + x_margin) - box.left
+        dy = (canvas.top + y_margin) - box.top
+        for shape in shapes:
+            shape.left += dx
+            shape.top += dy
+        return shapes
+
+    def _to_center(self, shapes):
+        shapes = self._to_shapes(shapes)
+        c_box = shapes.circumscribed_box
+        target_width = c_box.width
+        target_height = c_box.width
+        slide_width = shapes[0].slide.box.width
+        slide_height = shapes[0].slide.box.height
         left = (slide_width - target_width) / 2
         top = (slide_height - target_height) / 2
-        self.shape.api.Left = left
-        self.shape.api.Top = top
-        return self.shape
+        return self._locate_shapes(shapes, left, top)
+
+    def _move_shapes(self, shapes, dx, dy):
+        """Move `Shapes`"""
+        raise NotImplementedError("")
+
+    def _locate_shapes(self, shapes, left, top):
+        """Locate `Shapes` so that the circumscribed box's
+        left and top becomes as specified.
+        """
+        current_box = shapes.circumscribed_box
+        current_left = current_box.left
+        current_top = current_box.top
+        for shape in shapes:
+            shape.left += left - current_left
+            shape.top += top - current_top
+        return shapes
 
 
 class ShapesAdjuster:
-    """Adjust `Shapes`. 
+    """Adjust `Shapes`.
 
     The interval changes depending of the given situation.
     Specifically, the decision of the circumscribed box differs.
 
     * `is_edge_interval = True`:
     One `Shape` enclose all the shapes. the circumscribed box is this shapes's.
-    * `is_edge_interval = False`: 
+    * `is_edge_interval = False`:
     The circumscribed box is determined by all the shapes.
     """
+
     def __init__(self, axis=None):
         self.axis = axis
-
 
     def _yield_axis(self, axis, shapes):
         if axis == "width":
@@ -67,8 +143,7 @@ class ShapesAdjuster:
         c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
         return c_box
 
-
-    def _adjust_horizontally(self, shapes, c_box, is_edge_interval): 
+    def _adjust_horizontally(self, shapes, c_box, is_edge_interval):
 
         boxes = [shape.box for shape in shapes]
         # c -> circumscribed
@@ -77,7 +152,7 @@ class ShapesAdjuster:
 
         r_width = c_right - c_left
         s_width = sum(box.width for box in boxes)
-        # `n_interval` and offset setting is 
+        # `n_interval` and offset setting is
         if not is_edge_interval:
             n_interval = len(shapes) - 1
             interval_width = (r_width - s_width) / n_interval
@@ -91,7 +166,7 @@ class ShapesAdjuster:
             shape.left = current_x
             current_x += shape.width + interval_width
 
-    def _adjust_vertially(self, shapes, c_box, is_edge_interval): 
+    def _adjust_vertially(self, shapes, c_box, is_edge_interval):
         boxes = [shape.box for shape in shapes]
 
         c_top = c_box.top
@@ -113,7 +188,6 @@ class ShapesAdjuster:
             shape.top = current_y
             current_y += shape.height + interval_height
 
-
     def __call__(self, shapes):
         axis = self._yield_axis(self.axis, shapes)
         c_box = self._yield_circumscribed_box(shapes)
@@ -125,7 +199,7 @@ class ShapesAdjuster:
         else:
             c_shape = None
 
-        if c_shape: 
+        if c_shape:
             shapes = [shape for shape in shapes if shape.Id != c_shape.Id]
             is_edge_interval = True
         else:
@@ -206,15 +280,16 @@ class AlignMode:
 class ShapesAligner:
     """Align Shapes.
 
-    Args:    
-        `axis`; the direction of align. 
-        * `axis`: 0(height, y, horizontally) -> horizontally. 
+    Args:
+        `axis`; the direction of align.
+        * `axis`: 0(height, y, horizontally) -> horizontally.
         * `axis`: 1(width, x, width) -> vertically..
-        `mode`: The mode which specifies which edge is aligned.  
-            - start 
+        `mode`: The mode which specifies which edge is aligned.
+            - start
             - center
-            - end 
+            - end
     """
+
     def __init__(self, axis=None, mode=None):
         self.axis = axis
         self.mode = mode
@@ -240,7 +315,6 @@ class ShapesAligner:
             mode = "start"
         return AlignMode(mode)
 
-
     def _align_vertically(self, shapes, mode):
         boxes = [shape.box for shape in shapes]
         if mode.is_start():
@@ -250,7 +324,7 @@ class ShapesAligner:
         elif mode.is_end():
             bottom = max(box.bottom for box in boxes)
             for shape in shapes:
-                shape.api.Top = bottom - shape.api.Height 
+                shape.api.Top = bottom - shape.api.Height
         elif mode.is_center():
             center_y = sum(box.center[0] for box in boxes)
             for shape in shapes:
@@ -280,7 +354,7 @@ class ShapesAligner:
         mode = self._yield_mode(self.mode)
 
         if len(shapes) <= 1:
-            return 
+            return
 
         if axis == 0:
             self._align_vertically(shapes, mode)
@@ -313,11 +387,11 @@ class ClusterMaker:
 
     @classmethod
     def suggest_axis(cls, shapes, iou_thresh=0.1):
-        """ Suggest the appropriate axis.
+        """Suggest the appropriate axis.
         Typically, as the number of clusters is smaller, better.
         """
-        clusters_0 = cls(axis=0, iou_thresh=iou_thresh)(shapes) 
-        clusters_1 = cls(axis=1, iou_thresh=iou_thresh)(shapes) 
+        clusters_0 = cls(axis=0, iou_thresh=iou_thresh)(shapes)
+        clusters_1 = cls(axis=1, iou_thresh=iou_thresh)(shapes)
         if len(clusters_0) <= len(clusters_1):
             return 0
         else:
@@ -326,6 +400,7 @@ class ClusterMaker:
     def _cluster(self, shapes, axis=0):
         assert axis in {0, 1}
         c_axis = 0 if axis == 1 else 1
+
         def _is_same_cluster(shape1, shape2):
             box1 = shape1.box
             box2 = shape2.box
@@ -337,6 +412,7 @@ class ClusterMaker:
                 return shape.box.left
             else:
                 return shape.box.top
+
         shapes = sorted(shapes, key=sort_key)
         boxes = [shape.box for shape in shapes]
         selected = set()
@@ -344,7 +420,7 @@ class ClusterMaker:
         n_shape = len(shapes)
         for i1 in range(n_shape):
             if i1 in selected:
-                continue 
+                continue
             selected.add(i1)
             g_indices[i1].append(i1)
             for i2 in range(i1 + 1, n_shape):
@@ -355,12 +431,14 @@ class ClusterMaker:
                     g_indices[i1].append(i2)
         keys = sorted(g_indices, key=lambda i: sort_key(shapes[i]))
         from fairypptx import Shapes  # To thwart cyclic reference.
+
         clusters = [Shapes([shapes[i] for i in g_indices[key]]) for key in keys]
         return clusters
 
     def __call__(self, shapes):
         axis = self._yield_axis(self.axis, shapes)
         return self._cluster(shapes, axis)
+
 
 class ClusterAligner:
     def __init__(self, axis=None, mode=None, iou_thresh=0.10):
@@ -386,7 +464,7 @@ class ClusterAligner:
         aligner = ShapesAligner(axis=axis, mode=self.mode)
         cluster_maker = ClusterMaker(axis=c_axis, iou_thresh=self.iou_thresh)
         clusters = cluster_maker(shapes)
-        for cluster in clusters: 
+        for cluster in clusters:
             aligner(cluster)
         return clusters
 
@@ -399,7 +477,7 @@ class ShapesArranger:
     def __call__(self, shapes):
         if self.axis == 0:
             return self._vertial_arrange(shapes)
-        elif self.axis == 1: 
+        elif self.axis == 1:
             return self._horizontal_arrange(shapes)
         else:
             raise NotImplementedError("Invalid.`axis`.")
@@ -413,7 +491,7 @@ class ShapesArranger:
             margin = self._to_margin(self.margin, shape, axis=0)
             shape.left = left
             shape.top = y
-            y += (shape.height + margin)
+            y += shape.height + margin
         return shapes
 
     def _horizontal_arrange(self, shapes):
@@ -425,18 +503,18 @@ class ShapesArranger:
             margin = self._to_margin(self.margin, shape, axis=1)
             shape.left = x
             shape.top = top
-            x += (shape.width + margin)
+            x += shape.width + margin
         return shapes
 
     def _to_margin(self, margin, shape, axis=0):
         """Return the pixel margin.
         If margin is less than 5, it is regarded as ratio of the length of shape.
-        Otherwise, it is regarded as the pixels. 
+        Otherwise, it is regarded as the pixels.
         """
         assert axis in {0, 1}
         if 5.0 <= margin:
             return margin
-        else: 
+        else:
             if axis == 0:
                 return shape.height * margin
             else:

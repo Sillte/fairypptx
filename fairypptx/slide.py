@@ -212,3 +212,6 @@ class Slide:
             raise ValueError(f"Cannot find an appropriate `slide`.")
 
         raise ValueError(f"Cannot interpret `arg`; {arg}.")
+
+# To solve the order of `import`.
+from fairypptx._slide import GridHandler

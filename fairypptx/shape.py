@@ -18,8 +18,7 @@ from fairypptx._shape import FillFormat, FillFormatProperty
 from fairypptx._shape import LineFormat, LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape.stylist import ShapeStylist
-from fairypptx._shape import LocationAdjuster
-from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner
+from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner, ShapesArranger, ShapesLocator
 from fairypptx import registory_utils
 
 
@@ -95,6 +94,24 @@ class Shapes:
         assert len(result) == len(shape_list)
 
         return result
+
+    @property
+    def slide(self):
+        slide_objects = [elem.api.Parent for elem in self]
+        assert set(elem.SlideId for elem in slide_objects)
+        return Slide(slide_objects[0])
+
+    @property
+    def circumscribed_box(self):
+        """Return Box which circumscribes `Shapes`.
+        """
+        boxes = [shape.box for shape in self]
+        c_left = min(box.left for box in boxes)
+        c_top = min(box.top for box in boxes)
+        c_right = max(box.right for box in boxes)
+        c_bottom = max(box.bottom for box in boxes)
+        c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
+        return c_box
 
     def select(self):
         """ Select.
@@ -302,11 +319,10 @@ class Shape:
             shape = Shape(shapes.add(arg, **kwargs))
         else:
             raise ValueError(f"`{type(arg)}`, `{arg}` is not interpretted.")
-
         assert isinstance(shape, Shape)
-        l_adjuster = LocationAdjuster(shape)
-        l_adjuster.center()
+        ShapesLocator(mode="center")(shape)
         return shape
+
 
     @classmethod
     def make_textbox(cls, arg, **kwargs):
