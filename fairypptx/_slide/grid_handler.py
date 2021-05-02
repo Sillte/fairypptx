@@ -74,10 +74,8 @@ class RangeIndexer:
 
 z_values = [0, 1, 3.5]
 indexer = RangeIndexer(z_values)
-print(indexer.to_index(-45))
 assert indexer.to_index(2.0) == 1
 assert indexer.to_index(-45) == -1
-print(indexer.to_index(66))
 # exit(0)
 
 
@@ -207,7 +205,6 @@ class GridHandler:
                 for ei in range(si, n_pivot - 1):
                     d += pivots[ei + 1] - pivots[ei]
                     result[(si, ei)] = d
-                    print(si, ei, d)
             assert len(result) == (len(pivots)) * (len(pivots) - 1) / 2
             return result
 
@@ -237,7 +234,6 @@ class GridHandler:
         for yi in range(yn):
             for xi in range(xn):
                 pair, area = _to_maximum(yi, xi)
-                print(yi, xi, pair, area, occupations[yi, xi])
                 if pair is None:
                     continue
                 key = (*pair, *(yi, xi))

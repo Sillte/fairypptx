@@ -12,6 +12,26 @@ from fairypptx.shape import Shape, Shapes
 from fairypptx.shape import Box
 from fairypptx.table import Table
 
+from fairypptx.shape import Shape, Shapes
+from fairypptx.object_utils import is_object
+from typing import Sequence
+
+
+def _to_shapes(arg):
+    """Convert to `Shapes`."""
+
+    if isinstance(arg, Shapes):
+        return arg
+    elif isinstance(arg, Sequence):
+        return Shapes(arg)
+    elif isinstance(arg, Shape):
+        return Shapes([arg])
+    elif is_object(arg, "Shapes"):
+        return Shapes(arg)
+    elif is_object(arg, "Shape"):
+        return Shapes(arg)
+    raise ValueError(f"Cannot interpret `{arg}`.")
+
 
 class ShapesEncloser:
     """Enclose the specified shapes.
@@ -64,7 +84,8 @@ class ShapesEncloser:
     def __call__(self, shapes):
         if not shapes:
             return None
-        c_box = self.circumscribed_box(shapes)
+        shapes = _to_shapes(shapes)
+        c_box = shapes.circumscribed_box
         left_margin, top_margin, right_margin, bottom_margin = self._margin_solver(c_box)
 
         width = c_box.width + (left_margin + right_margin)
@@ -80,16 +101,6 @@ class ShapesEncloser:
             shape.line = self.linecolor 
         shape.api.Zorder(constants.msoSendToBack)
         return Shapes(list(shapes) + [shape])
-
-    @classmethod
-    def circumscribed_box(cls, shapes):
-        boxes = [shape.box for shape in shapes]
-        c_left = min(box.left for box in boxes)
-        c_top = min(box.top for box in boxes)
-        c_right = max(box.right for box in boxes)
-        c_bottom = max(box.bottom for box in boxes)
-        c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
-        return c_box
 
 
 class TitleProvider:
@@ -111,7 +122,8 @@ class TitleProvider:
         self.underline = underline
 
     def __call__(self, shapes):
-        c_box = ShapesEncloser.circumscribed_box(shapes)
+        shapes = _to_shapes(shapes)
+        c_box = shapes.circumscribed_box
         shape = Shape.make(1)
         shape.fill = self.fill
         shape.line = self.line
@@ -247,14 +259,14 @@ class BoundingResizer:
                 fontsize = 12
 
         if fontsize is not None:
-            c_box = ShapesEncloser.circumscribed_box(shapes)
+            c_box = shapes.circumscribed_box
             c_fontsize = self._get_minimum_fontsize(shapes)
             ratio = fontsize / c_fontsize
             size = ratio 
 
 
         if isinstance(size, (int , float)):
-            c_box = ShapesEncloser.circumscribed_box(shapes)
+            c_box = shapes.circumscribed_box
             c_width = c_box.x_length
             c_height = c_box.y_length
             n_width = c_width * size
@@ -278,17 +290,17 @@ class BoundingResizer:
         """
 
         # If the given is `Shape`, then, `Shape` is returned.
-        is_shape = False
         if isinstance(shapes, Shape):
-            shapes = Shapes([shapes])
             is_shape = True
-        shapes = Shapes(shapes)
-
+        else:
+            is_shape = False
         if not shapes:
             return shapes
+        shapes = _to_shapes(shapes)
+
 
         n_width, n_height = self._yield_size(shapes)
-        c_box = ShapesEncloser.circumscribed_box(shapes)
+        c_box = shapes.circumscribed_box
         width, height = c_box.x_length, c_box.y_length
 
         pivot = (c_box.top, c_box.left)  # [y_min, x_min]

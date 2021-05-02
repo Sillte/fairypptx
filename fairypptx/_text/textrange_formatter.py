@@ -5,7 +5,7 @@
 * Output: __call__(self, object).
 * Must be serialiable by `.pkl`.
 """
-from enum import Enum
+from enum import IntEnum
 from fairypptx import constants 
 
 SUFFICIENT_SMALL = 0.1
@@ -51,7 +51,7 @@ class ParagraphTextRangeFormatter:
         return self
 
 
-class _ParagraphType(Enum):
+class _ParagraphType(IntEnum):
     BulletNone = 0
     BulletUnNumbered = 1
     BulletNumbered = 2

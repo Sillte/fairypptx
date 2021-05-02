@@ -220,6 +220,10 @@ class ObjectDictMixin(UserDict):
         """Return this class without `_api`."""
         return self.cls(self)
 
+    def __getstate__(self):
+        # This is for serialization of `pickle`.
+        return {"data": self.data, "name": self.name, "readonly": self.readonly}
+
     def __setitem__(self, key, item):
         super().__setitem__(key, item)
         if self._api:
@@ -233,7 +237,7 @@ class ObjectDictMixin(UserDict):
 
     def __setattr__(self, name, value):
 
-        # Without `_api`, the behaviro is the same as `UserDict`.
+        # Without `_api`, the behavior is the same as `UserDict`.
         if "_api" not in self.__dict__:
             object.__setattr__(self, name, value)
             return

@@ -181,7 +181,7 @@ class TextRange:
             elem.api.ParagraphFormat.Bullet.Type = constants.ppBulletUnnumbered
 
 
-    def register(self, key, disk=False):
+    def register(self, key, disk=True):
         """ Currently, depending of Paragraphs,
         Style specification rule is ambiguous. 
         Here, (IndentLevel, #paragraphs)'s format is stored.
@@ -194,7 +194,6 @@ class TextRange:
     def like(self, style):
         if isinstance(style, str):
             formatter = registory_utils.fetch("TextRange", style)
-            print(formatter)
             formatter(self)
             return self
         else:

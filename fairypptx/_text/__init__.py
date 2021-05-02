@@ -178,12 +178,14 @@ class ParagraphFormat(ObjectDictMixin):
 
 
 
+
 if __name__ == "__main__":
     from fairypptx import TextRange
     f1 = Font()
     tr = TextRange()
     p = ParagraphFormat(tr.ParagraphFormat)
-    print(p)
+    import pickle
+    pickle.dumps(p)
     s = tr.font
     f2 = Font(tr.Font)
 

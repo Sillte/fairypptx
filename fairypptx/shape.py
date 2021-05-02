@@ -37,7 +37,6 @@ class Shapes:
             self.app = Application()
         else:
             self.app = app
-
         self._api, self._object_list = self._construct(arg)
         assert object_utils.get_type(self._api) == "Shapes"
 
@@ -83,7 +82,6 @@ class Shapes:
         """
 
         def _inner(shape):
-            print(shape.api.Type)
             if shape.api.Type == constants.msoGroup:
                 return sum((_inner(Shape(elem)) for elem in shape.api.GroupItems), [])
             else:
@@ -162,16 +160,6 @@ class Shapes:
                 pass
             else:
                 return values
-                #if all(value == values[0] for value in values):
-                #    return value
-                #else:
-                #    raise ValueError(
-                #        (
-                #            "Non-equivalent values over the Shapes.",
-                #            f"Maybe `{name}` returns Object?",
-                #            f"values=`{values}`",
-                #        )
-                #    )
         raise AttributeError(f"Cannot find the attribute `{name}`.")
 
     def __setattr__(self, name, value):
