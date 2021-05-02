@@ -207,7 +207,7 @@ class ObjectDictMixin(UserDict):
     def __init__(self, arg=None, **kwargs):
         self.cls = type(self)
         if self.cls.name:
-            self.name = name
+            self.name = self.cls.name
         else:
             self.name = self.cls.__name__
         self.data, self._api = self._construct(arg, **kwargs)
