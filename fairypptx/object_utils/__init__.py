@@ -419,7 +419,7 @@ class ObjectItems:
         """
         if isinstance(key, int):
             if key < 0:
-                key = key + len(self) - 1
+                key = key + len(self)
             if not (0 <= key < len(self)):
                 raise IndexError(
                     f"Size is {len(self)}, index is {key} is out of range."

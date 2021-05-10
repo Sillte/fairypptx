@@ -105,6 +105,7 @@ class RowsColumnsMixin(ObjectClassMixin):
     ------------------------------
     * Please specify `child_class` to be `Row` or  `Column`.
     """
+
     # Please specify `child_class`
     child_class = None
 
@@ -143,8 +144,19 @@ class RowsColumnsMixin(ObjectClassMixin):
                 ret.shape = values
             return ret
         elif isinstance(obj, int):
-            obj = self.items.normalize(obj)
-            ret = self.items.cls(self.api.Add(obj + 1))
+            # Here, change behavior 
+            # when `obj` is positive or negative
+            # due to the diffrence of forward and backword.
+            if 0 <= obj:
+                obj = self.items.normalize(obj)
+                ret = self.items.cls(self.api.Add(obj + 1))
+            else:
+                obj = self.items.normalize(obj) + 1
+                if obj == len(self):
+                    ret = self.items.cls(self.api.Add())
+                else:
+                    ret = self.items.cls(self.api.Add(obj + 1))
+
             if values:
                 ret.shape = values
             return ret
