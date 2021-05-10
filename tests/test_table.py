@@ -53,6 +53,11 @@ def test_insert():
     assert table[4, 1].shape.text == "Werewolf"
     assert table[2, 0].text == "Human"
 
+    table = Table(shape)
+    table.rows.insert(-1)
+    assert table.size == (8, 2)
+
+
 def test_delete():
     """Check behavior of `insert` of `Row` / `Rows`.
     """
