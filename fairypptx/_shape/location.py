@@ -79,7 +79,7 @@ class ShapesLocator:
         shapes = self._to_shapes(shapes)
         c_box = shapes.circumscribed_box
         target_width = c_box.width
-        target_height = c_box.width
+        target_height = c_box.height
         slide_width = shapes[0].slide.box.width
         slide_height = shapes[0].slide.box.height
         left = (slide_width - target_width) / 2
