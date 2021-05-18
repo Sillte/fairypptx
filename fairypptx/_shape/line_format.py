@@ -1,6 +1,6 @@
 from collections.abc import Sequence 
 from fairypptx import constants
-from fairypptx.object_utils import ObjectDictMixin, getattr
+from fairypptx.object_utils import ObjectDictMixin, getattr, setattr
 from fairypptx.color import Color
 
 class LineFormat(ObjectDictMixin):
@@ -43,9 +43,29 @@ class LineFormat(ObjectDictMixin):
             keys += ["EndArrowheadStyle", "EndArrowheadLength", "EndArrowheadWidth"]
         d = {key: getattr(api_object, key) for key in keys}
 
+        # (2021/05/19)
+        # For some keys, invalid values are initially set.
+        # `setattr` of invalid values raises `ValueError`.
+        # If these values are stored as `dict`, 
+        # failure transpire in `apply` of `ObjectDictMixin`. 
+        # Hence, the following procedure is performed.
+        #
+        # If it takes times, I'd  like to consider
+        # to apply check with the limited sub-group of `keys`.
+        remove_keys = set()
+        for key, value in d.items():
+            try:
+                setattr(api_object, key, value)
+            except ValueError:
+                remove_keys.add(key)
+        d = {key: value for key, value in d.items() if key not in remove_keys}
+
+        # (2021/05/19) I feel the following procedure becomes unnecessary, 
+        #  by `remove_keys`
         # Invalid (not supported) values are over-written.
-        if d["DashStyle"] == constants.msoLineDashStyleMixed:
-            d["DashStyle"] = constants.msoLineSolid
+        #if d["DashStyle"] == constants.msoLineDashStyleMixed:
+        #    d["DashStyle"] = constants.msoLineSolid
+
         return d
 
 

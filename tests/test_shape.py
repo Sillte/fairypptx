@@ -6,6 +6,7 @@ from fairypptx import constants
 from fairypptx import Application
 from fairypptx import constants
 
+
 def test_line_setter():
     shape = Shape.make(1)
 
@@ -45,11 +46,12 @@ def test_fill_setter():
     assert shape.api.Fill.Visible == constants.msoTrue
     assert shape.api.Fill.ForeColor.RGB == Color(color).as_int()
     transparency = 1 - Color(color).alpha
-    assert abs(shape.api.Fill.Transparency - transparency) < 1.e-4
+    assert abs(shape.api.Fill.Transparency - transparency) < 1.0e-4
+
 
 def test_text():
     shape = Shape.make(1)
-    target =  "Happy?"
+    target = "Happy?"
     shape.text = target
     assert shape.api.TextFrame.TextRange.Text == target
     assert target == shape.text
@@ -61,11 +63,13 @@ def test_image():
     image = shape.to_image()
     assert isinstance(image, Image.Image)
 
+
 def test_select():
     shape = Shape.make(1)
     shape.select(False)
     App = Application()
     assert App.ActiveWindow.Selection.Type == constants.ppSelectionShapes
+
 
 def test_tighten():
     shape = Shape.make(1)
@@ -76,6 +80,27 @@ def test_tighten():
     assert height != shape.Height
 
 
+def test_like():
+    # The case without texts.
+    shape = Shape.make(1)
+    shape.register("__pytest__")
+    line_dict = shape.line
+    shape = Shape.make(1)
+    shape.like("__pytest__")
+    assert line_dict == shape.line
+
+    # The case with texts.
+    shape = Shape.make(1)
+    shape.text = "Hoghoge"
+    shape.textrange.font.size = 18
+    shape.register("__pytest__")
+
+    shape = Shape.make(1)
+    shape.text = "Target"
+    shape.textrange.font.size = 32
+    shape.like("__pytest__")
+    assert shape.textrange.font.size == 18
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "--capture=no"])
-
