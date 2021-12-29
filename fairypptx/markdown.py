@@ -68,7 +68,7 @@ class Markdown:
         selection = Application().api.ActiveWindow.Selection
         # Necessary to prevent deadlock.
         if selection.Type == constants.ppSelectionText:
-            selection.UnSelect()
+            selection.Unselect()
 
         content = _to_content(arg)
         # [TODO] Assume that content is markdown.
@@ -103,8 +103,8 @@ class Markdown:
         # [TODO] It this strategy is all right?  
         if 1 < len(shapes):
             shapes = sorted(shapes, key=lambda shape: (shape.box.top, shape.box.left))
-            c_x = shapes[0].left  
-            c_y = shapes[0].top
+            c_x = shapes[0].api.Left  
+            c_y = shapes[0].api.Top
             for shape in shapes:
                 shape.api.Left = c_x
                 shape.api.Top = c_y

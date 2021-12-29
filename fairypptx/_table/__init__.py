@@ -1,4 +1,3 @@
-from _ctypes import COMError
 from collections.abc import Sequence
 from PIL import Image
 import numpy as np

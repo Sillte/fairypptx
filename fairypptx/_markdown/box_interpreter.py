@@ -15,7 +15,7 @@ def interpret(shape):
     """ Interpret shape's textrange as markdown.
     """
     result_buffer = ""
-    paragraphs = list(shape.TextFrame.TextRange.Paragraphs())
+    paragraphs = list(shape.api.TextFrame.TextRange.Paragraphs())
     converter = _Converter(paragraphs)
     for paragraph in paragraphs:
         result_buffer += converter.start_paragraph(paragraph)

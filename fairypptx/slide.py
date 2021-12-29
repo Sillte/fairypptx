@@ -1,4 +1,5 @@
 from _ctypes import COMError
+from pywintypes import com_error
 from PIL import Image
 
 from fairypptx.presentation import Presentation
@@ -86,7 +87,7 @@ class Slides:
             try:
                 if App.ActiveWindow.Selection.SlideRange:
                     return self._construct(App.ActiveWindow.Selection.SlideRange)
-            except COMError:
+            except com_error:
                 pass
             slides = Presentation().slides
             return slides.api, slides._indices
@@ -196,12 +197,12 @@ class Slide:
             try:
                 if App.ActiveWindow.ViewType != constants.ppViewNormal:
                     App.ActiveWindow.ViewType = constants.ppViewNormal
-            except COMError:
+            except com_error:
                 pass
             try:
                 if App.ActiveWindow.Selection.SlideRange:
-                    return App.ActiveWindow.Selection.SlideRange[1]
-            except COMError:
+                    return App.ActiveWindow.Selection.SlideRange.Item(1)
+            except com_error:
                 pass
 
             pres = Presentation()

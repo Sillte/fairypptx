@@ -1,6 +1,6 @@
-from _ctypes import COMError
 from collections.abc import Sequence
 from collections import UserString
+from pywintypes import com_error
 from PIL import Image
 from fairypptx import constants
 from fairypptx.constants import msoTrue, msoFalse
@@ -192,7 +192,7 @@ class Shapes:
             shapes_objects = [
                 shape_object.Parent.Shapes for shape_object in shape_objects
             ]
-            assert len(set(shapes_objects)) == 1, "All the shapes must belong to the same slide."
+            assert len(set(elem.Parent.SlideID for elem in shapes_objects)) == 1, "All the shapes must belong to the same slide."
             return shapes_objects[0], shape_objects
         elif is_object(arg, "Shapes"):
             object_list = [arg.Item(index + 1) for index in range(arg.Count)]
@@ -221,7 +221,7 @@ class Shapes:
             App = self.app.api
             try:
                 Selection = App.ActiveWindow.Selection
-            except COMError as e:
+            except com_error as e:
                 # May be `ActiveWindow` does not exist. (esp at an empty file.)
                 pass
             else:
@@ -233,7 +233,7 @@ class Shapes:
                     shapes_objects = [
                         shape_object.Parent.Shapes for shape_object in shape_objects
                     ]
-                    assert len(set(shapes_objects)) == 1
+                    assert len(set(elem.Parent.SlideID for elem in shapes_objects)) == 1, "All the shapes must belong to the same slide."
                     shapes_object = shapes_objects[0]
                     return shapes_object, shape_objects
                 elif Selection.Type == constants.ppSelectionText:
@@ -244,7 +244,7 @@ class Shapes:
             slide = Slide()
             shape_objects = [elem for elem in slide.api.Shapes]
             return slide.api.Shapes, shape_objects
-        raise ValueError(f"Cannot interpret `arg`; {arg}.")
+        raise ValueError(f"Cannot interpret `arg`", arg.__class__)
 
 
 class Shape:
@@ -268,6 +268,43 @@ class Shape:
     @property
     def box(self):
         return Box(self.api)
+
+    @property
+    def left(self):
+        return self.api.Left
+
+    @left.setter
+    def left(self, value):
+        self.api.Left = value
+
+    @property
+    def top(self):
+        return self.api.Top
+
+    @top.setter
+    def top(self, value):
+        self.api.Top = value
+
+    @property
+    def width(self):
+        return self.api.Width
+
+    @width.setter
+    def width(self, value):
+        self.api.Width = value
+
+    @property
+    def height(self):
+        return self.api.Height
+
+    @height.setter
+    def height(self, value):
+        self.api.Height = value
+
+    
+    def select(self, replace=True):
+        return self.api.Select(replace)
+
 
     @property
     def size(self):
@@ -362,13 +399,13 @@ class Shape:
         Args:
             oneline: Modify so that text becomes 1 line.
         """
-        if self.api.HasTextframe:
+        if self.api.HasTextFrame:
             if oneline is True:
                 self.api.TextFrame.TextRange.Text = self.text.replace("\r", "").replace(
                     "\n", ""
                 )
             with stored(self.api, ("TextFrame.AutoSize", "TextFrame.WordWrap")):
-                self.api.TextFrame.Autosize = constants.ppAutoSizeShapeToFitText
+                self.api.TextFrame.AutoSize = constants.ppAutoSizeShapeToFitText
                 self.api.TextFrame.WordWrap = constants.msoFalse
         return self
 

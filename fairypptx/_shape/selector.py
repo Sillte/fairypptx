@@ -1,6 +1,7 @@
 from fairypptx.shape import Shapes, Shape
 from fairypptx.shape import Shapes
 import _ctypes 
+from pywintypes import com_error
 
 from fairypptx.slide import Slide
 
@@ -19,7 +20,7 @@ class ShapesSelector:
                 try:
                     if func(shape):
                         return shape
-                except _ctypes.COMError:
+                except com_error:
                     pass
             return None
         if isinstance(query, str):
@@ -28,7 +29,7 @@ class ShapesSelector:
                 try:
                     if shape.text.strip().startswith(query):
                         return shape
-                except _ctypes.COMError:
+                except com_error:
                     pass
             return None
         return None
@@ -47,7 +48,7 @@ class ShapesSelector:
                 try:
                     if shape.text.strip().find(query) != -1:
                         result.append(shape)
-                except _ctypes.COMError:
+                except com_error:
                     pass
         if result:
             return Shapes(result)

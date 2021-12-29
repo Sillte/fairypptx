@@ -10,7 +10,6 @@ Desire:
 
 """
 
-from _ctypes import COMError
 import itertools
 from collections.abc import Sequence
 from PIL import Image

@@ -7,6 +7,7 @@ As you can easily assumes, `editor` is a high-level api, so
 
 import numpy as np 
 import _ctypes
+from pywintypes import com_error
 from fairypptx import constants
 from fairypptx.shape import Shape, Shapes
 from fairypptx.shape import Box
@@ -228,7 +229,7 @@ class BoundingResizer:
             else:
                 try:
                     fontsize = self._to_minimum_fontsize(shape.textrange)
-                except _ctypes.COMError as e:
+                except com_error as e:
                     pass
                 else:
                     if fontsize:
@@ -322,7 +323,7 @@ class BoundingResizer:
             else:
                 try:
                     self._set_fontsize(shape.textrange, ratio)
-                except _ctypes.COMError as e:
+                except com_error as e:
                     pass
 
         if not is_shape:

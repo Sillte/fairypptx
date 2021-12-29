@@ -9,14 +9,14 @@ def test_is_object():
     assert object_utils.is_object("string") is False
     application = Application()
     assert object_utils.is_object(application) is False
+    print("check", application.api.__class__)
     assert object_utils.is_object(application.api) is True
 
 
 def test_get_type():
     application = Application()
     assert object_utils.get_type(application.api) == "Application"
-    with pytest.raises(AttributeError):
-        object_utils.get_type("non-Object")
+    assert object_utils.get_type(None) is None
 
 
 def test_upstream():
@@ -42,7 +42,7 @@ def test_stored():
     # Specify `str`.
     shape.api.Line.Weight = 3
     with object_utils.stored(shape.api, "Line.Weight"):
-        shape.api.LineWeight = 5
+        shape.api.Line.Weight = 5
     assert shape.api.Line.Weight  == 3
 
     # Specified by `Sequence`.

@@ -1,9 +1,15 @@
-from comtypes import client
+# from comtypes import client
+from win32com.client import DispatchEx, GetActiveObject
+from pywintypes import com_error
 
 
 class Application:
     def __init__(self):
-        self.api = client.CreateObject("Powerpoint.Application")
+        try:
+            api = GetActiveObject("Powerpoint.Application")
+        except com_error:
+            api = DispatchEx("Powerpoint.Application")
+        self.api = api
         self.api.Visible = True
 
     def __getattr__(self, name): 
@@ -14,7 +20,7 @@ class Application:
     def presentation(self):
         try:
             return Presentation(self.api.ActivePresentation)
-        except COMError:
+        except com_error:
             pass
 
         # Return the first Presentation.

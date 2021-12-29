@@ -4,7 +4,8 @@ Utility functions for handling Objects.
 
 """
 import builtins
-from _ctypes import COMError
+from win32com.client import CDispatch, DispatchBaseClass, CoClassBaseClass
+from pywintypes import com_error
 from contextlib import contextmanager
 from collections.abc import Sequence
 from collections import UserDict, UserString
@@ -17,7 +18,12 @@ from fairypptx import registory_utils
 
 def get_type(instance):
     """Return the Capitalized Object Type Name."""
-    return getattr(type(instance), "__com_interface__").__name__.strip("_").capitalize()
+    if instance is None:
+        return None
+    return instance.__class__.__name__.strip("_").capitalize()
+    #except AttributeError: 
+    #    return None
+    # return getattr(type(instance), "__com_interface__").__name__.strip("_").capitalize()
 
 
 def is_object(instance, name=None):
@@ -34,14 +40,13 @@ def is_object(instance, name=None):
     PowerPoint, even if ``True`` is returned.
 
     """
-    try:
-        c_name = get_type(instance)
-    except AttributeError:
-        return False
+    flag = isinstance(instance, (DispatchBaseClass, CoClassBaseClass))
+    c_name = get_type(instance)
+    print("c_name", c_name, instance.__class__)
     if name:
-        return name.capitalize() == c_name
+        return flag and (name.capitalize() == c_name)
     else:
-        return True
+        return flag
 
 
 def upstream(instance, name):
@@ -55,17 +60,14 @@ def upstream(instance, name):
     """
     target = instance
     while True:
+        type_name = get_type(target)
+        print("type_name", type_name, name.capitalize())
+        if type_name == name.capitalize():
+            return target
         try:
-            type_name = get_type(target)
-        except AttributeError:
-            raise ValueError(f"`{instance}` is not regarded as Object.")
-        else:
-            if type_name == name.capitalize():
-                return target
-        try:
-            target = target.parent
+            target = target.Parent
         except AttributeError as e:
-            raise ValueError(f"`{name}` is not an ancestor of `{instance}`.")
+            raise ValueError(f"`{name}` is not an ancestor of `{instance.__class__}`.")
 
 
 def setattr(instance, attr, value):
@@ -88,7 +90,7 @@ def setattr(instance, attr, value):
         builtins.setattr(target, elems[-1], value)
     except AttributeError as e:
         raise AttributeError(f"`{value}` cannot be set to `{attr}`") from e
-    except COMError as e:
+    except com_error as e:
         raise ValueError(f"`{value}` cannot be set to `{attr}`") from e
 
 

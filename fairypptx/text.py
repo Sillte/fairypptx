@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from collections import defaultdict
-from _ctypes import COMError
+from pywintypes import com_error
 from fairypptx import Shape
 from fairypptx import Shape, Application
 from pprint import pprint
@@ -81,7 +81,7 @@ class TextRange:
             App = self.app.api
             try:
                 Selection = App.ActiveWindow.Selection
-            except COMError as e: 
+            except com_error as e: 
                 # May be `ActiveWindow` does not exist. (esp at an empty file.)
                 pass
             else:

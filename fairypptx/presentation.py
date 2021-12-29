@@ -1,7 +1,7 @@
 from fairypptx.application import Application
 from pathlib import Path
 from collections import UserString
-from _ctypes import COMError
+from pywintypes import com_error
 from fairypptx.object_utils import is_object
 
 class Presentation:
@@ -42,7 +42,7 @@ class Presentation:
             App = self.app.api
             try:
                 return App.ActivePresentation
-            except COMError:
+            except com_error:
                 pass
 
             # Return the first Presentation.
