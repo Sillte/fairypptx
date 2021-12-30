@@ -42,7 +42,6 @@ def is_object(instance, name=None):
     """
     flag = isinstance(instance, (DispatchBaseClass, CoClassBaseClass))
     c_name = get_type(instance)
-    print("c_name", c_name, instance.__class__)
     if name:
         return flag and (name.capitalize() == c_name)
     else:
@@ -61,8 +60,8 @@ def upstream(instance, name):
     target = instance
     while True:
         type_name = get_type(target)
-        print("type_name", type_name, name.capitalize())
-        if type_name == name.capitalize():
+        # print("type_name", type_name, name.capitalize())
+        if type_name.capitalize() == name.capitalize():
             return target
         try:
             target = target.Parent
