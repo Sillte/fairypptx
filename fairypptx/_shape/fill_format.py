@@ -37,7 +37,7 @@ class FillFormat(ObjectDictMixin):
 
     def to_dict(self, api_object):
         data = {key: getattr(api_object, key) for key in self.common_keys}
-        # data["Type"] = type_valkue
+        # data["Type"] = type_value
         type_value = getattr(api_object, "Type")
         if type_value in self.type_to_keys:
             return dict(data,  **{key: getattr(api_object, key) for key in self.type_to_keys[type_value]})
