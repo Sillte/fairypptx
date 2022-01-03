@@ -24,7 +24,7 @@ from collections.abc import Mapping
 from fairypptx import constants
 from fairypptx.color import Color
 from fairypptx import object_utils
-from fairypptx.object_utils import ObjectDictMixin
+from fairypptx.object_utils import ObjectDictMixin, to_api2
 from fairypptx import registory_utils
 
 class Text(UserString):
@@ -128,7 +128,11 @@ class Font(ObjectDictMixin):
 
     @color.setter
     def color(self, value):
-        self["Color.RGB"] = Color(value).as_int()
+        value = Color(value)
+        self["Color.RGB"] = value.as_int()
+        if value.alpha < 1:
+            api2 = to_api2(self.api)
+            api2.Fill.Transparency = 1 - value.alpha 
 
     @property
     def size(self):

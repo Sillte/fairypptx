@@ -434,7 +434,26 @@ class Shape:
         """Return whether this is NOT Grouped Object.
         """
         return self.api.Type != constants.msoGroup
-        
+
+    def is_child(self):
+        """Return whether this is child or not. 
+        """
+        return self.api.Child == constants.msoTrue
+
+
+    @property
+    def parent(self):
+        assert self.is_child()
+        return Shape(self.api.ParentGroup)
+
+    @property
+    def children(self):
+        assert not self.is_leaf()
+        return Shapes([elem for elem in self.api.GroupItems])
+
+    def ungroup(self):
+        return Shapes(self.api.Ungroup())
+
 
     def __getattr__(self, name):
         if "_api" not in self.__dict__:

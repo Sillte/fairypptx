@@ -11,6 +11,7 @@ from fairypptx.text import TextFrame, TextRange, Text # NOQA
 from fairypptx.table import Table, DFTable # NOQA
 
 from fairypptx.markdown import Markdown
+from fairypptx.parts.latex import Latex  # NOQA
 
 
 if __name__ == "__main__":

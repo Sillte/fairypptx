@@ -1,9 +1,7 @@
 from collections.abc import Sequence
 from collections import defaultdict
 from pywintypes import com_error
-from fairypptx import Shape
 from fairypptx import Shape, Application
-from pprint import pprint
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream
 from fairypptx import registory_utils
@@ -24,6 +22,8 @@ class TextFrame:
     def _fetch_api(self, arg):
         if is_object(arg, "TextFrame"):
             return arg
+        elif is_object(arg, "TextFrame2"):
+            return arg
         elif isinstance(arg, TextFrame):
             return arg.api
         elif is_object(arg, "Shape"):
@@ -37,7 +37,19 @@ class TextFrame:
 
     @property
     def api(self):
-        return self._api
+        if is_object(self._api, "TextFrame"):
+            return self._api
+        elif is_object(self._api, "TextFrame2"):
+            return self._to_api(self._api)
+        raise RuntimeError("Bug.")
+
+    @property
+    def api2(self):
+        if is_object(self._api, "TextFrame2"):
+            return self._api
+        elif is_object(self._api, "TextFrame"):
+            return self._to_api2(self._api)
+        raise RuntimeError("Bug.")
 
     def __getattr__(self, name): 
         if "_api" not in self.__dict__:
@@ -56,6 +68,20 @@ class TextFrame:
             # TODO: Maybe require modification. 
             object.__setattr__(self, name, value)
 
+    def _to_api2(self, api):
+        if is_object(api, "TextFrame2"):
+            return api
+        elif is_object(api, "TextFrame"):
+            return api.Parent.TextFrame2
+        raise ValueError()
+
+    def _to_api(self, api):
+        if is_object(api, "TextFrame"):
+            return api
+        elif is_object(api, "TextFrame2"):
+            return api.Parent.TextFrame2
+        raise ValueError()
+
 """
 [TODO] which is better? 
 At `TextRange`  class, internally, TextRange Objects are stored  by `sequence`. 
@@ -72,6 +98,8 @@ class TextRange:
 
     def _fetch_api(self, arg):
         if is_object(arg, "TextRange"):
+            return arg
+        elif is_object(arg, "TextRange2"):
             return arg
         elif is_object(arg, "Shape"):
             return arg.TextFrame.TextRange
@@ -98,7 +126,29 @@ class TextRange:
 
     @property
     def api(self):
-        return self._api
+        if is_object(self._api, "TextRange"):
+            return self._api
+        elif is_object(self._api, "TextRange2"):
+            try:
+                start = self._api.Start
+                length = self._api.Length
+                shape_api = upstream(self._api, "Shape")
+                return shape_api.TextFrame.TextRange.Characters(start, length)
+            except Exception as e:
+                raise ValueError from e
+        raise RuntimeError("Bug.")
+
+    @property
+    def api2(self):
+        if is_object(self._api, "TextRange2"):
+            return self._api
+        elif is_object(self._api, "TextRange"):
+            start = self._api.Start
+            length = self._api.Length
+            shape_api = upstream(self._api, "Shape")
+            return shape_api.TextFrame2.TextRange.GetCharacters(start, length)
+        raise RuntimeError("Bug.")
+
 
     @property
     def shape(self):

@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from fairypptx import object_utils
+from fairypptx.object_utils import to_api2, is_object
 from fairypptx import Application, Shapes, Shape
 
 
@@ -115,6 +116,17 @@ def test_hasattr():
     assert object_utils.hasattr(shape.api, "NONATTRIBUTE") == False
     assert object_utils.hasattr(shape.api, "TextFrame.TextRange.Text") == True
     assert object_utils.hasattr(shape.api, "TextFrame.TextRange.None") == False
+
+
+def test_api2():
+    shape = Shape.make(1)
+    shape.text = "hogehoge"
+    assert is_object(to_api2(Shape().textrange.api), "TextRange2")
+    assert is_object(to_api2(Shape().textrange.api.Font), "Font2")
+    assert is_object(to_api2(Shape().textrange.api.ParagraphFormat), "ParagraphFormat2")
+
+    # TextRange's regision should be compatible.
+    assert to_api2(shape.textrange.characters[4].api).Text == shape.text[4]
     
 
 if __name__ == "__main__":

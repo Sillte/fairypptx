@@ -128,6 +128,43 @@ def hasattr(instance, attr):
     return True
 
 
+def to_api2(api_object):
+    """Convert to the second version Object.
+
+    In Powerpoint Object model, 
+    some classes have 2 apis. (e.g. `TextRange` and `TextRange2`.) 
+
+    This function returns 2 version of `api`.  
+
+    TODO: This list is not complete. 
+    """
+    if is_object(api_object) and get_type(api_object).endswith("2"):
+        return api_object
+
+    def _to_textrange2_api(textrange_api):
+        shape_obj = upstream(api_object, "Shape")
+        start = textrange_api.Start
+        length = textrange_api.Length
+        return shape_obj.TextFrame2.TextRange.GetCharacters(start, length)
+
+    if is_object(api_object, "TextFrame"):
+        shape_api = upstream(api_object, "Shape")
+        return shape_api.TextFrame2
+    if is_object(api_object, "TextRange"):
+        return _to_textrange2_api(api_object)
+    if is_object(api_object, "Font"):
+        tr_api = upstream(api_object, "TextRange")
+        tr_api2 = _to_textrange2_api(tr_api)
+        return tr_api2.Font
+    if is_object(api_object, "ParagraphFormat"):
+        tr_api = upstream(api_object, "TextRange")
+        tr_api2 = _to_textrange2_api(tr_api)
+        return tr_api2.ParagraphFormat
+    if hasattr(api_object, "api"):
+        return to_api2(api_object)  # Maybe high-level class is given? 
+    raise ValueError("Cannot interpret the given `api_object`. ", api_object.__class__)
+
+
 @contextmanager
 def stored(instance, attrs):
     """Store the values of `instance`'s `attrs`.
