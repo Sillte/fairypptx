@@ -11,7 +11,7 @@ from fairypptx.constants import msoTrue, msoFalse
 from fairypptx import constants
 
 from fairypptx.object_utils import is_object, upstream
-from fairypptx.inner.MSO import constants
+from fairypptx import constants
 from pywintypes import com_error
 
 from fairyimage import from_latex

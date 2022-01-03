@@ -1,9 +1,28 @@
-# flake8: noqa
+from ._constants import MSO    # NOQA
+from ._constants import MSPPT  # NOQA
+
+class constants(MSO.constants, MSPPT.constants):
+    pass
+
+# ### 
+# We want to use `constants` as `from fairypptx.constants import msoTrue`. 
+# 
+# It is all right to execute below code, 
+# 
+# ```
+# d = globals()
+# for key in dir(constants):
+#    d[key] = getattr(constants, key)
+# ```
+# However, we cannot lookup the defintion of each constant.  
+# To counter-act against this problem, 
+# generated the variables naively below. 
+
+
 """To generate this code,
 [pywin32](https://github.com/mhammond/pywin32) is used.
 Thank you very much !!
 """
-
 
 BackstageGroupStyleError = 2  # Enum: BackstageGroupStyle, https://docs.microsoft.com/ja-jp/office/vba/api/office.backstagegroupstyle
 BackstageGroupStyleNormal = 0  # Enum: BackstageGroupStyle, https://docs.microsoft.com/ja-jp/office/vba/api/office.backstagegroupstyle

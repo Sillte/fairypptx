@@ -28,7 +28,7 @@ class Presentation:
         elif isinstance(arg, Presentation):
             return arg.api
         elif isinstance(arg, (str, UserString, Path)):
-            print("arg", arg)
+            # print("arg", arg)
             App = self.app.api
             # Check the specified presentation is opened
             arg = Path(arg).absolute()

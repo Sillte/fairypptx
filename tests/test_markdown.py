@@ -20,9 +20,9 @@ This case the return is not Markdown, but shapes,
 because `Table` and `Texts` is separate. 
 * [link](https://ruru-jinro.net/)
 """.strip()
-    shapes = Markdown.make(text)
-    assert isinstance(shapes, Shapes) 
-    assert len(shapes) == 2, "Table and `Normal`. "
+    markdown = Markdown.make(text)
+    assert isinstance(markdown.shapes, Shapes) 
+    assert len(markdown.shapes) == 2, "Table and `Normal`. "
 
     text = """## Sample Header.  
 This case the return is  Markdown, since

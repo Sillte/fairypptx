@@ -1,5 +1,8 @@
 # Classes used over the entire package should be imported first. 
 from fairypptx.color import Color  # NOQA
+from fairypptx.constants import constants  # NOQA
+
+print(constants)
 
 
 # Policy of the order of imports: "Ancestors should exist without the decendants."
@@ -10,7 +13,7 @@ from fairypptx.shape import Shapes, Shape # NOQA
 from fairypptx.text import TextFrame, TextRange, Text # NOQA
 from fairypptx.table import Table, DFTable # NOQA
 
-from fairypptx.markdown import Markdown
+from fairypptx.parts.markdown import Markdown
 from fairypptx.parts.latex import Latex  # NOQA
 
 

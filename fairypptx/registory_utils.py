@@ -17,9 +17,9 @@ Value Specification
 ----------------------
 * (target)
 
-* When File Straoge is used, the target must be json-serializable.
+* When File Storage is used, the target must be json-serializable.
 * If you only use in-memory registory, then any object is valid,
-but please consider the
+but  is deriable if so. 
 
 
 Normally, users are not intended to call below functions directly. 

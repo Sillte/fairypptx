@@ -17,7 +17,7 @@ from contextlib import contextmanager
 import json  
 from pprint import pprint  
 from fairypptx import constants
-from fairypptx._markdown import fonttag_parser
+from fairypptx.parts._markdown import fonttag_parser
 
 
 def write(shape, text, default_fontsize=18):
