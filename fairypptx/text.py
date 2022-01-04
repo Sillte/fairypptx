@@ -4,7 +4,7 @@ from pywintypes import com_error
 from fairypptx import Shape, Application
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream
-from fairypptx import registory_utils
+from fairypptx import registry_utils
 from fairypptx.application import Application
 from fairypptx import constants
 from fairypptx._text import Text, Font, ParagraphFormat
@@ -239,11 +239,11 @@ class TextRange:
 
         """
         formatter = ParagraphTextRangeStylist(self)
-        registory_utils.register("TextRange", key, formatter, extension=".pkl", disk=disk)
+        registry_utils.register("TextRange", key, formatter, extension=".pkl", disk=disk)
 
     def like(self, style):
         if isinstance(style, str):
-            formatter = registory_utils.fetch("TextRange", style)
+            formatter = registry_utils.fetch("TextRange", style)
             formatter(self)
             return self
         else:

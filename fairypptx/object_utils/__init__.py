@@ -13,7 +13,7 @@ from collections.abc import Mapping
 
 import numpy as np
 
-from fairypptx import registory_utils
+from fairypptx import registry_utils
 
 
 def get_type(instance):
@@ -313,13 +313,13 @@ class ObjectDictMixin(UserDict):
     def register(self, key, disk=False):
         """Register to the storage."""
         name = self._get_name()
-        registory_utils.register(name, key, self.data, extension=".json", disk=disk)
+        registry_utils.register(name, key, self.data, extension=".json", disk=disk)
 
     @classmethod
     def fetch(cls, key, disk=True):
         """Construct the instance with `key` object."""
         name = cls._get_name()
-        data = registory_utils.fetch(name, key, disk=True)
+        data = registry_utils.fetch(name, key, disk=True)
         return cls(data)
 
     def _construct(self, arg, **kwargs):

@@ -1,9 +1,9 @@
-"""Handle registory.
-In this context, registrory stores `json` or `pkl` data.
+"""Handle registry.
+In this context, registry stores `json` or `pkl` data.
 
 File Storage
 --------------------
- `{Path.home()} /.fairypptx/registory`.
+ `{Path.home()} /.fairypptx/registry`.
 
 Key Specification
 --------------------
@@ -11,22 +11,28 @@ Key Specification
 * (key): the key  
          When the `target` is stored in File Storage, 
          `{key}.json` becomes the file name.
-         Case incensitive.
+         Case insensitive.
 
 Value Specification
 ----------------------
 * (target)
 
 * When File Storage is used, the target must be json-serializable.
-* If you only use in-memory registory, then any object is valid,
-but  is deriable if so. 
+* If you only use in-memory registry, then any object is valid,
+but  is desirable if so. 
 
 
 Normally, users are not intended to call below functions directly. 
 For each class, ``register`` / ``fetch`` functions are prepared. 
+
+
+Additionally, this sub module provide the temporary file generation, 
+Some Microsoft Object Models requires the existence of `file`. (e.g. , `FillFormat.UserPicture`).  
+For these functions, it is expected to use this picture.
 """
 
 from pathlib import Path
+from contextlib import contextmanager
 from collections.abc import Mapping
 from collections import defaultdict
 import shutil
@@ -35,13 +41,13 @@ import weakref
 import json
 import pickle
 
-__registory = defaultdict(dict)
+__registry = defaultdict(dict)
 
 
 def register(category, key, target, extension=None, *, disk=None):
     """Register `target` of the specific `category`  with `key`.
     Args:
-        catetory: the subfolder name. 
+        category: the subfolder name. 
         key (str): the stem of path.
         target (str): the registered target.
         extension: If specified, then the file is stored in `{key}{extension}`
@@ -57,7 +63,7 @@ def register(category, key, target, extension=None, *, disk=None):
         B. setting `disk` to be `True`.
     Notice that A. is safer.   
     """
-    global __registory
+    global __registry
     if disk is None:
         disk = True if extension else False
     if disk is True:
@@ -67,7 +73,7 @@ def register(category, key, target, extension=None, *, disk=None):
     # Internally, if extension is `None` here,  then disk is not stored.
     assert extension in {".pkl", ".json", None}
 
-    __registory[category][key] = target
+    __registry[category][key] = target
     if extension is not None:
         # Existent files are deleted.
         for path in _to_existent_paths(category, key):
@@ -85,10 +91,10 @@ def register(category, key, target, extension=None, *, disk=None):
 def fetch(category, key, *, disk=True): 
     """Fetch target with (category, key).
     """
-    global __registory
+    global __registry
 
-    if key in __registory[category]:
-        return __registory[category][key]
+    if key in __registry[category]:
+        return __registry[category][key]
 
     if disk is True:
         paths = _to_existent_paths(category, key)
@@ -104,42 +110,42 @@ def fetch(category, key, *, disk=True):
         elif extension == ".pkl":
             with open(path, "rb") as fp:
                 target = pickle.load(fp)
-        __registory[category][key] = target
+        __registry[category][key] = target
         return target
     raise KeyError(f"[`category`][`key`] = [{category}][{key}] is not existent in memory.")
 
 def keys(category, disk=True):
     """Return the set of keys.
     """
-    memory_keys = set(__registory[category].keys())
+    memory_keys = set(__registry[category].keys())
     if disk is False:
         return memory_keys
     else:
-        folder = _registory_folder() / category
+        folder = _registry_folder() / category
         folder_keys = set(p.stem for p in folder.glob("*.*"))
         return memory_keys | folder_keys
 
 
 def clear(category=None, key=None, disk=False):
-    """Clear the registory. 
+    """Clear the registry. 
     """
-    global __registory
+    global __registry
     if category is None:
-        __registory = defaultdict(dict)
+        __registry = defaultdict(dict)
         if disk is True:
-            folders = _registory_folder().glob("*/")
+            folders = _registry_folder().glob("*/")
             if folder.exists():
                 shutil.rmtree(folder)
     else:
-        folder = _registory_folder() / category
+        folder = _registry_folder() / category
         if key is None:
-            __registory[category] = dict()
+            __registry[category] = dict()
             if disk is True:
                 if not folder.exists():
                     raise ValueError(f"`{category}` folder does not exist.")
                 shutil.rmtree(folder)
         else:
-            del __registory[category][key]
+            del __registry[category][key]
             if disk is True:
                 paths = _to_existent_paths(category, key)
                 for path in paths:
@@ -153,22 +159,23 @@ def _to_stem(key):
 
 
 def _to_path(category, key, extension):
-    folder = _registory_folder() / category
+    folder = _registry_folder() / category
     folder.mkdir(exist_ok=True)
     stem = _to_stem(key)
     path = folder / f"{stem}{extension}"
     return path
 
 def _to_existent_paths(category, key):
-    folder = _registory_folder() / category
+    folder = _registry_folder() / category
     stem = _to_stem(key)
     return list(folder.glob(f"{stem}.*/"))
 
-def _registory_folder():
-    folder =  Path.home() / ".fairypptx" / "registory"
+def _registry_folder():
+    folder =  Path.home() / ".fairypptx" / "registry"
     folder.mkdir(parents=True, exist_ok=True)
     return folder
 
+REGISTRY_FOLDER = _registry_folder()   #  The folder into which files are generated.  
 
 def _solve_extension(target, extension):
     if extension is not None:
@@ -184,13 +191,56 @@ def _solve_extension(target, extension):
     # The last resort.
     return ".pkl"
 
+
+@contextmanager
+def yield_temporary_path(target):
+    """Generate `temporary` file within this context
+
+    This is intended to be used for calling a part of Microsoft Object Model function. 
+    Hence, the type of `target` is limited, I suppose.   
+    """
+    temporary_folder = _registry_folder()  / "__temporary__"
+    temporary_folder.mkdir(exist_ok=True, parents=True)
+    import uuid
+    import os
+    from PIL import Image
+    stem = uuid.uuid1()
+
+    if isinstance(target, Image.Image):
+        path = temporary_folder / f"{stem}.png"
+        target.save(path)
+    elif isinstance(target, bytes):
+        path = temporary_folder / f"{stem}"
+        path.write_bytes(target)
+    elif isinstance(target, (str)):
+        path = temporary_folder / f"{stem}"
+        path.write_text(target, "utf8")
+    else:
+        raise TypeError("The given target cannot be handled. ", target.__class__)
+
+    try:
+        yield path
+    except Exception as e:
+        os.unlink(path)
+        raise e
+    else:
+        os.unlink(path)
+
+
 if __name__ == "__main__":
-    _registory_folder()
+    _registry_folder()
     data = {"first": 1, "second":2}
     register("TestObject", "data_key", data, ".pkl", disk=False)
-    clear()
+    #clear()
     gained = fetch("TestObject", "data_key", disk=False)
     print(keys("TestObject"))
     print(gained)
+
+    from PIL import Image
+    image = Image.new("RGB", size=(1, 2))
+    with yield_temporary_path(image) as k:
+        s = k
+    print(s.exists())
+    print(REGISTRY_FOLDER)
 
 

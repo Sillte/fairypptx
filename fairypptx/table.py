@@ -1,4 +1,4 @@
-"""Table class 
+"""table class 
 
 * `DFTable` enables you to get `pandas.DataFrame` from `Table` Object.
 * 
@@ -25,7 +25,7 @@ from fairypptx.slide import Slide
 from fairypptx.inner import storage 
 from fairypptx.shape import  Shapes, Shape
 from fairypptx.object_utils import is_object, upstream, stored
-from fairypptx.object_utils import registory_utils
+from fairypptx.object_utils import registry_utils
 
 from fairypptx._table import Cell, Row, Rows, Column, Columns
 from fairypptx._table.stylist import TableStylist
@@ -204,13 +204,13 @@ class Table:
 
     def register(self, key, disk=True):
         stylist = TableStylist(self)
-        registory_utils.register(
+        registry_utils.register(
             self.__class__.__name__, key, stylist, extension=".pkl", disk=disk
         )
 
     def like(self, key):
         if isinstance(key, str):
-            stylist = registory_utils.fetch(self.__class__.__name__, key)
+            stylist = registry_utils.fetch(self.__class__.__name__, key)
             stylist(self)
             return self
         raise TypeError(f"Currently, type {type(style)} is not accepted.")

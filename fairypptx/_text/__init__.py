@@ -25,7 +25,7 @@ from fairypptx import constants
 from fairypptx.color import Color
 from fairypptx import object_utils
 from fairypptx.object_utils import ObjectDictMixin, to_api2
-from fairypptx import registory_utils
+from fairypptx import registry_utils
 
 class Text(UserString):
     """Represents the format of TextRange.  
@@ -75,8 +75,8 @@ class Text(UserString):
     
     def like(self, target):
         if isinstance(target, str):
-            self.font = registory_utils.fetch("Font", target)
-            self.paragraphformat = registory_utils.fetch("ParagraphFormat", target)
+            self.font = registry_utils.fetch("Font", target)
+            self.paragraphformat = registry_utils.fetch("ParagraphFormat", target)
         elif isinstance(target, (Text, TextRange)):
             self.font = dict(target.font)
             self.paragraphformat = dict(target.paragraphformat)

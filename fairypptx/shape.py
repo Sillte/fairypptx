@@ -19,7 +19,7 @@ from fairypptx._shape import LineFormat, LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape.stylist import ShapeStylist
 from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner, ShapesArranger, ShapesLocator
-from fairypptx import registory_utils
+from fairypptx import registry_utils
 
 
 class Shapes:
@@ -377,21 +377,21 @@ class Shape:
 
     def like(self, style):
         if isinstance(style, str):
-            stylist = registory_utils.fetch(self.__class__.__name__, style)
+            stylist = registry_utils.fetch(self.__class__.__name__, style)
             stylist(self)
             return self
         raise TypeError(f"Currently, type {type(style)} is not accepted.")
 
     def register(self, key, disk=True):
         stylist = ShapeStylist(self)
-        registory_utils.register(
+        registry_utils.register(
             self.__class__.__name__, key, stylist, extension=".pkl", disk=disk
         )
 
     def get_styles(self):
         """Return available styles.
         """
-        return registory_utils.keys(self.__class__.__name__)
+        return registry_utils.keys(self.__class__.__name__)
 
     def tighten(self, *, oneline=False):
         """Tighten the Shape according to Text.
