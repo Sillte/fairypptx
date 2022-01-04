@@ -6,7 +6,7 @@ I wonder what is appropriate name for these concepts....
 from fairypptx import TextRange, Shape, Shapes
 from fairypptx import Color
 from fairypptx import Shape
-from fairypptx.inner import storage
+from fairypptx.registry_utils import yield_temporary_path
 from fairypptx.constants import msoTrue, msoFalse
 from fairypptx import constants
 
@@ -105,8 +105,7 @@ class Latex:
         image_shape = image_shapes[0]
 
         image = from_latex(text, *args, **kwargs)
-        path = storage.get_path(".png")
-        image.save(path)
+
         left = image_shape.left
         top = image_shape.top
         width = image_shape.width
@@ -117,9 +116,11 @@ class Latex:
         # Perform change of `image`
         # and write the state of `self`
         shapes_api = upstream(self.shape.api, "Slide").Shapes
-        output_image_shape = shapes_api.AddPicture(
-            path, msoFalse, msoTrue, Left=left, Top=top, Width=width, Height=height
-        )
+
+        with yield_temporary_path(memory) as path:
+            output_image_shape = shapes_api.AddPicture(
+                path, msoFalse, msoTrue, Left=left, Top=top, Width=width, Height=height
+            )
         self.shape.ungroup()
         output_shape = Shapes([script_shape, output_image_shape]).group()
         # `self` should be rewritten.

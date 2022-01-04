@@ -1,4 +1,3 @@
-from _ctypes import COMError
 from pywintypes import com_error
 from PIL import Image
 
@@ -8,7 +7,7 @@ from fairypptx import constants
 
 from fairypptx.color import Color
 from fairypptx.box import Box
-from fairypptx.inner import storage
+from fairypptx.registry_utils import yield_temporary_path
 from fairypptx.object_utils import get_type, is_object, upstream
 
 
@@ -165,9 +164,9 @@ class Slide:
         """
         assert box is None, "Current Implemenation."
 
-        path = storage.get_path(".png")
-        self.api.Export(path, "PNG")
-        image = Image.open(path).convert(mode).copy()
+        with yield_temporary_path(suffix=".png") as path:
+            self.api.Export(path, "PNG")
+            image = Image.open(path).convert(mode).copy()
         return image
 
     def select(self):

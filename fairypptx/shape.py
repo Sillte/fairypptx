@@ -9,7 +9,6 @@ from fairypptx.color import Color
 from fairypptx.box import Box, intersection_over_cover
 from fairypptx.application import Application
 from fairypptx.slide import Slide
-from fairypptx.inner import storage
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream, stored
 
@@ -329,14 +328,13 @@ class Shape:
     def make(cls, arg, **kwargs):
         shapes = Shapes()
         if isinstance(arg, Image.Image):
-            path = storage.get_path(".png")
-            arg.save(path)
-            shape_object = shapes.api.AddPicture(
-                path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1],
-            )
-            shape = Shape(shape_object)
-            shape.width = arg.size[0] 
-            shape.height = arg.size[1]
+            with registry_utils.yield_temporary_path(arg) as path: 
+                shape_object = shapes.api.AddPicture(
+                    path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1],
+                )
+                shape = Shape(shape_object)
+                shape.width = arg.size[0] 
+                shape.height = arg.size[1]
         elif isinstance(arg, (str, UserString)):
             shape = cls.make_textbox(arg, **kwargs)
             # TODO: Idetally, interpret of `str` is necessary.
@@ -419,9 +417,9 @@ class Shape:
         return self
 
     def to_image(self, mode="RGBA"):
-        path = storage.get_path(".png")
-        self.api.Export(path, constants.ppShapeFormatPNG)
-        image = Image.open(path)
+        with registry_utils.yield_temporary_path(suffix=".png") as path:
+            self.api.Export(path, constants.ppShapeFormatPNG)
+            image = Image.open(path).copy()
         return image.convert(mode)
 
 
