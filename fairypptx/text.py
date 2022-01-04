@@ -8,7 +8,7 @@ from fairypptx import registory_utils
 from fairypptx.application import Application
 from fairypptx import constants
 from fairypptx._text import Text, Font, ParagraphFormat
-from fairypptx._text.textrange_formatter import ParagraphTextRangeFormatter
+from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
 
 class TextFrame:
     def __init__(self, arg, *, app=None):
@@ -238,7 +238,7 @@ class TextRange:
         Well, then, I wonder whether other mode is introduced or not.
 
         """
-        formatter = ParagraphTextRangeFormatter(self)
+        formatter = ParagraphTextRangeStylist(self)
         registory_utils.register("TextRange", key, formatter, extension=".pkl", disk=disk)
 
     def like(self, style):
