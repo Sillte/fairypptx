@@ -2,8 +2,6 @@
 from fairypptx.color import Color  # NOQA
 from fairypptx.constants import constants  # NOQA
 
-print(constants)
-
 
 # Policy of the order of imports: "Ancestors should exist without the decendants."
 from fairypptx.application import Application  # NOQA

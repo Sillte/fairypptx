@@ -17,7 +17,6 @@ Currently, this contrains a lot of problems.
 * Copy of `html` to `TextRange` does not work correctly.  
 * How to use tags in `Markdown`? 
 """
-
 from pathlib import Path
 from typing import Sequence
 from fairypptx import Slide, Shapes, Shape, TextRange, Application, Text, Table
@@ -31,13 +30,13 @@ from fairypptx.parts._markdown import pandoc, html_clipboard
 
 class Markdown:
     """
+
     Note (murmurs)
     ------
 
-    `Markdown` may contains `Multiple` Shape, this is because
-
+    `Markdown` may contains `Multiple` Shapes...
     """
-    def __init__(self, arg, **kwargs):
+    def __init__(self, arg=None, **kwargs):
         self.shapes = self._to_shapes(arg)
 
     def _to_shapes(self, arg):
@@ -49,6 +48,8 @@ class Markdown:
             return arg.shapes
         elif isinstance(arg, Sequence):
             return Shapes(arg)
+        elif arg is None:
+            return self._to_shapes(Shape())
         raise TypeError("Invalid arg", arg)
 
     @property
@@ -95,7 +96,6 @@ class Markdown:
                 c_x += shape.api.Width
         return Markdown(shapes)
 
-
     @classmethod
     def _to_content(cls, arg):
         try:
@@ -105,6 +105,36 @@ class Markdown:
         except OSError:
             pass
         return arg
+
+    # Since `Markdown` belong to `Part`,   
+    # I have to prepare these interfaces.
+
+    @property
+    def script(self):
+        """
+        Note: I know, this is far from complete.
+        """
+        return self.shape.text
+
+
+    def compile(self, text, *args, **kwargs):
+        # Currently, generate the next `Markdown` and 
+        # Change the position and delete the old one. 
+
+        new_markdown = type(self).make(text, *args, **kwargs)
+
+        left = self.shapes[0].left
+        top = self.shapes[0].top
+
+        for n_shape in new_markdown.shapes:
+            n_shape.left = left
+            n_shape.top = top
+
+        for shape in self.shapes:
+            shape.api.Delete()
+        self = new_markdown
+        return  self
+
 
 
 def _get_default_css_folder():
