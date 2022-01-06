@@ -450,7 +450,7 @@ class Shape:
         return Shapes([elem for elem in self.api.GroupItems])
 
     def ungroup(self):
-        return Shapes(self.api.UnGroup())
+        return Shapes(self.api.Ungroup())
 
 
     def __getattr__(self, name):

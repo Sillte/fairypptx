@@ -16,6 +16,8 @@ Currently, this contrains a lot of problems.
 
 * Copy of `html` to `TextRange` does not work correctly.  
 * How to use tags in `Markdown`? 
+
+(2022/01/06) -> `jsonast` mechanism can help the problem above?  
 """
 from pathlib import Path
 from typing import Sequence
@@ -23,9 +25,9 @@ from fairypptx import Slide, Shapes, Shape, TextRange, Application, Text, Table
 from fairypptx import constants
 
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
-from fairypptx.parts._markdown import write, interpret
 from fairypptx.parts._markdown import toml_config
-from fairypptx.parts._markdown import pandoc, html_clipboard
+from fairypptx.parts._markdown.html import from_html
+from fairypptx.parts._markdown.jsonast import from_jsonast
 
 
 class Markdown:
@@ -57,57 +59,27 @@ class Markdown:
         return self.shapes[0]
 
     @classmethod
-    def make(cls, arg, slide=None):
+    def make(cls, arg, slide=None, engine="jsonast"):
         if slide is None:
             slide = Slide()
+        engine = str(engine).lower()
+
         # Necessary to prevent deadlock.
         selection = Application().api.ActiveWindow.Selection
         if selection.Type == constants.ppSelectionText:
             selection.Unselect()
 
-        content = cls._to_content(arg)
-        # [TODO] Assume that content is markdown.
-        content, config = toml_config.separate(content)
-        css = config.get("css", None)
-        css_folder = _get_default_css_folder()
+        # [TODO] As of 2022-01-06
+        # generation interface is not compatible.
+        # You should consider this.
 
-        html = pandoc.to_html(content, css=css, css_folder=css_folder)
+        if engine == "html":
+            return from_html(arg, slide=slide)
+        elif engine == "jsonast":
+            return from_jsonast(arg)
+        else:
+            raise NotImplementedError("Engine is not implemented.") 
 
-        # Path("./degub.html").write_text(html)
-        html_clipboard.push(html, is_path=None)
-
-        shapes = Shapes(slide.api.Shapes.Paste())
-        for shape in shapes:
-            if shape.api.Type == constants.msoTable:
-                Table(shape).tighten()
-            elif hasattr(shape, "textrange"):
-                _compensate_textrange(shape)
-                shape.tighten()
-
-        # Adjustment geometrically
-        # [TODO] It this strategy is all right?  
-        if 1 < len(shapes):
-            shapes = sorted(shapes, key=lambda shape: (shape.box.top, shape.box.left))
-            c_x = shapes[0].api.Left  
-            c_y = shapes[0].api.Top
-            for shape in shapes:
-                shape.api.Left = c_x
-                shape.api.Top = c_y
-                c_x += shape.api.Width
-        return Markdown(shapes)
-
-    @classmethod
-    def _to_content(cls, arg):
-        try:
-            path = Path(arg)
-            if path.exists():
-                return path.read_text(encoding="utf8")
-        except OSError:
-            pass
-        return arg
-
-    # Since `Markdown` belong to `Part`,   
-    # I have to prepare these interfaces.
 
     @property
     def script(self):
@@ -193,4 +165,7 @@ table, th, td {
   line-height: 3;
 }
 """.strip()
+
+
+
             

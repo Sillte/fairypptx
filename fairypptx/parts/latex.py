@@ -117,7 +117,7 @@ class Latex:
         # and write the state of `self`
         shapes_api = upstream(self.shape.api, "Slide").Shapes
 
-        with yield_temporary_path(memory) as path:
+        with yield_temporary_path(image) as path:
             output_image_shape = shapes_api.AddPicture(
                 path, msoFalse, msoTrue, Left=left, Top=top, Width=width, Height=height
             )

@@ -99,7 +99,7 @@ class _Converter:
             return ret_text
 
         # Inferrence of Header
-        """ Currently, Fontsize which is smaller than the normal cannot be handled.
+        """ Currently, Fontsize which is smaller than the normal size cannot be handled.
         """ 
         if indent_level == 1:
             size = paragraph.Font.Size
