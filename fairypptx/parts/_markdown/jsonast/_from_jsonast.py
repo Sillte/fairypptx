@@ -147,6 +147,7 @@ class Converter:
         # we perform these processings, here. 
         is_inc_paragraph = (last_n_paragraph < len(paragraphs))
 
+
         if is_inc_paragraph and is_prev_paragraph:
             assert 2 <= len(paragraphs)
             paragraphs[-2].api.IndentLevel = last_indent_level
@@ -207,6 +208,9 @@ class Converter:
         assert isinstance(json_ast, dict)
 
         blocks = json_ast["blocks"]
+        from pprint import pprint
+        print("INPUT")
+        pprint(blocks)
         shape = Shape.make(1)   # Temporary.  
 
         from fairypptx import Markdown  # For dependency hierarchy
@@ -319,12 +323,12 @@ class Strong(Element):
         inlines = tag["c"]
 
         def emphasize(textrange):
-            # print("?? Called?", textrange.text)
             textrange.font.bold = True
         
         with converter.formatter_scope(emphasize):
             # Performs setting of `Format`.  
             cls.delegate_inlines(inlines, markdown, converter)
+
 
 class CodeBlock(Element):
     @classmethod
@@ -339,17 +343,34 @@ class Code(Element):
         converter.insert(string)
 
 
+def _change_bullet_type(paragraph, bullet_type):
+    """
+    # [BUG] / [UNSOLVED] I do not why, however, 
+    # in some cases, the change of `ParagraphFormat.BulletType` 
+    # does not applied when `IndentLevel` is the same as the previous ones...
+
+    # Experimentally, I can guess that 
+    # once you changes `IndentLevel` and set `Bullet.Type`, 
+    # then, this problem does not seem occur. 
+    """
+    indent_level = paragraph.api.IndentLevel
+    assert 1 <= indent_level <= 5,  "BUG."  
+    paragraph.api.IndentLevel = 5
+    paragraph.api.ParagraphFormat.Bullet.Type = bullet_type
+    paragraph.api.IndentLevel = indent_level
+
 class BulletList(Element):
     @classmethod
     def from_tag(cls, tag, markdown, converter):
         blocks = tag["c"]
 
         def bullet_list(textrange):
-            textrange.api.ParagraphFormat.Bullet.Visible = constants.msoTrue
-            textrange.api.ParagraphFormat.Bullet.Type = constants.ppBulletUnnumbered
+            textrange.api.ParagraphFormat.Bullet.Visible = True
+            _change_bullet_type(textrange, constants.ppBulletUnnumbered)
 
             textrange.font.bold = False
             textrange.font.underline = False
+
 
         with converter.formatter_scope(bullet_list), converter.inc_indent():
             for block in blocks:
@@ -448,8 +469,20 @@ if __name__ == "__main__":
     sample = """
     {"blocks": [{"t": "Para", "c": [{"t": "Str", "c": "Three"}]}]}
     """
+    SCRIPT = """ 
+* ITEM1 
+    1. ITEM1-1
+    2. ITEM1-2
+        * ITEM1-3
+        * ITEM1-4
+    * hgoe
+    * fgerafva
+    1. fgerafva
+    3. fafe
+    """.strip()
+
     conv = Converter()
-    markdown =  conv.parse(sample)
+    markdown =  conv.parse(SCRIPT)
     print(markdown.shape.text)
 
     exit(0)

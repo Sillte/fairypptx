@@ -86,7 +86,8 @@ class Markdown:
         """
         Note: I know, this is far from complete.
         """
-        return self.shape.text
+        from fairypptx.parts._markdown.jsonast import to_script
+        return to_script(self.shape.textrange)
 
 
     def compile(self, text, *args, **kwargs):

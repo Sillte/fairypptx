@@ -121,9 +121,9 @@ def test_hasattr():
 def test_api2():
     shape = Shape.make(1)
     shape.text = "hogehoge"
-    assert is_object(to_api2(Shape().textrange.api), "TextRange2")
-    assert is_object(to_api2(Shape().textrange.api.Font), "Font2")
-    assert is_object(to_api2(Shape().textrange.api.ParagraphFormat), "ParagraphFormat2")
+    assert is_object(to_api2(shape.textrange.api), "TextRange2")
+    assert is_object(to_api2(shape.textrange.api.Font), "Font2")
+    assert is_object(to_api2(shape.textrange.api.ParagraphFormat), "ParagraphFormat2")
 
     # TextRange's regision should be compatible.
     assert to_api2(shape.textrange.characters[4].api).Text == shape.text[4]
