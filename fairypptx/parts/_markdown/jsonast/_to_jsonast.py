@@ -51,7 +51,6 @@ class Converter:
         textrange = shape.textrange
         queue_paragraphs = to_kind_groups(textrange)  # List[Dict[str, List["paragraphs"]]]
         for kind, paragraphs in queue_paragraphs:
-            print("PP", len(paragraphs))
             if kind == Kind.ITEMIZATION:
                 blocks += itemization_paragraphs_to_blocks(paragraphs)
             else:
