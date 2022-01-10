@@ -28,6 +28,12 @@ from contextlib import contextmanager
 import json 
 
 
+# [NOTE] 
+# This is temporary solution.  
+# I feel it is better to configure
+# these fontsizes...
+
+DEFAULT_FONTSIZE = 16
 
 
 class Formatter:
@@ -39,7 +45,7 @@ class Formatter:
         #
         textrange.font.bold = False
         textrange.font.underline = False
-        textrange.font.size = 16
+        textrange.font.size = DEFAULT_FONTSIZE
 
         textrange.api.ParagraphFormat.Bullet.Visible = False
 
@@ -52,13 +58,15 @@ class HeaderFormatter:
         self.level = level
         self.converter = converter
 
-        self.level_to_fontsize = {1: 36, 2:24, 3:20}
+        self.level_to_fontsize = {1: 36, 2:24, 3:20, 4:18, 5:16}
 
     def __call__(self, textrange):
-        fontsize = self.level_to_fontsize.get(self.level, 16)
+        fontsize = self.level_to_fontsize.get(self.level, DEFAULT_FONTSIZE)
+
+        if self.level <= 3:
+            textrange.font.underline = True
 
         textrange.font.bold = True
-        textrange.font.underline = True
         textrange.font.size = fontsize
 
         textrange.api.ParagraphFormat.Bullet.Visible = False
@@ -370,6 +378,7 @@ class BulletList(Element):
 
             textrange.font.bold = False
             textrange.font.underline = False
+            textrange.font.size = DEFAULT_FONTSIZE
 
 
         with converter.formatter_scope(bullet_list), converter.inc_indent():
@@ -395,6 +404,7 @@ class OrderedList(Element):
         def bullet_list(textrange):
             textrange.api.ParagraphFormat.Bullet.Visible = constants.msoTrue
             textrange.api.ParagraphFormat.Bullet.Type = constants.ppBulletNumbered
+            textrange.font.size = DEFAULT_FONTSIZE
 
         with converter.formatter_scope(bullet_list), converter.inc_indent():
             for block in blocks:
@@ -486,6 +496,5 @@ if __name__ == "__main__":
     print(markdown.shape.text)
 
     exit(0)
-
 
 
