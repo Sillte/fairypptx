@@ -347,6 +347,167 @@ class ObjectDictMixin(UserDict):
         return name
 
 
+class ObjectDictMixin2(Mapping):
+    """Represents `api` / `api2`'s extension for
+
+    For some `Objects`, `api` and `api2` exist, 
+    (c.f. ParagraphFormat, TextRange)
+
+    data2 is added to `ObjectDictMixin`
+    """
+
+    data = dict()
+    data2 = dict()
+
+    readonly = []
+    name = None
+
+    def __init__(self, arg=None):
+        cls = type(self)
+        if cls.name is None:
+            cls.name = cls.__name__
+        self._construct(arg)
+        assert bool(self.data) or bool(self.data2)
+
+
+    def to_dict(self, api):
+        cls = type(self)
+        return {key: getattr(api, key) for key in self.data}
+
+    def to_dict2(self, api2):
+        cls = type(self)
+        return {key: getattr(api2, key) for key in self.data2}
+
+    def apply(self, api):
+        api2 = to_api2(api)
+        readonly_props = set(self.readonly)
+
+        for key, value in self.data.items():
+            if key not in readonly_props:
+                if value is not None:
+                    setattr(api, key, value)
+
+        for key, value in self.data2.items():
+            if key not in readonly_props:
+                if value is not None:
+                    setattr(api2, key, value)
+        return api
+
+    @property
+    def api(self):
+        return self._api
+
+    @property
+    def api2(self):
+        if self.api:
+            return to_api2(self.api)
+        else:
+            return None
+
+    def to_api2(self, api):
+        return to_api2(api)
+
+
+    def _construct(self, arg):
+        cls = type(self)
+        self._api = None
+        if arg is None:
+            self.data = cls.data.copy()
+            self.data2 = cls.data2.copy()
+        elif is_object(arg, cls.name):
+            self._api = arg
+            self.data = self.to_dict(self.api)
+            self.data2 = self.to_dict2(self.api2)
+        elif isinstance(arg, Mapping):
+            for key, value in arg.items(): 
+                self[key] = value
+        else:
+            raise ValueError("Given `arg` is not appropriate.", arg)
+
+
+    def __repr__(self):
+        return repr(self.data) + "\n" + repr(self.data2)
+
+    def items(self):
+        import itertools 
+        return itertools.chain(self.data.items(), self.data2.items())
+
+    def __len__(self):
+        return len(self.data) + len(self.data2)
+
+    def __getitem__(self, key):
+        if key in self.data:
+            return self.data[key]
+        if key in self.data2:
+            return self.data2[key]
+        raise KeyError(key)
+
+    def __setitem__(self, key, item):
+        is_api_set =  self.api and (key not in self.readonly)
+
+        if key in self.data:
+            self.data[key] = item
+            if is_api_set:
+                if item is not None:
+                    setattr(self.api, key, item)
+            return 
+        elif key in self.data2:
+            self.data2[key] = item
+            if is_api_set:
+                if item is not None:
+                    setattr(self.api2, key, item)
+            return
+        elif is_api_set: 
+            # This is a fallback, 
+            try:
+                setattr(self.api, key, item)
+            except AttributeError as e:
+                pass
+            else:
+                self.data[key] = item
+                return 
+            try:
+                setattr(self.api2, key, item)
+            except AttributeError as e:
+                pass
+            else:
+                self.data2[key] = item
+                return 
+        raise KeyError("Cannot set key", key)
+
+    def __delitem__(self, key):
+        del self.data[key]
+        del self.data2[key]
+
+    def __iter__(self):
+        import itertools
+        return itertools.chain(iter(self.data), iter(self.data2))
+
+    def __contains__(self, key):
+        return key in self.data or key in self.data2
+
+    def __getstate__(self):
+        """For `pickle` serialization
+        """
+        return {"name": self.name,
+                "data": self.data,
+                "data2": self.data2,
+                "readonly": self.readonly}
+
+    def register(self, key, disk=False):
+        """Register to the storage."""
+        name = type(self).name
+        registry_utils.register(name, key, self, extension=".pkl", disk=disk)
+
+
+    @classmethod
+    def fetch(cls, key, disk=True):
+        """Construct the instance with `key` object."""
+        name = cls.name
+        return registry_utils.fetch(name, key, disk=True)
+
+
+
 class ObjectClassMixin:
     """Provide functions useful for classes which corresponds to Object Class.
 

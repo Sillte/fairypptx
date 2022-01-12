@@ -24,7 +24,7 @@ from collections.abc import Mapping
 from fairypptx import constants
 from fairypptx.color import Color
 from fairypptx import object_utils
-from fairypptx.object_utils import ObjectDictMixin, to_api2, getattr, is_object, setattr
+from fairypptx.object_utils import ObjectDictMixin, to_api2, getattr, is_object, setattr, ObjectDictMixin2
 from fairypptx import registry_utils
 
 class Text(UserString):
@@ -143,7 +143,7 @@ class Font(ObjectDictMixin):
         self["Size"] = value
 
 
-class ParagraphFormat(Mapping):
+class ParagraphFormat(ObjectDictMixin2):
     """Represents the Font Information. 
 
     Note
@@ -164,153 +164,82 @@ class ParagraphFormat(Mapping):
     data = dict()
     data2 = dict()
 
-    data["FarEastLineBreakControl"] = constants.msoFalse
-    data["Alignment"] = constants.ppAlignLeft
-    data["BaseLineAlignment"] = constants.ppBaselineAlignBaseline
-    data["HangingPunctuation"] = constants.msoFalse
+    data["FarEastLineBreakControl"] = None
+    data["Alignment"] = None
+    data["BaseLineAlignment"] = None
+    data["HangingPunctuation"] = None
     data["LineRuleAfter"] = None
     data["LineRuleBefore"] = None
     data["LineRuleWithin"] = None
     data["SpaceAfter"] = None
     data["SpaceBefore"] = None
-    data["SpaceWithin"] = constants.msoFalse
+    data["SpaceWithin"] = None
 
+    # The order is very important!
+    # Especially, `Type` and `Visible`!.
+    data["Bullet.Type"] = None
     data["Bullet.Visible"] = None
     data["Bullet.Character"] = None
     data["Bullet.Font.Name"] = None
-    data["Bullet.Type"] = None
 
     data2["FirstLineIndent"] = None
     data2["LeftIndent"] = None
 
     readonly = []
-    name = "ParagraphFormat"
+    name = None
 
-    def __init__(self, arg=None):
-        self._construct(arg)
+    def apply(self, api):
+        excludes = set()
+        if self.data["Bullet.Type"] != constants.ppBulletUnnumbered:
+            excludes.add("Bullet.Character")
+            excludes.add("Bullet.Font.Name")
+        api2 = self.to_api2(api)
 
-    def _construct(self, arg):
-        cls = type(self)
-        self._api = None
-        if arg is None:
-            self.data = cls.data.copy()
-            self.data2 = cls.data2.copy()
-        elif is_object(arg, cls.name):
-            self._api = arg
-            self.data = {key: getattr(self.api, key) for key in cls.data}
-            self.data2 = {key: getattr(self.api2, key) for key in cls.data2}
-        elif isinstance(arg, Mapping):
-            for key, value in arg.items(): 
-                self[key] = value
-        else:
-            raise ValueError("Given `arg` is not appropriate.", arg)
+        readonly_props = set(self.readonly) | excludes
 
-    @property
-    def api(self):
-        return self._api
+        for key, value in self.data.items():
+            if key not in readonly_props:
+                if value is not None:
+                    setattr(api, key, value)
 
-    @property
-    def api2(self):
-        if self.api:
-            return to_api2(self.api)
-        else:
-            return None
+        for key, value in self.data2.items():
+            if key not in readonly_props:
+                if value is not None:
+                    setattr(api2, key, value)
+        return api
 
-    def __repr__(self):
-        return repr(self.data) + "\n" + repr(self.data2)
-
-    def items(self):
-        import itertools 
-        return itertools.chain(self.data.items(), self.data2.items())
-
-    def __len__(self):
-        return len(self.data) + len(self.data2)
-
-    def __getitem__(self, key):
-        if key in self.data:
-            return self.data[key]
-        if key in self.data2:
-            return self.data2[key]
-        raise KeyError(key)
-
-    def __setitem__(self, key, item):
-        if key in self.data:
-            if self.api:
-                if item is not None:
-                    setattr(self.api, key, item)
-                self.data[key] = item
-            return 
-        elif key in self.data2:
-            if self.api:
-                if item is not None:
-                    setattr(self.api2, key, item)
-            self.data2[key] = item
-            return
-        elif self.api: 
-            # This is a fallback, 
-            try:
-                setattr(self.api, key, item)
-            except AttributeError as e:
-                pass
-            else:
-                self.data[key] = item
-                return 
-            try:
-                setattr(self.api2, key, item)
-            except AttributeError as e:
-                pass
-            else:
-                self.data2[key] = item
-                return 
-        raise KeyError("Cannot set key", key)
-
-    def __delitem__(self, key):
-        del self.data[key]
-        del self.data2[key]
-
-    def __iter__(self):
-        import itertools
-        return itertools.chain(iter(self.data), iter(self.data2))
-
-    def __contains__(self, key):
-        return key in self.data or key in self.data2
-
-    def __getstate__(self):
-        """For `pickle` serialization
-        """
-        return {"name": self.name,
-                "data": self.data,
-                "data2": self.data2,
-                "readonly": self.readonly}
-
-    def register(self, key, disk=False):
-        """Register to the storage."""
-        name = type(self).name
-        registry_utils.register(name, key, self, extension=".pkl", disk=disk)
-
-
-    @classmethod
-    def fetch(cls, key, disk=True):
-        """Construct the instance with `key` object."""
-        name = cls.name
-        return registry_utils.fetch(name, key, disk=True)
 
 
 if __name__ == "__main__":
     from fairypptx import TextRange
     from fairypptx import Shape, Shapes, Slide
+    #Shape().textrange.register("A"); exit(0)
+    #Shape().textrange.like("A"); exit(0)
     # Shape.make("HOGEHOIGE")
-    Shape().textrange.like("TEST"); exit(0)
+    #Shape().textrange.like("TEST"); exit(0)
     #TextRange().register("TEST"); exit(0)
+    #$Shape().register("B"); exit(0)
+    Shape().like("B"); exit(0)
     shapes = Slide().shapes
+    #Shape().textrange.register("A"); exit(0)
+    Shape().textrange.like("A");exit(0)
+    #shapes = Shapes()
+    # print(shapes[0].textrange.paragraphs[0].api.ParagraphFormat.Bullet.Character); exit(0)
+
     f = shapes[0].textrange.paragraphs[0].paragraphformat
-    f["Application"] = None
-    print(set(f.values()))
-    print(dict(f)); exit(0)
-    f.register("TEST")
-    m = ParagraphFormat.fetch("TEST")
-    print(m)
-    shapes[1].textrange.paragraphformat = f
+    print(f)
+    shapes[1].textrange.paragraphs[0].paragraphformat = f 
+    #print("f", f)
+
+    #print(shapes[1].textrange.paragraphs[0].paragraphformat)
+    #setattr(f.api, "Bullet.Character", 216); 
+    #setattr(f.api, "Bullet.Visible", True); 
+    #print(f)
+    #f.register("TEST")
+    #m = ParagraphFormat.fetch("TEST")
+    #shapes[1].textrange.paragraphs[0].paragraphformat = f
+    #print(shapes[1].textrange.paragraphs[0].paragraphformat)
+    exit(0)
 
     
     f1 = Font()

@@ -342,13 +342,14 @@ class TextRange:
 
     @property
     def paragraphformat(self):
-        return ParagraphFormat(self.api.ParagraphFormat)
+        result =  ParagraphFormat(self.api.ParagraphFormat)
+        return result
 
     @paragraphformat.setter
     def paragraphformat(self, param):
-        paragraph_format = ParagraphFormat(self.api.ParagraphFormat)
-        for key, value in param.items():
-            paragraph_format[key] = value
+        paragraph_format = ParagraphFormat(param)
+        print("AA", paragraph_format); 
+        paragraph_format.apply(self.api.ParagraphFormat)
 
     
     def itemize(self):
