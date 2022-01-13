@@ -348,7 +348,6 @@ class TextRange:
     @paragraphformat.setter
     def paragraphformat(self, param):
         paragraph_format = ParagraphFormat(param)
-        print("AA", paragraph_format); 
         paragraph_format.apply(self.api.ParagraphFormat)
 
     
