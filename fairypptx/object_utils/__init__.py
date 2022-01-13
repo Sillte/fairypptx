@@ -234,8 +234,31 @@ class ObjectDictMixin(UserDict):
     ----------------------------------
     `fetch` <-> `register`.
 
-    When you implement `to_dict`,
-    typically you also implement`apply`.
+
+    Usage
+    ----------------------------------
+
+    * `apply`: When you want to apply the content of `this class`
+               to `Object`, using the stored dict.
+    * `to_dict`: You you want to store the data from `Object` as `dict`.
+
+    - When you implement `to_dict`, typically you also implement`apply`.
+    - Some properties are read-only, so you may have to call the function other than `setattr`.
+      For those cases, please implement your customized `apply`.
+
+    The expected protocol of these classes as follows:
+    what this class intend to realize this protocol.
+
+    - __init__(self, arg):
+        - If `arg` is Object, then `self.api` points to `arg` and `self.data` represents 
+        - If `arg` is `Mapping`, then `self.api` is None  and `self.data` is equivalent to `arg`.  
+
+    - def apply(self, api_object): 
+        - `self.data`'s contents are reflected onto `api_object`.   
+
+    - `fetch` / `register` / `api`:  (You can easily guess the contents.)
+
+    I feel if these interfaces are realized, the feel of usage does not change from perspective of users.  
     """
 
     data = dict()
@@ -312,18 +335,18 @@ class ObjectDictMixin(UserDict):
 
     def register(self, key, disk=False):
         """Register to the storage."""
-        name = self._get_name()
+        name = self.name
         registry_utils.register(name, key, self.data, extension=".json", disk=disk)
 
     @classmethod
     def fetch(cls, key, disk=True):
         """Construct the instance with `key` object."""
-        name = cls._get_name()
+        name = self.name
         data = registry_utils.fetch(name, key, disk=True)
         return cls(data)
 
     def _construct(self, arg, **kwargs):
-        name = self._get_name()
+        name = self.name
         api = None
         if arg is None:
             data = dict(self.cls.data)
@@ -338,13 +361,6 @@ class ObjectDictMixin(UserDict):
         data.update(kwargs)
         return data, api
 
-    @classmethod
-    def _get_name(cls):
-        if cls.name:
-            name = cls.name
-        else:
-            name = cls.__name__
-        return name
 
 
 class ObjectDictMixin2(Mapping):
