@@ -220,5 +220,12 @@ def test_make_itemization():
     tr.shape.tighten()
 
 
+def test_find():
+    tr = TextRange.make("ITEM1-ITEM2-ITEM3")
+    result = tr.find("ITEM")
+    assert len(result) == 3
+    assert all(elem.text == "ITEM" for elem in result)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "--capture=no"])

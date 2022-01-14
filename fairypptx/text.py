@@ -356,6 +356,19 @@ class TextRange:
             elem.api.ParagraphFormat.Bullet.Visible = constants.msoTrue
             elem.api.ParagraphFormat.Bullet.Type = constants.ppBulletUnnumbered
 
+    def find(self, target : str):
+        """Return `list` of `TextRange` whose text is `target`. 
+        """
+        result = []
+        start = 0
+        while True:
+            cand = self.api.Find(target, start, constants.msoTrue)
+            if cand is None:
+                break
+            start = cand.Start + cand.Length - 1 
+            result.append(TextRange(cand))
+        return result
+
 
     def register(self, key, disk=True):
         """ Currently, depending of Paragraphs,
