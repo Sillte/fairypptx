@@ -162,11 +162,23 @@ class Slide:
         Arg:
             box(Box, shape): Specify the range of cropping.
         """
-        assert box is None, "Current Implemenation."
+        from fairypptx import Shape  # For dependency.
+        if isinstance(box, Shape):
+            box = box.box
 
         with yield_temporary_path(suffix=".png") as path:
             self.api.Export(path, "PNG")
             image = Image.open(path).convert(mode).copy()
+
+        if box is not None:
+            # Since the size differs, calibration is required.
+            ratios = (image.size[0] / self.size[0],
+                      image.size[1] / self.size[1])
+            left, right = map(lambda x: round(x * ratios[0]), (box.left, box.right))
+            top, bottom = map(lambda y: round(y * ratios[1]), (box.top, box.bottom))
+            left, right = max(0, left), min(image.size[0], right)
+            top, bottom = max(0, top), min(image.size[1], bottom)
+            image = image.crop((left, top, right, bottom))
         return image
 
     def select(self):

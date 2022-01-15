@@ -68,6 +68,33 @@ class LineFormat(ObjectDictMixin):
 
         return d
 
+    @property
+    def color(self): 
+        int_rgb = self.api.ForeColor.RGB
+        color = Color(int_rgb)
+        alpha = 1 - self.api.Transparency 
+        return Color((*color.rgb, alpha))
+
+    @color.setter
+    def color(self, value): 
+        color = Color(value)
+        rgb, alpha = color.as_int(), color.alpha
+        self.api.ForeColor.RGB = rgb
+        self.api.Transparency = 1 - alpha 
+        return color
+
+    @property
+    def weight(self):
+        if self.api.Visible:
+            return self.api.Weight
+        else:
+            return None
+
+    @weight.setter
+    def weight(self, value):
+        self.api.Visible = True
+        self.api.Weight = value
+
 
 class LineFormatProperty:
     def __get__(self, shape, objtype=None):
@@ -110,5 +137,6 @@ class LineFormatProperty:
             Line.Transparency = 1 - value.alpha
         else:
             raise ValueError(f"`{value}` cannot be set at `{self.__class__.__name__}`.")
+
 
 
