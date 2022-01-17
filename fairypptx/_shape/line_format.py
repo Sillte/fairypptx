@@ -81,6 +81,7 @@ class LineFormat(ObjectDictMixin):
         rgb, alpha = color.as_int(), color.alpha
         self.api.ForeColor.RGB = rgb
         self.api.Transparency = 1 - alpha 
+        self.api.Visible = True
         return color
 
     @property
