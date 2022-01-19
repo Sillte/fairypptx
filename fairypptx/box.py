@@ -119,7 +119,7 @@ class Box(UserDict):
     @property
     def center(self):
         # When len of `Sequence` is 2, the order is y - x.
-        return ((self.Top + self.Height) / 2, (self.Left + self.Width) / 2, )
+        return (self.Top + self.Height / 2, self.Left + self.Width / 2)
 
     @property
     def area(self):

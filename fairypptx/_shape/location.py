@@ -326,7 +326,7 @@ class ShapesAligner:
             for shape in shapes:
                 shape.api.Top = bottom - shape.api.Height
         elif mode.is_center():
-            center_y = sum(box.center[0] for box in boxes)
+            center_y = sum(box.center[0] for box in boxes) / len(boxes)
             for shape in shapes:
                 shape.api.Top = center_y - shape.api.Height / 2
         else:
@@ -343,7 +343,7 @@ class ShapesAligner:
             for shape in shapes:
                 shape.api.Left = right - shape.api.Width
         elif mode.is_center():
-            center_x = sum(box.center[1] for box in boxes)
+            center_x = sum(box.center[1] for box in boxes) / len(boxes)
             for shape in shapes:
                 shape.api.Left = center_x - shape.api.Width / 2
         else:
