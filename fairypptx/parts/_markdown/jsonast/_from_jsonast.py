@@ -425,6 +425,11 @@ class Link(Element):
         hyperlink.Action = constants.ppActionHyperlink
         hyperlink.Hyperlink.Address = path
 
+class HorizontalRule(Element):                
+    @classmethod
+    def from_tag(cls, tag, markdown, converter):
+        pass
+
 # Below elements are imcompleted. 
 #
 
@@ -432,7 +437,9 @@ class Table(Element):
     @classmethod
     def from_tag(cls, tag, markdown, converter):
         #print("Link", tag); assert False
-        inlines, alignment, number, columns, rows =  tag["c"]
+        #inlines, alignment, number, columns, rows =  tag["c"]
+        # Table Attr Caption [ColSpec] TableHead [TableBody] TableFoot
+        attr, caption, colspec, table_head, table_body, table_foot = tag["c"]
         print("Currently `Table` cannot be handled")
         import numpy as np
         values = np.array([["" for _ in range(2)] for _ in range(2)])

@@ -104,10 +104,12 @@ class TextRange:
             return arg
         elif is_object(arg, "Shape"):
             return arg.TextFrame.TextRange
-        elif isinstance(arg, Shape):
-            return arg.api.TextFrame.TextRange
         elif is_object(arg, "TextFrame"):
             return arg.TextRange
+        elif isinstance(arg, Shape):
+            return arg.api.TextFrame.TextRange
+        elif isinstance(arg, TextRange):
+            return arg.api
         elif arg is None:
             App = self.app.api
             try:

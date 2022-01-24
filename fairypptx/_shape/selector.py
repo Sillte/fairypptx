@@ -13,7 +13,7 @@ class ShapesSelector:
         self.target = target
 
     def match(self, query) -> Shape:
-        """Return one shape, satisfying the condtion of `query`.
+        """Return one shape, satisfying the condition of `query`.
         """
         if callable(query):
             for shape in self._to_shapes(): 

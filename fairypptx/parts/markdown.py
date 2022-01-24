@@ -109,7 +109,6 @@ class Markdown:
         return  self
 
 
-
 def _get_default_css_folder():
     folder = Path().home() / ".fairypptx" / "css"
     if folder.exists():

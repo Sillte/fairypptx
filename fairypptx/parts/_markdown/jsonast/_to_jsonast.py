@@ -21,23 +21,25 @@ class Kind:
     NORMAL = auto()
     ITEMIZATION = auto()
 
+
 class Converter: 
+    _pandoc_api = None
     def __init__(self):
         pass
 
     @classmethod
-    def _from_jsonast(self, jsonast):
+    def _from_jsonast(cls, jsonast):
         # These metadata seems mandatory... 
         #
         if "meta" not in jsonast:
             jsonast["meta"] = {}
         if "pandoc-api-version" not in jsonast:
-            jsonast["pandoc-api-version"] = [1,17,4,2]
+            jsonast["pandoc-api-version"] = cls._pick_pandoc_api()
         from pprint import pprint
         print("JSONAST")
         pprint(jsonast["blocks"])
         content = json.dumps(jsonast)
-        ret = subprocess.run("pandoc -t markdown -f json",
+        ret = subprocess.run("pandoc -t gfm -f json",
                               universal_newlines=True, 
                               stdout=subprocess.PIPE, 
                               input=content, encoding="utf8")
@@ -59,6 +61,22 @@ class Converter:
         jsonast = {"blocks": blocks}
         return self._from_jsonast(jsonast)
 
+    @classmethod
+    def _pick_pandoc_api(cls):
+        """Get `pandoc` api version.
+        I imagine that more  
+        and, if api format changes, 
+        then this function corrupts...
+        """
+        if cls._pandoc_api is not None:
+            return cls._pandoc_api
+        ret = subprocess.run("pandoc -t json",
+                              universal_newlines=True, 
+                              stdout=subprocess.PIPE, 
+                              input="", encoding="utf8")
+        cls._pandoc_api = json.loads(ret.stdout)["pandoc-api-version"]
+        return cls._pandoc_api
+        
 
 def to_kind_groups(textrange):
     """  
