@@ -14,7 +14,7 @@ please consider the usage of `&nbsp;`.
 
 Reference
 ------
-# https://hackage.haskell.org/package/pandoc-types-1.12.4.5/docs/Text-Pandoc-Definition.html
+# https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html
 """
 
 
@@ -430,7 +430,7 @@ class HorizontalRule(Element):
     def from_tag(cls, tag, markdown, converter):
         pass
 
-# Below elements are imcompleted. 
+# Below elements are incomplete. 
 #
 
 class Table(Element):
@@ -447,7 +447,7 @@ class Table(Element):
 
         # Currently, (2020/01/06) `markdown`'s cannot handles
         # the multiple shapes. 
-        # So, I orphanize the generated Table.
+        # So, I orphanage the generated Table.
         # markdown._shapes.append(table)
 
 
