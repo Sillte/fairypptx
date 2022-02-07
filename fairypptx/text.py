@@ -188,7 +188,11 @@ class TextRange:
 
     @property
     def runs(self):
-        return [TextRange(elem) for elem in self.api.Runs()]
+        # (2022/02/08): Experimentally, I feel it is better that `runs` are separated at `paragraphs` 
+        # Since the modification of `run` affects unintuitive. 
+        # This phenomena was seen revising `FontResizer`.
+        return [TextRange(elem) for para in self.paragraphs for elem in para.api.Runs()]
+        #return [TextRange(elem) for elem in self.api.Runs()]
 
     @property
     def root(self):
@@ -442,4 +446,5 @@ class TextRange:
 
 # For structure hierarchy.
 from fairypptx._text.editor import DefaultEditor 
+from fairypptx._text.editor import FontResizer 
 

@@ -300,9 +300,16 @@ class Shape:
     def height(self, value):
         self.api.Height = value
 
-    
     def select(self, replace=True):
         return self.api.Select(replace)
+
+    def resize(self, *, fontsize=None):
+        from fairypptx.text import FontResizer
+        if fontsize is not None:
+            FontResizer(fontsize=fontsize, mode="min")(self.textrange)
+            self.tighten()
+            return self
+        raise NotImplementedError("Yet, not implemented.")
 
 
     @property

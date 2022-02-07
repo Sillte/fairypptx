@@ -50,8 +50,8 @@ def test_paragraph():
     tr = TextRange(shape)
 
     assert len(tr.paragraphs) == 2
-    # Even if multiple paragraphs exist, `runs` becomes 1.
-    assert len(tr.runs) == 1
+    # Though actually, `Run` are 1 in original API, `fairypptx` separates `run` at `paragraph`. 
+    assert len(tr.runs) == 2
     # However, sentences are separated by ``\r\n``.
     assert len(tr.sentences) == 2
     assert tr.Text == target.replace("\r\n", "\r")

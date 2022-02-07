@@ -140,6 +140,7 @@ class DefaultEditor:
     """
 
     def __call__(self, textrange):
+        textrange = TextRange(textrange)
         editors = []
         editors.append(TrimItemization(head_spaces=1, tail_spaces=1))
         editors.append(HeaderSpacer(head_spaces=1, tail_spaces=1))
@@ -150,6 +151,36 @@ class DefaultEditor:
         textrange =  caller(textrange)
         textrange.shape.tighten()
         return textrange
+
+class FontResizer:
+    """Resize the font of `TextRange`.
+    Args:
+        pass
+    """
+    def __init__(self,
+                 fontsize=18,
+                 mode="min"):
+        self.fontsize = fontsize
+        self.mode = mode.lower()
+        assert self.mode in {"min", "all"}
+
+    def __call__(self, textrange):
+        textrange = TextRange(textrange)
+        if not textrange.text:
+            raise ValueError("Empty Textrange.")
+
+        if self.mode == "all":
+            textrange = TextRange(textrange)
+            textrange.font.size = self.fontsize
+            return textrange
+        elif self.mode == "min":
+            min_size = min((run.font.size for run in textrange.runs), default=self.fontsize)
+            diff_size = self.fontsize - min_size 
+            for run in textrange.runs:
+                run.font.size += diff_size
+            return textrange
+        else:
+            raise RuntimeError("Implementation Error `mode`.")
 
 
 if __name__ == "__main__":
