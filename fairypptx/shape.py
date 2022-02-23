@@ -300,6 +300,17 @@ class Shape:
     def height(self, value):
         self.api.Height = value
 
+    @property
+    def rotation(self):
+        return self.api.Rotation
+
+    @rotation.setter
+    def rotation(self, value): 
+        self.api.Rotation = value
+
+    def rotate(self, degree):
+        self.api.Rotation += degree
+
     def select(self, replace=True):
         return self.api.Select(replace)
 

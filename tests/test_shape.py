@@ -101,6 +101,12 @@ def test_like():
     shape.like("__pytest__")
     assert shape.textrange.font.size == 18
 
+def test_rotate():
+    shape = Shape.make("TEXT")
+    shape.rotation = 60
+    shape.rotate(-15)
+    assert shape.rotation == 45
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "--capture=no"])
