@@ -3,7 +3,7 @@
 I wonder what is appropriate name for these concepts....
 """
 
-from fairypptx import TextRange, Shape, Shapes
+from fairypptx import TextRange, Shape, Shapes, Slide
 from fairypptx import Color
 from fairypptx import Shape
 from fairypptx.registry_utils import yield_temporary_path

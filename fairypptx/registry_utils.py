@@ -168,7 +168,7 @@ def _to_path(category, key, extension):
 def _to_existent_paths(category, key):
     folder = _registry_folder() / category
     stem = _to_stem(key)
-    return list(folder.glob(f"{stem}.*/"))
+    return list(folder.glob(f"{stem}.*"))
 
 def _registry_folder():
     folder =  Path.home() / ".fairypptx" / "registry"
