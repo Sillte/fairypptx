@@ -4,5 +4,4 @@ matplotlib
 Pillow
 pywin32
 premailer
-figpptx
 toml

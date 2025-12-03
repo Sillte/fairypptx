@@ -13,11 +13,11 @@ def test_init():
 
 def test_df_table():
     df = pd.DataFrame(np.arange(12).reshape(3, 4))
-    df.index = pd.MultiIndex.from_tuples([("ア", "A"), ("ア", "B"), ("ア", "C")])
+    df.index = pd.MultiIndex.from_tuples([("XX", "A"), ("YY", "B"), ("ZZ", "C")])
     df.columns = ["W", "X", "Y", "Z"]
     table = DFTable.make(df)
     read_df = table.df
-    assert df.equals(read_df)
+    assert df.astype("U").equals(read_df.astype("U"))
 
 def test_insert():
     """Check behavior of `insert` of `Row` / `Rows`.

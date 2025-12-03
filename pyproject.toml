@@ -1,4 +1,87 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
+[project]
+name = "fairypptx"
+version = "0.0.1"
+description = "Fairies flutter around you - A Python library for handling PowerPoint with automation"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+keywords = ["powerpoint", "pptx", "automation"]
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "Pillow",
+    "pywin32",
+    "premailer",
+    "toml",
+    "fairyimage@git+https://github.com/Sillte/fairyimage.git@master"
+]
+
+[project.optional-dependencies]
+
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "flake8>=5.0",
+    "black>=23.0",
+    "isort>=5.0",
+    "mypy>=1.0",
+]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.urls]
+Repository = "https://github.com/Sillte/fairypptx"
+Issues = "https://github.com/Sillte/fairypptx/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["fairypptx*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=fairypptx --cov-report=html"
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+
+[tool.coverage.run]
+source = ["fairypptx"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+precision = 2
+
+[tool.ruff]
+line-length = 120
+src = ["fairypptx"]
+exclude = [".git", "__pycache__", "build", "dist", "venv", ".venv"]
+
+[tool.ruff.lint]
+extend-ignore = ["E203"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
 

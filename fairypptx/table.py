@@ -195,7 +195,9 @@ class Table:
     def to_numpy(self):
         """Convert to `numpy`.
         """
-        return np.array(self.tolist())
+        data = self.tolist()
+        print("data", data)
+        return np.array(data)
 
     @property
     def values(self):

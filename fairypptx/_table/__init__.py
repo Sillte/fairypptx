@@ -68,9 +68,8 @@ class RowColumnMixin(ObjectClassMixin):
         Note:
         (2021-03-28) Currently, only `text` is converted.  
         """
-        dtype = None
         cells = [Cell(self.api.Cells.Item(index + 1)) for index in range(len(self))]
-        return [cell.text for cell in cells]
+        return [str(cell.text) for cell in cells]
 
 class Row(RowColumnMixin):
 
