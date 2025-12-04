@@ -68,7 +68,7 @@ def test_select():
     shape = Shape.make(1)
     shape.select(False)
     App = Application()
-    assert App.ActiveWindow.Selection.Type == constants.ppSelectionShapes
+    assert App.api.ActiveWindow.Selection.Type == constants.ppSelectionShapes
 
 
 def test_tighten():

@@ -2,7 +2,7 @@ from pywintypes import com_error
 from PIL import Image
 
 from fairypptx.presentation import Presentation
-from fairypptx.application import Application
+from fairypptx.core.application import Application
 from fairypptx import constants
 
 from fairypptx.color import Color

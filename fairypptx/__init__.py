@@ -4,7 +4,7 @@ from fairypptx.constants import constants  # NOQA
 
 
 # Policy of the order of imports: "Ancestors should exist without the decendants."
-from fairypptx.application import Application  # NOQA
+from fairypptx.core.application import Application  # NOQA
 from fairypptx.presentation import Presentation  # NOQA
 from fairypptx.slide import Slides, Slide  # NOQA
 from fairypptx.shape import Shapes, Shape # NOQA

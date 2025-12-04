@@ -6,7 +6,7 @@ from fairypptx import Shape, Application
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream
 from fairypptx import registry_utils
-from fairypptx.application import Application
+from fairypptx.core.application import Application
 from fairypptx import constants
 from fairypptx._text import Text, Font, ParagraphFormat
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
