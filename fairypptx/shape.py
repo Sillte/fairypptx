@@ -31,11 +31,8 @@ class Shapes:
 
     """
 
-    def __init__(self, arg=None, *, app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
+    def __init__(self, arg=None):
+        self.app = Application()
         self._api, self._object_list = self._construct(arg)
         assert object_utils.get_type(self._api) == "Shapes"
 
@@ -252,12 +249,8 @@ class Shape:
     text = TextProperty()
     texts = TextsProperty()
 
-    def __init__(self, arg=None, *, app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
-
+    def __init__(self, arg=None):
+        self.app = Application()
         self._api = self._fetch_api(arg)
 
     @property
@@ -329,7 +322,7 @@ class Shape:
 
     @property
     def slide(self):
-        return Slide(upstream(self.api, "Slide"), app=self.app)
+        return Slide(upstream(self.api, "Slide"))
 
     @property
     def textrange(self):

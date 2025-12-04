@@ -23,11 +23,8 @@ class Slides:
 
     """
 
-    def __init__(self, arg=None, *, app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
+    def __init__(self, arg=None):
+        self.app = Application()
 
         self._api, self._indices = self._construct(arg)
 
@@ -94,12 +91,8 @@ class Slides:
 
 
 class Slide:
-    def __init__(self, arg=None, *, app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
-
+    def __init__(self, arg=None):
+        self.app = Application()
         self._api = self._fetch_api(arg)
 
     @property
@@ -129,7 +122,7 @@ class Slide:
 
     @property
     def presentation(self):
-        return Presentation(upstream(self.api, "Presentation"), app=self.app)
+        return Presentation(upstream(self.api, "Presentation"))
 
     @property
     def size(self):

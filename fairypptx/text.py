@@ -12,12 +12,8 @@ from fairypptx._text import Text, Font, ParagraphFormat
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
 
 class TextFrame:
-    def __init__(self, arg, *, app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
-
+    def __init__(self, arg):
+        self.app = Application()
         self._api = self._fetch_api(arg)
 
     def _fetch_api(self, arg):
@@ -89,12 +85,8 @@ At `TextRange`  class, internally, TextRange Objects are stored  by `sequence`.
 """
 
 class TextRange:
-    def __init__(self, arg=None, *, app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
-
+    def __init__(self, arg=None):
+        self.app = Application()
         self._api = self._fetch_api(arg)
 
     def _fetch_api(self, arg):

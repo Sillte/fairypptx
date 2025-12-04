@@ -30,12 +30,8 @@ from fairypptx._table import Cell, Row, Rows, Column, Columns
 from fairypptx._table.stylist import TableStylist
 
 class Table:
-    def __init__(self, arg=None, * ,app=None):
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
-
+    def __init__(self, arg=None):
+        self.app = Application()
         self._api = self._fetch_api(arg)
 
     def _fetch_api(self, arg):
@@ -224,13 +220,9 @@ class DFTable:
     def __init__(self,
                  arg=None,
                  *, index_nlevels=None,
-                 columns_nlevels=None, app=None):
+                 columns_nlevels=None):
 
-        if app is None:
-            self.app = Application()
-        else:
-            self.app = app
-
+        self.app = Application()
         self._api = self._fetch_api(arg)
         self.index_nlevels = index_nlevels
         self.columns_nlevels = columns_nlevels
@@ -313,7 +305,7 @@ class DFTable:
 
     @property
     def table(self):
-        return Table(self.api, app=self.app)
+        return Table(self.api)
 
     def tighten(self):
         self.table.tighten()

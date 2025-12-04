@@ -6,7 +6,7 @@ from fairypptx.core.resolvers import resolve_presentation
 from fairypptx.core.types import COMObject, ObjectLike
 
 class Presentation:
-    def __init__(self, arg: None | str | Path | ObjectLike = None, app=None):
+    def __init__(self, arg: None | str | Path | ObjectLike = None):
         self._api = resolve_presentation(arg) 
 
     @property
