@@ -1,7 +1,8 @@
+from fairypptx.slides import Slides
 import pytest
 from PIL import Image
 from fairypptx import constants
-from fairypptx import Slide, Shape, Shapes, Slides
+from fairypptx import Slide, Shape, Shapes
 
 
 def test_to_image():

@@ -1,7 +1,7 @@
 import pytest
 from fairypptx import constants
 from fairypptx import Shape, Shapes
-from fairypptx import Slides
+from fairypptx.slides import Slides
 from fairypptx import Color
 
 def test_getitem():

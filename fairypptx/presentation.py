@@ -1,7 +1,4 @@
-from fairypptx.core.application import Application
 from pathlib import Path
-from pywintypes import com_error
-from fairypptx.object_utils import is_object
 from fairypptx.core.resolvers import resolve_presentation
 from fairypptx.core.types import COMObject, ObjectLike
 
@@ -15,6 +12,6 @@ class Presentation:
 
     @property
     def slides(self):
-        from fairypptx.slide import Slides
+        from fairypptx.slides import Slides
         return Slides(self.api.Slides)
 
