@@ -1,6 +1,5 @@
 from fairypptx import constants
 from fairypptx.slide_range import SlideRange
-from fairypptx.core.application import Application
 from fairypptx.core.resolvers import resolve_slides
 from fairypptx.core.types import COMObject
 from fairypptx.slide import Slide
@@ -19,7 +18,6 @@ class Slides:
     """
 
     def __init__(self, arg=None):
-        self.app = Application()
         self._api = resolve_slides(arg)
 
     @property
@@ -49,5 +47,5 @@ class Slides:
         raise ValueError(msg)
 
     def __iter__(self):
-        for i, _ in enumerate(self.api.Count):
+        for i in range(self.api.Count):
             yield self[i]
