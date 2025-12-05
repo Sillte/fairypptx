@@ -20,7 +20,7 @@ class Slide:
 
     @property
     def shapes(self):
-        from fairypptx.shape import Shapes
+        from fairypptx.shapes import Shapes
 
         return Shapes(self.api.Shapes)
 
@@ -28,7 +28,8 @@ class Slide:
     def leaf_shapes(self):
         """Return Shapes, but grouped shape is decomposed.
         """
-        from fairypptx.shape import Shapes, Shape
+        from fairypptx.shape import Shape
+        from fairypptx.shape_range import ShapeRange
 
         def _inner(shape):
             if shape.api.Type == constants.msoGroup:
@@ -37,7 +38,7 @@ class Slide:
                 return [shape]
 
         shape_list = sum((_inner(elem) for elem in self.shapes), [])
-        return Shapes(shape_list)
+        return ShapeRange(shape_list)
 
     @property
     def presentation(self):

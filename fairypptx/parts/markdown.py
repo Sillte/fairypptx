@@ -21,7 +21,7 @@ Currently, this contrains a lot of problems.
 """
 from pathlib import Path
 from typing import Sequence
-from fairypptx import Slide, Shapes, Shape, TextRange, Application, Text, Table
+from fairypptx import Slide, ShapeRange, Shape, TextRange, Application, Text, Table
 from fairypptx import constants
 
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
@@ -39,24 +39,28 @@ class Markdown:
     `Markdown` may contains `Multiple` Shapes...
     """
     def __init__(self, arg=None, **kwargs):
-        self.shapes = self._to_shapes(arg)
+        self.shape_range = self._to_shapes(arg)
 
     def _to_shapes(self, arg):
-        if isinstance(arg, Shapes):
+        if isinstance(arg, ShapeRange):
             return arg
         elif isinstance(arg, Shape):
-            return Shapes([arg])
+            return ShapeRange([arg])
         elif isinstance(arg, Markdown):
-            return arg.shapes
+            return arg.shape_range
         elif isinstance(arg, Sequence):
-            return Shapes(arg)
+            return ShapeRange(arg)
         elif arg is None:
             return self._to_shapes(Shape())
         raise TypeError("Invalid arg", arg)
 
     @property
     def shape(self):
-        return self.shapes[0]
+        return self.shape_range[0]
+
+    @property
+    def slide(self):
+        return self.shape_range.api
 
     @classmethod
     def make(cls, arg, slide=None, engine="jsonast"):

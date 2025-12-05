@@ -1,5 +1,6 @@
 from fairypptx.color import Color, make_hue_circle
-from fairypptx.shape import Shape, Shapes
+from fairypptx.shape import Shape
+from fairypptx.shapes import Shapes
 
 
 class PaletteMaker:

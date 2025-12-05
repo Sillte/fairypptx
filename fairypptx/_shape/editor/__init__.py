@@ -9,17 +9,17 @@ import numpy as np
 import _ctypes
 from pywintypes import com_error
 from fairypptx import constants
-from fairypptx.shape import Shape, Shapes
+from fairypptx.shape import Shape
 from fairypptx.shape import Box
 from fairypptx.table import Table
 
-from fairypptx.shape import Shape, Shapes
 from fairypptx.object_utils import is_object
 from typing import Sequence
 
 
 def _to_shapes(arg):
     """Convert to `Shapes`."""
+    from fairypptx import Shapes
 
     if isinstance(arg, Shapes):
         return arg

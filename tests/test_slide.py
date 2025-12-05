@@ -2,7 +2,7 @@ from fairypptx.slides import Slides
 import pytest
 from PIL import Image
 from fairypptx import constants
-from fairypptx import Slide, Shape, Shapes
+from fairypptx import Slide, ShapeRange
 
 
 def test_to_image():
@@ -18,8 +18,8 @@ def test_leaf_shapes():
     s1.text = "S1"
     s2 = slide.shapes.add(1)
     s2.text = "S2"
-    sg = Shapes([s1, s2])
-    grouped = sg.group()
+    sg = ShapeRange([s1, s2])
+    sg.group()
     shapes = slide.leaf_shapes
     assert {shape.text for shape in shapes} == {"S1", "S2"}
 

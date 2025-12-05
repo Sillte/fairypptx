@@ -217,7 +217,6 @@ class Converter:
 
         blocks = json_ast["blocks"]
         from pprint import pprint
-        print("INPUT")
         pprint(blocks)
         shape = Shape.make(1)   # Temporary.  
 
@@ -232,6 +231,7 @@ class Converter:
             cls.from_tag(block, markdown, self)
         markdown.shape.tighten()
         markdown.shape.textrange.paragraphformat.api.Alignment = constants.ppAlignLeft
+        print("aFAFAF", markdown.shape.textrange.text)
         return markdown
 
 

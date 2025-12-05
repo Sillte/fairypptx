@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Sequence, Any
 from fairypptx.core.protocols import PPTXObjectProtocol
 from fairypptx.core.application import Application
 from fairypptx.core.types import COMObject
@@ -10,11 +11,24 @@ from win32com.client import DispatchEx, GetActiveObject
 from pywintypes import com_error
 
 def get_application_api() -> COMObject:
+    """Return Application API.
+    """
     try:
         api = GetActiveObject("Powerpoint.Application")
     except com_error:
         api = DispatchEx("Powerpoint.Application")
     return api
+
+
+def to_api_or_none(arg: Any) -> None | COMObject:
+    """Return `COMOBject`, if possible. 
+    Otherwise return None. 
+    """
+    if isinstance(arg, PPTXObjectProtocol):
+        return arg.api
+    if is_object(arg):
+        return arg
+    return None
 
 
 def resolve_presentation(arg: PPTXObjectProtocol | COMObject | None | str | Path | UserString) -> COMObject:
@@ -123,3 +137,99 @@ def resolve_slides(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObje
     if arg is None:
         App = Application().api
         return App.ActivePresentation.Slides
+
+def resolve_shape_range(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
+    if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
+        if isinstance(arg, PPTXObjectProtocol):
+            api: COMObject = arg.api 
+        else:
+            api = arg
+        if is_object(api, "ShapeRange"):
+            return api
+
+    if arg is None:
+        App = Application().api
+        try:
+            Selection = App.ActiveWindow.Selection
+        except com_error:
+            # May be `ActiveWindow` does not exist. (esp at an empty file.)
+            pass
+        else:
+            if Selection.Type == constants.ppSelectionShapes:
+                if not Selection.HasChildShapeRange:
+                    return Selection.ShapeRange
+                else:
+                    return Selection.ChildShapeRange
+            elif Selection.Type == constants.ppSelectionText:
+                # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
+                return Selection.ShapeRange
+        slide_api = resolve_slide()
+        return slide_api.Range()
+    raise NotImplementedError()
+
+def resolve_shape(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
+    """Return the COMObject of `Shape`."""
+
+    if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
+        if isinstance(arg, PPTXObjectProtocol):
+            api: COMObject = arg.api 
+        else:
+            api = arg
+        if is_object(api, "Shape"):
+            return api
+        elif is_object(api, "Shapes"):
+            return api.Item(1)
+        elif is_object(api, "ShapeRange"):
+            return api.Item(1)
+
+        msg = f"`{arg}` is not acceptable for `Shape`."
+        raise ValueError(msg)
+    if arg is None:
+        App = Application().api
+        return App.ActivePresentation.Slides
+    raise NotImplementedError()
+
+
+def resolve_shapes(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
+    if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
+        if isinstance(arg, PPTXObjectProtocol):
+            api: COMObject = arg.api 
+        else:
+            api = arg
+
+        if is_object(api, "ShapeRange"):
+            return api.Parent.Shapes
+        elif is_object(api, "Shapes"):
+            return api
+        elif is_object(api, "Slide"):
+            return api.Shapes
+        elif is_object(api, "Shape"):
+            return api.Parent.Shapes
+
+    if isinstance(arg, Sequence):
+        apis = [to_api_or_none(elem) for elem in arg]
+        if not apis[0]:
+            raise ValueError(f"Cannot interpret `arg`; {arg}.") 
+        if apis[0] is None:
+            raise ValueError(f"Cannot interpret `arg`; {arg}.") 
+        
+        # [TODO] This judge may be too loose....
+        return apis[0].Parent.Shapes
+
+    if arg is None:
+        App = Application().api
+        try:
+            Selection = App.ActiveWindow.Selection
+        except com_error as e:
+            pass
+        else:
+            if Selection.Type == constants.ppSelectionShapes:
+                if Selection.HasChildShapeRange:
+                    shape_objects = [shape for shape in Selection.ChildShapeRange]
+                else:
+                    shape_objects = [shape for shape in Selection.ShapeRange]
+                return shape_objects[0].Parent.Shapes
+    return resolve_slide().Shapes
+
+          
+

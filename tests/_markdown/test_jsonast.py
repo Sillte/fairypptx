@@ -23,7 +23,9 @@ Hello world!
     """.strip()
     markdown = Markdown.make(IN_SCRIPT)
     out_script = str(markdown.script)
-    assert _to_jsonast(IN_SCRIPT) == _to_jsonast(out_script)
+    assert IN_SCRIPT.strip() == out_script.strip()
+    #print("out_script", out_script)
+    #assert _to_jsonast(IN_SCRIPT) == _to_jsonast(out_script)
 
 def test_simple_itemization():
     IN_SCRIPT = """ 

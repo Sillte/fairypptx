@@ -22,7 +22,8 @@ from fairypptx.color import Color
 from fairypptx.box import Box, intersection_over_cover
 from fairypptx.core.application import Application
 from fairypptx.slide import Slide
-from fairypptx.shape import  Shapes, Shape
+from fairypptx.shape import Shape
+from fairypptx.shapes import Shapes
 from fairypptx.object_utils import is_object, upstream, stored
 from fairypptx.object_utils import registry_utils
 

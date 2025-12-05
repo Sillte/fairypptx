@@ -21,13 +21,10 @@ because `Table` and `Texts` is separate.
 * [link](https://ruru-jinro.net/)
 """.strip()
     markdown = Markdown.make(text, engine="jsonast")
-    assert isinstance(markdown.shapes, Shapes) 
     # (2021/01/06) `JsonAst` does not include the `Table`. 
     # assert len(markdown.shapes) == 2, "Table and `Normal`. 
-
     markdown = Markdown.make(text, engine="html")
-    assert isinstance(markdown.shapes, Shapes) 
-    assert len(markdown.shapes) == 2, "Table and `Normal`."
+    assert len(markdown.shape_range) == 2, "Table and `Normal`."
 
     text = """## Sample Header.  
 This case the return is  Markdown, since

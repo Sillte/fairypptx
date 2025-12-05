@@ -4,6 +4,7 @@
 from pathlib import Path
 from fairypptx import constants
 from fairypptx import Shape, Shapes, Slide, Application, Table
+from fairypptx.shape_range import ShapeRange
 
 
 class Converter:
@@ -32,7 +33,7 @@ class Converter:
         # Path("./degub.html").write_text(html)
         html_clipboard.push(html, is_path=None)
 
-        shapes = Shapes(slide.api.Shapes.Paste())
+        shapes = ShapeRange(slide.api.Shapes.Paste())
         for shape in shapes:
             if shape.api.Type == constants.msoTable:
                 Table(shape).tighten()

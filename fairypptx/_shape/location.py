@@ -35,7 +35,8 @@ class ShapesLocator:
 
     def _to_shapes(self, arg):
         """Convert to `Shapes`."""
-        from fairypptx.shape import Shape, Shapes
+        from fairypptx.shape import Shape
+        from fairypptx.shapes import Shapes
         from fairypptx.object_utils import is_object
         from typing import Sequence
 

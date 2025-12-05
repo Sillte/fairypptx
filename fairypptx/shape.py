@@ -5,12 +5,11 @@ from PIL import Image
 from fairypptx import constants
 from fairypptx.constants import msoTrue, msoFalse
 
-from fairypptx.color import Color
-from fairypptx.box import Box, intersection_over_cover
+from fairypptx.box import Box, intersection_over_cover  # NOQA
 from fairypptx.core.application import Application
-from fairypptx.slide import Slide
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream, stored
+from fairypptx.core.types import COMObject 
 
 from fairypptx._text import Text
 from fairypptx._shape import FillFormat, FillFormatProperty
@@ -21,228 +20,6 @@ from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAlig
 from fairypptx import registry_utils
 
 
-class Shapes:
-    """Shapes.
-    It accepts a subset of Slide.Shapes Object. 
-
-    Note
-    ---------------------
-    * `Add` / `Delete` operations may break the indices of this class.
-
-    """
-
-    def __init__(self, arg=None):
-        self.app = Application()
-        self._api, self._object_list = self._construct(arg)
-        assert object_utils.get_type(self._api) == "Shapes"
-
-        # Sorting mechanism desirable.
-
-    @property
-    def api(self):
-        return self._api
-
-    def __len__(self):
-        return len(self._object_list)
-
-    def __iter__(self):
-        for index in range(len(self)):
-            yield self[index]
-
-    def __getitem__(self, key):
-        if isinstance(key, int):
-            return Shape(self._object_list[key])
-        elif isinstance(key, slice):
-            shape_objects = self._object_list[key]
-            shapes = [Shape(shape_object) for shape_object in shape_objects]
-            return Shapes(shapes)
-
-        raise KeyError(f"`key`: {key}")
-
-    def add(self, shape_type, **kwargs):
-        ret_object = self.api.AddShape(shape_type, Left=0, Top=0, Width=100, Height=100)
-        return Shape(ret_object)
-
-    def group(self):
-        """
-        Side Effect:
-            `Selction` changes.
-        """
-        self.select()
-        shape_object = self.app.api.ActiveWindow.Selection.ShapeRange.Group()
-        return Shape(shape_object)
-
-    @property
-    def leafs(self):
-        """Return Shapes. Each shape of the return is not `msoGroup`.
-        """
-
-        def _inner(shape):
-            if shape.api.Type == constants.msoGroup:
-                return sum((_inner(Shape(elem)) for elem in shape.api.GroupItems), [])
-            else:
-                return [shape]
-
-        shape_list = sum((_inner(elem) for elem in self), [])
-        result = Shapes(shape_list)
-        assert len(result) == len(shape_list)
-
-        return result
-
-    @property
-    def slide(self):
-        slide_objects = [elem.api.Parent for elem in self]
-        assert set(elem.SlideId for elem in slide_objects)
-        return Slide(slide_objects[0])
-
-    @property
-    def circumscribed_box(self):
-        """Return Box which circumscribes `Shapes`.
-        """
-        boxes = [shape.box for shape in self]
-        c_left = min(box.left for box in boxes)
-        c_top = min(box.top for box in boxes)
-        c_right = max(box.right for box in boxes)
-        c_bottom = max(box.bottom for box in boxes)
-        c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
-        return c_box
-
-    def select(self):
-        """ Select.
-        """
-        self.app.api.ActiveWindow.Selection.Unselect()
-        for shape in self:
-            shape.api.Select(msoFalse)
-        return self
-
-    def tighten(self):
-        for shape in self:
-            shape.tighten()
-        return self
-
-    def align_cluster(self,
-                      axis=None,
-                      mode="start",
-                      iou_thresh=0.10):
-        """ Perform alignment. `align` is applied 
-        by the unit of group(cluster).
-        """
-        return ClusterAligner(axis=axis, mode=mode, iou_thresh=iou_thresh)(self)
-
-    def align(self, axis=None, mode="start"):
-        """Align (Make the edge coordination). 
-        """
-        return ShapesAligner(axis=axis, mode=mode)(self)
-
-    def adjust(self, axis=None):
-        """Adjust (keeping the equivalent distance.)
-        """
-        return ShapesAdjuster(axis=axis)(self)
-
-    def __getattr__(self, name):
-        if "_api" not in self.__dict__:
-            raise AttributeError
-        if name.startswith("_"):
-            return object.__getattr___(self, name)
-        try:
-            return getattr(self.__dict__["_api"], name)
-        except AttributeError:
-            pass
-
-        if self:
-            try:
-                values = [getattr(shape, name) for shape in self]
-            except AttributeError:
-                pass
-            else:
-                return values
-        raise AttributeError(f"Cannot find the attribute `{name}`.")
-
-    def __setattr__(self, name, value):
-        if "_api" not in self.__dict__:
-            object.__setattr__(self, name, value)
-            return
-
-        # Especially for ``_indices``.
-        if name.startswith("_"):
-            object.__setattr__(self, name, value)
-            return
-
-        if name in self.__dict__ or name in type(self).__dict__:
-            object.__setattr__(self, name, value)
-            return
-        if hasattr(self.api, name):
-            setattr(self.api, name, value)
-            return
-
-        if self:
-            for shape in self:
-                setattr(shape, name, value)
-            return
-
-        raise ValueError(f"Cannot find an appropriate attribute by `{name}.`")
-
-    def _construct(self, arg):
-        if is_object(arg, "ShapeRange"):
-            shape_objects = [elem for elem in arg]
-            shapes_objects = [
-                shape_object.Parent.Shapes for shape_object in shape_objects
-            ]
-            assert len(set(elem.Parent.SlideID for elem in shapes_objects)) == 1, "All the shapes must belong to the same slide."
-            return shapes_objects[0], shape_objects
-        elif is_object(arg, "Shapes"):
-            object_list = [arg.Item(index + 1) for index in range(arg.Count)]
-            return arg, object_list
-
-        elif is_object(arg, "Slide"):
-            object_list = [arg.Item(index + 1) for index in range(arg.Shapes.Count)]
-            return arg.Shapes, object_list
-        elif isinstance(arg, Shapes):
-            return arg.api, arg._object_list
-        elif isinstance(arg, Sequence):
-            def _to_object(instance):
-                if is_object(instance):
-                    return instance
-                return instance.api
-
-            assert arg, "Empty Shapes is not currently allowed."
-            shape_objects = [_to_object(elem) for elem in arg]
-            slide_ids = set(elem.Parent.SlideID for elem in shape_objects)
-            assert len(slide_ids) <= 1, "All the shapes must belong to the same slide."
-            shape_ids = set(elem.Id for elem in shape_objects)
-            slide_object = shape_objects[0].Parent
-            return slide_object.Shapes, shape_objects
-
-        if arg is None:
-            App = self.app.api
-            try:
-                Selection = App.ActiveWindow.Selection
-            except com_error as e:
-                # May be `ActiveWindow` does not exist. (esp at an empty file.)
-                pass
-            else:
-                if Selection.Type == constants.ppSelectionShapes:
-                    if not Selection.HasChildShapeRange:
-                        shape_objects = [shape for shape in Selection.ShapeRange]
-                    else:
-                        shape_objects = [shape for shape in Selection.ChildShapeRange]
-                    shapes_objects = [
-                        shape_object.Parent.Shapes for shape_object in shape_objects
-                    ]
-                    assert len(set(elem.Parent.SlideID for elem in shapes_objects)) == 1, "All the shapes must belong to the same slide."
-                    shapes_object = shapes_objects[0]
-                    return shapes_object, shape_objects
-                elif Selection.Type == constants.ppSelectionText:
-                    # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
-                    shape_object = Selection.ShapeRange(1)
-                    shapes_object = shape_object.Parent.Shapes
-                    return shapes_object, [shape_object]
-            slide = Slide()
-            shape_objects = [elem for elem in slide.api.Shapes]
-            return slide.api.Shapes, shape_objects
-        raise ValueError(f"Cannot interpret `arg`", arg.__class__)
-
-
 class Shape:
     line = LineFormatProperty()
     fill = FillFormatProperty()
@@ -250,11 +27,10 @@ class Shape:
     texts = TextsProperty()
 
     def __init__(self, arg=None):
-        self.app = Application()
         self._api = self._fetch_api(arg)
 
     @property
-    def api(self):
+    def api(self) -> COMObject:
         return self._api
 
     @property
@@ -321,14 +97,14 @@ class Shape:
         return (self.api.Width, self.api.Height)
 
     @property
-    def slide(self):
+    def slide(self) -> "Slide":
+        from fairypptx.slide import Slide
         return Slide(upstream(self.api, "Slide"))
 
     @property
     def textrange(self):
         # Return `TextRange`.
         from fairypptx import TextRange
-
         return TextRange(self.api.TextFrame.TextRange)
 
     @textrange.setter
@@ -337,6 +113,7 @@ class Shape:
 
     @classmethod
     def make(cls, arg, **kwargs):
+        from fairypptx import Shapes 
         shapes = Shapes()
         if isinstance(arg, Image.Image):
             with registry_utils.yield_temporary_path(arg) as path: 

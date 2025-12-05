@@ -1,5 +1,5 @@
-from fairypptx.shape import Shapes, Shape
-from fairypptx.shape import Shapes
+from fairypptx.shape import Shape
+from fairypptx.shapes import Shapes
 import _ctypes 
 from pywintypes import com_error
 
