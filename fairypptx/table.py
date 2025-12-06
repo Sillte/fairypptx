@@ -79,7 +79,7 @@ class Table:
             column.tighten()
 
     def tolist(self):
-        data = [row.tolist() for row in self.rows]
+        data = [[str(cell.text) for cell in row.cells] for row in self.rows]
         return data
 
     def to_numpy(self):

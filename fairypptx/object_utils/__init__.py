@@ -3,6 +3,7 @@
 Utility functions for handling Objects.
 
 """
+from typing import Self, Sequence, Any, cast
 import builtins
 from win32com.client import CDispatch, DispatchBaseClass, CoClassBaseClass
 from pywintypes import com_error
@@ -589,7 +590,7 @@ class ObjectClassMixin:
             object.__setattr__(self, name, value)
 
 
-class ObjectItems:
+class ObjectItems[T]:
     """Utility class for handing `api.Item(index)` function.
     Args
         api_object: `.api` object for the parent.
@@ -597,32 +598,38 @@ class ObjectItems:
         child_cls: The wrapper class used for each element of Items.
     """
 
-    def __init__(self, api_object, child_cls):
-        self.api = api_object
+    def __init__(self, api_object: Any, child_cls: type[T]):
+        self._api = api_object
         self.cls = child_cls
+        
+    @property
+    def api(self):
+        return self._api
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.api.Count
 
-    def __getitem__(self, key):
-        if isinstance(key, (int, np.integer)):
+    def __getitem__(self, key: int | slice | Sequence[int]) -> T | list[T]:
+        if isinstance(key, (int, np.number)):
+            key = int(key)
             if key < 0:
-                key = key + len(self) - 1
+                key = key + len(self)
             if not (0 <= key < len(self)):
                 raise IndexError(
                     f"Size is {len(self)}, index is {key} is out of range."
                 )
-            return self.cls(self.api.Item(key + 1))
+            return cast(T, self.cls(self.api.Item(key + 1)))
+
         elif isinstance(key, slice):
             indices = range(*key.indices(len(self)))
-            return [self[index] for index in indices]
+            return cast(list[T], [self[index] for index in indices])
         elif isinstance(key, Sequence):
-            return [self[index] for index in key]
+            return cast(list[T], [self[index] for index in key])
         raise TypeError(
             f"Key's type is invalid; key = `{key}`, type(key) = `{type(key)}`"
         )
 
-    def normalize(self, key):
+    def normalize(self, key: int | slice | Sequence[int]) -> int | Sequence[int]:
         """Return int or Sequence of int, which represents indices.
 
         If key is int, the return is in [0, len(sel) - 1].
@@ -652,7 +659,6 @@ class ObjectItems:
                         f"index out of range; len=`{len(self)}`, but index is `{elem}`"
                     )
             return key
-
         raise TypeError(f"Invalid Argument; `{key}`")
 
 

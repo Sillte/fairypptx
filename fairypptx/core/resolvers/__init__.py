@@ -289,5 +289,17 @@ def resolve_table(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObjec
 
     raise ValueError(f"Cannot interpret `arg`; {arg}.")
 
+
+def resolve_row(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
+    if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
+        if isinstance(arg, PPTXObjectProtocol):
+            api: COMObject = arg.api 
+        else:
+            api = arg
+        if is_object(api, "Table"):
+            return api.Row
+        if is_object(api, "Shape"):
+            return api.Table
+
           
 
