@@ -74,10 +74,10 @@ def test_select():
 def test_tighten():
     shape = Shape.make(1)
     shape.text = "This is a test of tighten."
-    width, height = shape.Width, shape.Height
+    width, height = shape.width, shape.height
     shape.tighten()
-    assert width != shape.Width
-    assert height != shape.Height
+    assert width != shape.api.Width
+    assert height != shape.api.Height
 
 
 def test_like():

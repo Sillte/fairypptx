@@ -10,6 +10,7 @@ from fairypptx.presentation import Presentation  # NOQA
 from fairypptx.slide import Slide  # NOQA
 from fairypptx.slide_range import SlideRange  # NOQA
 from fairypptx.shape import Shape # NOQA
+from fairypptx.shape import GroupShape # NOQA
 from fairypptx.shape_range import ShapeRange # NOQA
 from fairypptx.shapes import Shapes # NOQA
 from fairypptx.text import TextFrame, TextRange, Text # NOQA

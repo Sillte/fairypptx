@@ -1,6 +1,8 @@
 from collections.abc import Sequence
 from collections import UserString
 from pywintypes import com_error
+from typing import Any, Self, Literal
+from pywintypes import com_error
 from PIL import Image
 from fairypptx import constants
 from fairypptx.constants import msoTrue, msoFalse
@@ -9,7 +11,10 @@ from fairypptx.box import Box, intersection_over_cover  # NOQA
 from fairypptx.core.application import Application
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream, stored
-from fairypptx.core.types import COMObject 
+from fairypptx.core.types import COMObject, PPTXObjectProtocol 
+
+from fairypptx.core.resolvers import resolve_shape 
+
 
 from fairypptx._text import Text
 from fairypptx._shape import FillFormat, FillFormatProperty
@@ -20,65 +25,90 @@ from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAlig
 from fairypptx import registry_utils
 
 
-class Shape:
+class LocationMixin:
+    """This Mixin handles the functionality of geometry information of `Shape`.
+    This Mixin must be applicable to all the `Shape` in the domain of COMObject.
+    """
+
+    @property
+    def left(self: PPTXObjectProtocol) -> float:
+        return self.api.Left
+
+    @left.setter
+    def left(self: PPTXObjectProtocol, value: float) -> None:
+        self.api.Left = value
+
+    @property
+    def top(self: PPTXObjectProtocol) -> float:
+        return self.api.Top
+
+    @top.setter
+    def top(self: PPTXObjectProtocol, value: float) -> None:
+        self.api.Top = value
+
+    @property
+    def width(self: PPTXObjectProtocol) -> float:
+        return self.api.Width
+
+    @width.setter
+    def width(self: PPTXObjectProtocol, value: float) -> None:
+        self.api.Width = value
+
+    @property
+    def height(self: PPTXObjectProtocol) -> None:
+        return self.api.Height
+
+    @height.setter
+    def height(self: PPTXObjectProtocol, value: float) -> None:
+        self.api.Height = value
+
+    @property
+    def size(self: PPTXObjectProtocol) -> tuple[float, float]:
+        return (self.api.Width, self.api.Height)
+
+    @size.setter
+    def size(self: PPTXObjectProtocol, value: tuple[float, float]) -> None:
+        self.api.Width, self.api.Height = value
+
+    @property
+    def rotation(self: PPTXObjectProtocol) -> float:
+        return self.api.Rotation
+
+    @rotation.setter
+    def rotation(self: PPTXObjectProtocol, value: float) -> None: 
+        self.api.Rotation = value
+
+    def rotate(self: PPTXObjectProtocol, degree: float) -> None:
+        self.api.Rotation += degree
+
+
+class Shape(LocationMixin):
     line = LineFormatProperty()
     fill = FillFormatProperty()
     text = TextProperty()
     texts = TextsProperty()
 
+    def __new__(cls, arg: Any) -> "Shape":
+        # NOTE: For the direction of the dependency, 
+        # `Factory` is imported here. 
+        klass = ShapeFactory.get_class(arg)
+        return super().__new__(klass)
+
     def __init__(self, arg=None):
-        self._api = self._fetch_api(arg)
+        self._api = resolve_shape(arg) 
 
     @property
     def api(self) -> COMObject:
         return self._api
 
     @property
+    def shapes_api(self) -> COMObject:
+        return self.api.Parent.Shapes
+
+    @property
     def box(self):
         return Box(self.api)
 
-    @property
-    def left(self):
-        return self.api.Left
-
-    @left.setter
-    def left(self, value):
-        self.api.Left = value
-
-    @property
-    def top(self):
-        return self.api.Top
-
-    @top.setter
-    def top(self, value):
-        self.api.Top = value
-
-    @property
-    def width(self):
-        return self.api.Width
-
-    @width.setter
-    def width(self, value):
-        self.api.Width = value
-
-    @property
-    def height(self):
-        return self.api.Height
-
-    @height.setter
-    def height(self, value):
-        self.api.Height = value
-
-    @property
-    def rotation(self):
-        return self.api.Rotation
-
-    @rotation.setter
-    def rotation(self, value): 
-        self.api.Rotation = value
-
-    def rotate(self, degree):
-        self.api.Rotation += degree
 
     def select(self, replace=True):
         return self.api.Select(replace)
@@ -91,10 +121,6 @@ class Shape:
             return self
         raise NotImplementedError("Yet, not implemented.")
 
-
-    @property
-    def size(self):
-        return (self.api.Width, self.api.Height)
 
     @property
     def slide(self) -> "Slide":
@@ -112,54 +138,18 @@ class Shape:
         self.text = value
 
     @classmethod
-    def make(cls, arg, **kwargs):
-        from fairypptx import Shapes 
-        shapes = Shapes()
-        if isinstance(arg, Image.Image):
-            with registry_utils.yield_temporary_path(arg) as path: 
-                shape_object = shapes.api.AddPicture(
-                    path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1],
-                )
-                shape = Shape(shape_object)
-                shape.width = arg.size[0] 
-                shape.height = arg.size[1]
-        elif isinstance(arg, (str, UserString)):
-            shape = cls.make_textbox(arg, **kwargs)
-            # TODO: Idetally, interpret of `str` is necessary.
-        elif isinstance(arg, int):
-            shape = Shape(shapes.add(arg, **kwargs))
-        else:
-            raise ValueError(f"`{type(arg)}`, `{arg}` is not interpretted.")
-        assert isinstance(shape, Shape)
-        ShapesLocator(mode="center")(shape)
-        return shape
+    def make(cls, arg, **kwargs) -> "Shape":
+        return ShapeFactory.make(arg, **kwargs)
 
 
     @classmethod
     def make_textbox(cls, arg, **kwargs):
-        assert isinstance(arg, (str, UserString))
-        shape = cls.make(constants.msoShapeRectangle)
-        shape.text = arg
-        shape.tighten()
-        return shape
+        return ShapeFactory.make_textbox(arg, **kwargs)
 
     @classmethod
-    def make_arrow(cls, arg=None, direction="right", **kwargs):
-        assert arg is None, "Current"
-        direction = direction.lower()
-        if direction == "right":
-            shape = cls.make(constants.msoShapeRightArrow)
-        elif direction == "left":
-            shape = cls.make(constants.msoShapeLeftArrow)
-        elif direction == "up":
-            shape = cls.make(constants.msoShapeUpArrow)
-        elif direction == "down":
-            shape = cls.make(constants.msoShapeDownArrow)
-        elif direction == "both":
-            shape = cls.make(constants.msoShapeLeftRightArrow)
-        else:
-            raise ValueError(f"Invalid direction.")
-        return shape
+    def make_arrow(cls, arg: Literal["right", "left", "up", "down", "both"] = "right"):
+        return ShapeFactory.make_textbox(arg)
+
 
     def like(self, style):
         if isinstance(style, str):
@@ -232,43 +222,85 @@ class Shape:
         assert self.is_child()
         return Shape(self.api.ParentGroup)
 
+
+class GroupShape(Shape):
+    def ungroup(self) -> "ShapeRange":
+        from fairypptx.shape_range import ShapeRange
+        return ShapeRange(self.api.Ungroup())
+
     @property
-    def children(self):
-        assert not self.is_leaf()
-        return Shapes([elem for elem in self.api.GroupItems])
-
-    def ungroup(self):
-        return Shapes(self.api.Ungroup())
+    def children(self) -> "ShapeRange":
+        from fairypptx.shape_range import ShapeRange
+        return ShapeRange([elem for elem in self.api.GroupItems])
 
 
-    def __getattr__(self, name):
-        if "_api" not in self.__dict__:
-            raise AttributeError
-        return getattr(self.__dict__["_api"], name)
+class ShapeFactory:
 
-    def __setattr__(self, name, value):
-        if "_api" not in self.__dict__:
-            object.__setattr__(self, name, value)
+    @staticmethod
+    def get_class(arg: None) -> type[Shape]:
+        """This function is intended to generate a class 
+        from PPTXObejct or COMObject. 
+        """
+        api = resolve_shape(arg)
+        # For some `arg`, `Type` is not accessible.
+        try:
+            t = api.Type
+        except com_error:
+            t = None
+        if t == constants.msoGroup:
+            return GroupShape
+        return Shape
 
-        if name in self.__dict__ or name in type(self).__dict__:
-            object.__setattr__(self, name, value)
-        elif hasattr(self.api, name):
-            setattr(self.api, name, value)
+    # Base on the argument given by user, 
+    # Factory selects the apt Shape.
+
+    @staticmethod
+    def make(arg: Any, **kwargs):
+        from fairypptx import Shapes 
+        if isinstance(arg, Image.Image):
+            shape = ShapeFactory.make_shape_with_image(arg)
+        elif isinstance(arg, (str, UserString)):
+            shape = ShapeFactory.make_textbox(arg, **kwargs)
+        elif isinstance(arg, int):
+            shape = ShapeFactory.make_shape_from_type(arg, **kwargs)
         else:
-            # TODO: Maybe require modification.
-            object.__setattr__(self, name, value)
+            raise ValueError(f"`{type(arg)}`, `{arg}` is not interpretted.")
+        ShapesLocator(mode="center")(shape)
+        return shape
 
-    def _fetch_api(self, arg):
-        if is_object(arg, "Shape"):
-            return arg
-        elif isinstance(arg, Shape):
-            return arg.api
-        elif arg is None:
-            shapes = Shapes()
-            if not shapes:
-                raise ValueError("No Shapes.")
-            return shapes[0].api
-        raise ValueError(f"Cannot interpret `arg`; {arg}.")
+    @staticmethod
+    def make_textbox(arg: str | UserString) -> Shape:
+        shape = ShapeFactory.make_shape_from_type(constants.msoShapeRectangle)
+        shape.text = arg
+        shape.tighten()
+        return shape
+
+    @staticmethod
+    def make_shape_from_type(arg: int, **kwargs) -> Shape:
+        from fairypptx import Slide
+        shapes = Slide().shapes
+        return shapes.add(arg, **kwargs)
+
+    @staticmethod
+    def make_shape_with_image(arg: Image.Image, **kwargs) -> Shape:
+        from fairypptx import Slide
+        from fairypptx import Slide
+        shapes = Slide().shapes
+        with registry_utils.yield_temporary_path(arg) as path: 
+            shape_object = shapes.api.AddPicture(
+                path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1], **kwargs
+            )
+            shape = Shape(shape_object)
+            shape.width = arg.size[0] 
+            shape.height = arg.size[1]
+        return shape
+
+    @staticmethod
+    def make_arrow(arg: Literal["right", "left", "up", "down", "both"] = "right") -> Shape:
+        m = {"right": constants.msoShapeRightArrow, "left": constants.msoShapeLeftArrow,
+         "up": constants.msoShapeUpArrow, "down": constants.msoShapeDownArrow, 
+         "both": constants.msoShapeLeftRightArrow}
+        return ShapeFactory.make_shape_from_type(m[arg])
 
 
 # High-level APIs are loaded here.

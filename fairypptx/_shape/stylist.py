@@ -29,7 +29,7 @@ class ShapeStylist:
             self.text_stylist = None
         self.fill = FillFormat(shape.fill)
         self.line = LineFormat(shape.line)
-        self.auto_shape_type = shape.AutoShapeType
+        self.auto_shape_type = shape.api.AutoShapeType
 
     def __call__(self, shape):
         if self.text_stylist:

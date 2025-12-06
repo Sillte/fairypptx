@@ -4,7 +4,7 @@ from collections.abc import Sequence as SeqABC
 from fairypptx.core.types import COMObject
 from fairypptx.core.application import Application
 from fairypptx import constants
-from fairypptx.shape import Shape
+from fairypptx.shape import Shape, GroupShape
 from fairypptx.object_utils import is_object
 from fairypptx.core.resolvers import resolve_shape_range
 
@@ -60,8 +60,8 @@ class ShapeRange:
         """Return Shapes. Each shape of the return is not `msoGroup`.
         """
         def _inner(shape: Shape) -> list[Shape]:
-            if shape.api.Type == constants.msoGroup:
-                return sum((_inner(Shape(elem)) for elem in shape.api.GroupItems), [])
+            if isinstance(shape, GroupShape):
+                return list(shape.children)
             else:
                 return [shape]
         shape_list: Sequence[Shape] = sum((_inner(elem) for elem in self), [])
@@ -81,8 +81,9 @@ class ShapeRange:
         shapes_api = self._shapes[0].api.Parent  # COM 
         if is_object(shapes_api, "Slide"):
             shapes_api = shapes_api.Shapes
-        indices = [s.api.ZOrderPosition for s in self._shapes]
-        return shapes_api.Range(indices)
+        names = [s.api.Name for s in self._shapes]
+        return shapes_api.Range(names)
+
 
     def align_cluster(self,
                       axis=None,

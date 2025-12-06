@@ -22,7 +22,7 @@ def test_insert_mode(mode, s1, s2, expected):
     ret = tr.insert(s2, mode)
     assert ret.text == s2
     # Change the format
-    ret.api.Font.Size = shape.TextFrame.TextRange.Font.Size + 12
+    ret.api.Font.Size = shape.api.TextFrame.TextRange.Font.Size + 12
     shape.tighten()
     tr = TextRange(shape)
     assert len(tr.runs) == 2

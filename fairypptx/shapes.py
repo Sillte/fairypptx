@@ -36,7 +36,7 @@ class Shapes:
             shapes = list(self)[key]
             return ShapeRange(shapes)
 
-    def add(self, shape_type: int) -> Shape:
+    def add(self, shape_type: int, **kwargs) -> Shape:
         ret_object = self.api.AddShape(shape_type, Left=0, Top=0, Width=100, Height=100)
         return Shape(ret_object)
 

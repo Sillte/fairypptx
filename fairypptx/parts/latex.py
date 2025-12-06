@@ -3,7 +3,7 @@
 I wonder what is appropriate name for these concepts....
 """
 
-from fairypptx import TextRange, Shape, Shapes, Slide
+from fairypptx import TextRange, Shape, Shapes, Slide, GroupShape
 from fairypptx import Color
 from fairypptx import Shape
 from fairypptx.registry_utils import yield_temporary_path
@@ -33,7 +33,6 @@ class Latex:
 
     def __init__(self, arg=None):
         self.shape = self._to_root_shape(arg)  # The grouped Shape.
-        assert not self.shape.is_leaf()
 
     @classmethod
     def make(cls, text, **kwargs):
@@ -51,14 +50,11 @@ class Latex:
         return Latex(shape)
 
     def _to_root_shape(self, arg):
-        if isinstance(arg, Shape):
-            if arg.is_child():
-                return arg.parent
-            else:
-                if not arg.is_leaf():
-                    return arg
-                else:
-                    raise ValueError("Invalid Shape", arg, arg.text)
+        if isinstance(arg, GroupShape):
+            return arg
+        elif isinstance(arg, Shape):
+            return arg.parent
+
         elif isinstance(arg, Latex):
             return arg.shape
 
@@ -150,7 +146,7 @@ class Latex:
         """Return whether `shape` is considered to be `Latex` or not."""
         if shape.is_child():
             shape = shape.parent
-        if not shape.is_leaf():
+        if isinstance(shape, GroupShape):
             script_shapes = [
                 shape for shape in shape.children if cls.is_script_shape(shape)
             ]
