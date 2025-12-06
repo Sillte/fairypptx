@@ -23,7 +23,6 @@ from pathlib import Path
 from fairypptx import Shape, TextRange
 from fairypptx import Table as PPTXTable 
 from fairypptx import constants 
-from fairypptx import text
 from contextlib import contextmanager  
 import json 
 
@@ -421,7 +420,7 @@ class Link(Element):
         string = "".join([str(inline.get("c", "")) for inline in inlines])
         path = targets[0]
         textrange = converter.insert(string)
-        hyperlink = textrange.ActionSettings(constants.ppMouseClick)
+        hyperlink = textrange.api.ActionSettings(constants.ppMouseClick)
         hyperlink.Action = constants.ppActionHyperlink
         hyperlink.Hyperlink.Address = path
 

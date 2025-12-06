@@ -1,7 +1,7 @@
 """There are codes related to modify `TextRange`.
 
 """
-from fairypptx.text import TextRange
+from fairypptx.text_range import TextRange
 from fairypptx._text.editor import guessers 
 from fairypptx import constants
 

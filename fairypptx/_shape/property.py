@@ -13,7 +13,7 @@ class TextProperty:
         return Text(shape.api.TextFrame.TextRange)
 
     def __set__(self, shape, value):
-        from fairypptx import TextRange
+        from fairypptx.text_range import TextRange
         tr = TextRange(shape)
         tr.text = value
 
