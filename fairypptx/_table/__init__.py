@@ -1,19 +1,12 @@
-from collections.abc import Sequence
-from PIL import Image
 import numpy as np
-import pandas as pd
-from fairypptx import constants
-from fairypptx.constants import msoTrue, msoFalse
 
-from fairypptx.color import Color
-from fairypptx.slide import Slide
-from fairypptx.shape import Shape
-from fairypptx.shapes import Shapes 
+
 from fairypptx.object_utils import is_object, upstream, stored, ObjectClassMixin, ObjectItems
 
 class Cell(ObjectClassMixin):
     @property
     def shape(self):
+        from fairypptx.shape import Shape
         return Shape(self.api.Shape)
 
     @property

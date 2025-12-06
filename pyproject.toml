@@ -32,10 +32,7 @@ dev = [
     "isort>=5.0",
     "mypy>=1.0",
 ]
-test = [
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-]
+
 
 [project.urls]
 Repository = "https://github.com/Sillte/fairypptx"
@@ -47,7 +44,6 @@ include = ["fairypptx*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=fairypptx --cov-report=html"
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"

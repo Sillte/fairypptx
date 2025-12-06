@@ -333,10 +333,6 @@ dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
 ]
-test = [
-    { name = "pytest" },
-    { name = "pytest-cov" },
-]
 
 [package.metadata]
 requires-dist = [
@@ -351,13 +347,11 @@ requires-dist = [
     { name = "pillow" },
     { name = "premailer" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0" },
-    { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.0" },
     { name = "pywin32" },
     { name = "toml" },
 ]
-provides-extras = ["dev", "test"]
+provides-extras = ["dev"]
 
 [[package]]
 name = "figpptx"

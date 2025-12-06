@@ -1,4 +1,5 @@
 # Classes used over the entire package should be imported first. 
+from fairypptx.df_table import DFTable
 from fairypptx.slides import Slides
 from fairypptx.color import Color  # NOQA
 from fairypptx.constants import constants  # NOQA
@@ -14,7 +15,7 @@ from fairypptx.shape import GroupShape # NOQA
 from fairypptx.shape_range import ShapeRange # NOQA
 from fairypptx.shapes import Shapes # NOQA
 from fairypptx.text import TextFrame, TextRange, Text # NOQA
-from fairypptx.table import Table, DFTable # NOQA
+from fairypptx.table import Table # NOQA
 
 from fairypptx.parts.markdown import Markdown
 from fairypptx.parts.latex import Latex  # NOQA

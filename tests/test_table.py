@@ -1,7 +1,8 @@
 import pytest
 import numpy as np
 import pandas as pd  
-from fairypptx.table import Table, DFTable, Row, Rows
+from fairypptx.df_table import DFTable
+from fairypptx.table import Table, Row, Rows
 
 def test_init():
     array = np.arange(8).reshape(2, 4)
@@ -15,8 +16,8 @@ def test_df_table():
     df = pd.DataFrame(np.arange(12).reshape(3, 4))
     df.index = pd.MultiIndex.from_tuples([("XX", "A"), ("YY", "B"), ("ZZ", "C")])
     df.columns = ["W", "X", "Y", "Z"]
-    table = DFTable.make(df)
-    read_df = table.df
+    table = DFTable.make(df, with_index=True)
+    read_df = table.to_df(index_nlevels=2, columns_nlevels=1)
     assert df.astype("U").equals(read_df.astype("U"))
 
 def test_insert():
