@@ -5,7 +5,7 @@ from fairypptx.presentation import Presentation
 from fairypptx.core.resolvers import resolve_slide
 from fairypptx import constants
 
-from fairypptx.box import Box
+from fairypptx._shape.box import Box
 from fairypptx.registry_utils import yield_temporary_path
 from fairypptx.object_utils import is_object, upstream
 
@@ -52,10 +52,9 @@ class Slide:
         return (pres.api.PageSetup.SlideWidth, pres.api.PageSetup.SlideHeight)
 
     @property
-    def box(self):
+    def box(self) -> Box:
         width, height = self.size
-        d = {"Left": 0, "Top": 0, "Width": width, "Height": height}
-        return Box(d)
+        return Box(left=0, top=0, width=width, height=height)
 
     @property
     def width(self):

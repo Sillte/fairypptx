@@ -6,7 +6,6 @@ from fairypptx import constants
 from fairypptx.constants import msoTrue, msoFalse
 
 from fairypptx.color import Color
-from fairypptx.box import Box, intersection_over_cover
 from fairypptx.slide import Slide
 from fairypptx.shape import Shape
 from fairypptx.shapes import Shapes 

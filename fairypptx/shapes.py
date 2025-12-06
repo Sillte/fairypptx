@@ -2,7 +2,7 @@ from typing import Iterator, Self
 
 from fairypptx.constants import msoFalse
 
-from fairypptx.box import Box  # NOQA
+from fairypptx._shape.box import Box  # NOQA
 from fairypptx.core.application import Application
 from fairypptx.core.resolvers import resolve_shapes
 from fairypptx.core.types import COMObject
@@ -54,7 +54,7 @@ class Shapes:
         c_top = min(box.top for box in boxes)
         c_right = max(box.right for box in boxes)
         c_bottom = max(box.bottom for box in boxes)
-        c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
+        c_box = Box(left=c_left, top=c_top, width=c_right - c_left, height=c_bottom - c_top)
         return c_box
 
     def select(self) -> Self:

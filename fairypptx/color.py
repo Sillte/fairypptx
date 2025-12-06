@@ -73,9 +73,9 @@ class _Color:
             tup = tuple(arg)
             if all(isinstance(elem, (int, float)) for elem in tup):
                 if len(tup) == 3:
-                    return cls._from_rgb_tuple(tup)  # type:[ignore]
+                    return cls._from_rgb_tuple(tup)
                 elif len(tup) == 4:
-                    return cls._from_rgba_tuple(tup) # type:[ignore]
+                    return cls._from_rgba_tuple(tup)
             raise ValueError(f"Invalid color tuple: {arg}")
 
         # 4) Object with `.rgba`

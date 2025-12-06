@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List, Union
-from fairypptx.box import Box
+from fairypptx._shape.box import Box
 from fairypptx.slide import Slide
 
 
@@ -249,7 +249,7 @@ class GridHandler:
         width = xe - xs
         top = ys
         height = ye - ys
-        box = Box((left, top, width, height))
+        box = Box(left=left, top=top, width=width, height=height)
         return box
 
 

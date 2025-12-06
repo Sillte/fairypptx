@@ -5,7 +5,7 @@
 from typing import Union
 import numpy as np
 from collections import defaultdict
-from fairypptx.box import Box, intersection_over_cover
+from fairypptx._shape.box import Box
 from fairypptx.slide import GridHandler
 
 
@@ -141,7 +141,7 @@ class ShapesAdjuster:
         c_top = min(box.top for box in boxes)
         c_right = max(box.right for box in boxes)
         c_bottom = max(box.bottom for box in boxes)
-        c_box = Box(c_left, c_top, c_right - c_left, c_bottom - c_top)
+        c_box = Box(left=c_left, top=c_top, width=c_right - c_left, height=c_bottom - c_top)
         return c_box
 
     def _adjust_horizontally(self, shapes, c_box, is_edge_interval):
@@ -405,7 +405,7 @@ class ClusterMaker:
         def _is_same_cluster(shape1, shape2):
             box1 = shape1.box
             box2 = shape2.box
-            rate = intersection_over_cover(box1, box2, axis=c_axis)
+            rate = Box.intersection_over_cover(box1, box2, axis=c_axis)
             return self.iou_thresh <= rate
 
         def sort_key(shape):

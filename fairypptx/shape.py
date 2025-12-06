@@ -7,7 +7,7 @@ from PIL import Image
 from fairypptx import constants
 from fairypptx.constants import msoTrue, msoFalse
 
-from fairypptx.box import Box, intersection_over_cover  # NOQA
+from fairypptx._shape.box import Box
 from fairypptx.core.application import Application
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream, stored
@@ -107,7 +107,7 @@ class Shape(LocationMixin):
 
     @property
     def box(self):
-        return Box(self.api)
+        return Box.from_api(self.api)
 
 
     def select(self, replace=True):
