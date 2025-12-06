@@ -10,9 +10,8 @@ Desire:
 
 """
 
-import itertools
+from typing import Any, Self
 from collections.abc import Sequence
-from PIL import Image
 import numpy as np
 import pandas as pd
 from fairypptx import constants
@@ -20,8 +19,9 @@ from fairypptx.constants import msoTrue, msoFalse
 
 from fairypptx.color import Color
 from fairypptx.core.application import Application
+from fairypptx.core.resolvers import resolve_table, resolve_shapes
+from fairypptx.core.types import COMObject
 from fairypptx.slide import Slide
-from fairypptx.shape import Shape
 from fairypptx.shapes import Shapes
 from fairypptx.object_utils import is_object, upstream, stored
 from fairypptx.object_utils import registry_utils
@@ -31,152 +31,46 @@ from fairypptx._table.stylist import TableStylist
 
 class Table:
     def __init__(self, arg=None):
-        self.app = Application()
-        self._api = self._fetch_api(arg)
-
-    def _fetch_api(self, arg):
-        if is_object(arg, "Shape"):
-            assert arg.Type == constants.msoTable
-            return arg.Table
-        elif isinstance(arg, Shape):
-            assert arg.api.Type == constants.msoTable
-            return arg.api.Table
-        elif is_object(arg, "Table"):
-            return arg
-        elif isinstance(arg, Table):
-            return arg.api
-        elif arg is None:
-            return self._fetch_api(Shape())
-
-        raise ValueError(f"Cannot interpret `arg`; {arg}.")
+        self._api = resolve_table(arg)
 
     @property
-    def shape(self):
+    def shape(self) -> "Shape":
+        from fairypptx.shape import Shape
         return Shape(self.api.Parent)
 
     @property
-    def api(self):
+    def api(self) -> COMObject:
         return self._api
 
     @property
-    def size(self):
+    def size(self) -> tuple[int, int]:
         # Naming is under consideration. `row` and `column` are more appropriate?
         return (len(self.api.Rows), len(self.api.Columns))
 
     @property
-    def rows(self):
+    def rows(self) -> Rows:
         return Rows(self.api.Rows)
 
     @property
-    def columns(self):
+    def columns(self) -> Columns:
         return Columns(self.api.Columns)
 
     def __setitem__(self, key, value):
-        assert isinstance(key, tuple)
-        assert len(key) == 2
-
-        def _is_indices(arg):
-            if isinstance(arg, (list, tuple, slice)):
-                return True
-            return False
-
-        def _to_indices(arg, axis):
-            if isinstance(arg, (list, tuple)):
-                return list(arg)
-            elif isinstance(arg, slice):
-                start, stop, step = arg.start, arg.stop, arg.step
-                if start is None:
-                    start = 0
-                if stop is None:
-                    stop = self.size[axis]
-                if step is None:
-                    step = 1
-                indices = []
-                i = start
-                while i < stop:
-                    indices.append(i)
-                    i += step
-                return indices
-            raise ValueError(f"`arg` cannot be interpreted as indices.", arg)
-
-        i_row, i_column = key
-        if isinstance(i_row , int) and isinstance(i_column, int):
-            if i_row < 0:
-                i_row += self.size[0]
-            if i_column < 0:
-                i_column += self.size[1]
-            cell_object = self.api.Cell(i_row + 1, i_column + 1)
-            # [TODO]: if `value` is `Text`, then what should we do? 
-            cell_object.Shape.TextFrame.TextRange.Text = str(value)
-            return
-        elif isinstance(i_row, int) and _is_indices(i_column):
-            indices = _to_indices(i_column, axis=1)
-            assert len(indices) == len(value)
-            for index, elem in zip(indices, value):
-                self[i_row, index] = elem
-        elif _is_indices(i_row) and isinstance(i_column, int):
-            indices = _to_indices(i_row, axis=0)
-            assert len(indices) == len(value)
-            for index, elem in zip(indices, value):
-                self[index, i_column] = elem
-        elif _is_indices(i_row) and _is_indices(i_column):
-            r_indices = _to_indices(i_row, axis=0)
-            c_indices = _to_indices(i_column, axis=0)
-            value = np.array(value)
-
-            if value.ndim == 0:
-                value = np.broadcast_to(value, shape=(len(r_indices), len(c_indices)))
-            elif value.ndim == 1:
-                if len(r_indices) == 1:
-                    value = value[None, ...]
-                else: 
-                    value = value[..., None]
-            assert value.shape == (len(r_indices), len(c_indices)), "Shape is different."
-            for r_index in r_indices:
-                for c_index in c_indices:
-                    self[r_index, c_index] = value[r_index, c_index]
-        else:
-            raise NotImplementedError()
+        writer = TableWriter(self)
+        writer.write(key, value)
 
     def __getitem__(self, key):
         i_row, i_column = key
         cell_object = self.api.Cell(i_row + 1, i_column + 1)
         return Cell(cell_object)
 
-    @classmethod
-    def make(cls, arg=None, **kwargs):
-        shapes = Shapes()
+    @staticmethod
+    def make(arg=None, size:tuple[int, int] | None = None, **kwargs) -> "Table":
+        return TableFactory.make_table(arg, size=size, **kwargs)
 
-        if isinstance(arg, np.ndarray):
-            assert arg.ndim <= 2
-            arg = np.atleast_2d(arg)
-            n_row, n_column = arg.shape
-            shape_object = shapes.api.AddTable(NumRows=n_row, NumColumns=n_column)
-            table = Table(shape_object.Table)
-            
-            for i_row in range(n_row):
-                for i_column in range(n_column):
-                    table[i_row, i_column] = str(arg[i_row, i_column])
-            return table
-
-        elif arg is None:
-            n_row, n_column = kwargs.get("size", (1, 1))
-            shape_object = shapes.api.AddTable(NumRows=n_row, NumColumns=n_column)
-            table = Table(shape_object.Table)
-            return table
-
-        raise ValueError(f" `{arg}` is not interpretted.")
-
-    @classmethod
-    def empty(cls, shape, **kwargs):
-        """From `np.empty`.
-        """
-        if isinstance(shape, int):
-            row, col = shape, 1
-        else:
-            row, col = shape
-        shape_object = Shapes().api.AddTable(NumRows=row, NumColumns=col)
-        return Table(shape_object.Table)
+    @staticmethod
+    def empty(shape: tuple[int, int]) -> "Table":
+        return TableFactory.empty(*shape)
 
     def tighten(self):
         for row in self.rows:
@@ -213,6 +107,118 @@ class Table:
         raise TypeError(f"Currently, type {type(style)} is not accepted.")
 
 
+class TableWriter:
+    """Encapsulates all writing logic for Table.
+    """
+
+    def __init__(self, table: Table):
+        self.table = table
+
+    # ---- Public API -------------------------------------------------
+
+    def write_cell(self, r: int, c: int, value: Any) -> None:
+        cell = self.table.api.Cell(r + 1, c + 1)
+        cell.Shape.TextFrame.TextRange.Text = str(value)
+
+    def write(self, key: tuple[int | list | slice, int | list | slice], value: np.ndarray | Any) -> None:
+        """Implements the same logic as the current Table.__setitem__."""
+        i_row, i_col = key
+
+        # Case 1: scalar index
+        if isinstance(i_row, int) and isinstance(i_col, int):
+            r = self._normalize(i_row, axis=0)
+            c = self._normalize(i_col, axis=1)
+            self.write_cell(r, c, value)
+            return
+
+        # Case 2: broadcast cases
+        r_idx = self._to_indices(i_row, axis=0)
+        c_idx = self._to_indices(i_col, axis=1)
+
+        value = np.array(value)
+
+        # Broadcasting
+        if value.ndim == 0:
+            value = np.broadcast_to(value, (len(r_idx), len(c_idx)))
+        elif value.ndim == 1:
+            if len(r_idx) == 1:
+                value = value[None, :]
+            else:
+                value = value[:, None]
+
+        assert value.shape == (len(r_idx), len(c_idx))
+
+        for i, rr in enumerate(r_idx):
+            for j, cc in enumerate(c_idx):
+                self.write_cell(rr, cc, value[i, j])
+
+    # ---- Helpers -----------------------------------------------------
+
+    def _normalize(self, idx, axis):
+        size = self.table.size[axis]
+        return idx + size if idx < 0 else idx
+
+    def _is_indices(self, arg):
+        return isinstance(arg, (list, tuple, slice))
+
+    def _to_indices(self, arg, axis):
+        if isinstance(arg, int):
+            return [self._normalize(arg, axis)]
+
+        if isinstance(arg, (list, tuple)):
+            return [self._normalize(x, axis) for x in arg]
+
+        if isinstance(arg, slice):
+            start = arg.start or 0
+            stop = arg.stop or self.table.size[axis]
+            step = arg.step or 1
+            return list(range(start, stop, step))
+
+        raise ValueError(f"Invalid index specifier: {arg}")
+
+class TableFactory:
+
+    @staticmethod
+    def make_table(arg=None, size:tuple[int, int] | None = None, **kwargs) -> Table:
+        if arg is None:
+            if size: 
+                return TableFactory.empty(*size)
+            else:
+                return TableFactory.empty()
+
+        if isinstance(arg, tuple) and len(arg) == 2 and isinstance(arg[0], int) and isinstance(arg[0], int):
+            return TableFactory.empty(*arg)
+
+        if isinstance(arg, np.ndarray):
+            return TableFactory.from_numpy(arg)
+        raise ValueError(arg)
+
+
+    @staticmethod
+    def from_numpy(arr: np.ndarray):
+        arr = np.atleast_2d(arr)
+        n_row, n_col = arr.shape
+
+        shapes_api = resolve_shapes()
+        shape_api = shapes_api.AddTable(NumRows=n_row, NumColumns=n_col)
+        table = Table(shape_api.Table)
+
+        writer = TableWriter(table)
+
+        for r in range(n_row):
+            for c in range(n_col):
+                writer.write((r, c), arr[r, c])
+        return table
+
+    @staticmethod
+    def empty(n_row: int = 3, n_col: int = 2):
+        shapes_api = resolve_shapes()
+        shape_api = shapes_api.AddTable(NumRows=n_row, NumColumns=n_col)
+        return Table(shape_api.Table)
+        
+        
+
+
 class DFTable:
     """`pandas.DataFrame` Table.
     This class is intended to handle `pandas.DataFrame`.  
@@ -228,6 +234,7 @@ class DFTable:
         self.columns_nlevels = columns_nlevels
 
     def _fetch_api(self, arg):
+        from fairypptx import Shape
         if is_object(arg, "Shape"):
             assert arg.Type == constants.msoTable
             return arg.Table

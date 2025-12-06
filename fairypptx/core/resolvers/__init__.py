@@ -243,13 +243,14 @@ def resolve_shape(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObjec
 
     if isinstance(arg, Sequence):
         apis = [to_api_or_none(elem) for elem in arg]
+        apis = [elem for elem in apis if elem is not None]
         if not apis[0]:
             raise ValueError(f"Cannot interpret `arg`; {arg}.") 
         if apis[0] is None:
             raise ValueError(f"Cannot interpret `arg`; {arg}.") 
         
         # [TODO] This judge may be too loose....
-        return apis[0].Parent.Shapes
+        return apis[0]
 
     if arg is None:
         App = Application().api
@@ -263,8 +264,30 @@ def resolve_shape(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObjec
                     shape_objects = [shape for shape in Selection.ChildShapeRange]
                 else:
                     shape_objects = [shape for shape in Selection.ShapeRange]
-                return shape_objects[0].Parent.Shapes
-    return resolve_slide().Shapes
+                if shape_objects:
+                    return shape_objects[0]
+    shapes_objects = resolve_slide().Shapes
+    if shapes_objects.Count:
+        return shapes_objects.Item(1)
+    raise ValueError("Cannot obtain `Shape` api.")
+
+
+def resolve_table(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
+    if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
+        if isinstance(arg, PPTXObjectProtocol):
+            api: COMObject = arg.api 
+        else:
+            api = arg
+        if is_object(api, "Table"):
+            return api
+        if is_object(api, "Shape"):
+            return api.Table
+
+    if arg is None:
+        shape_api = resolve_shape(None)
+        return shape_api.Table
+
+    raise ValueError(f"Cannot interpret `arg`; {arg}.")
 
           
 

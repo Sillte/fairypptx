@@ -88,7 +88,7 @@ class Shape(LocationMixin):
     text = TextProperty()
     texts = TextsProperty()
 
-    def __new__(cls, arg: Any) -> "Shape":
+    def __new__(cls, arg: Any = None) -> "Shape":
         # NOTE: For the direction of the dependency, 
         # `Factory` is imported here. 
         klass = ShapeFactory.get_class(arg)
