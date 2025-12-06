@@ -13,7 +13,7 @@ def test_format():
 
     values = [random.randint(0, 255) for _ in range(3)]
     color = Color(values)
-    assert color.rgb == values
+    assert color.rgb == tuple(values)
     assert color.alpha == 1.0
 
 

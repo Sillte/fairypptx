@@ -206,16 +206,10 @@ class Shape(LocationMixin):
         """
         return self.api.Type == constants.msoTable
 
-    def is_leaf(self):
-        """Return whether this is NOT Grouped Object.
-        """
-        return self.api.Type != constants.msoGroup
-
     def is_child(self):
         """Return whether this is child or not. 
         """
         return self.api.Child == constants.msoTrue
-
 
     @property
     def parent(self):
