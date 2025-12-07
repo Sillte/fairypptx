@@ -16,7 +16,7 @@ from pywintypes import com_error
 class NaiveSolidFillFormat(ApiApplyBaseModel):
     type: Literal[MsoFillType.FillSolid] = MsoFillType.FillSolid
     data: Mapping[str, Any]
-    _keys: ClassVar[Sequence[str]] = ["Type", "ForeColor.RGB", "Visible", "Transparency", "Visible"]
+    _keys: ClassVar[Sequence[str]] = ["ForeColor.RGB", "Visible", "Transparency", "Visible"]
     _accessor: ClassVar[CrudeApiAccesssor] = CrudeApiAccesssor(_keys)
 
     def apply_api(self, api):
@@ -24,6 +24,7 @@ class NaiveSolidFillFormat(ApiApplyBaseModel):
 
     @classmethod
     def from_api(cls, api) -> Self:
+        api.Solid()
         data = cls._accessor.read(api)
         return cls.model_validate({"data": data})
 
@@ -31,16 +32,20 @@ class NaiveSolidFillFormat(ApiApplyBaseModel):
 class NaivePatternedFillFormat(ApiApplyBaseModel):
     type: Literal[MsoFillType.FillPatterned] = MsoFillType.FillPatterned
     data: Mapping[str, Any]
-    _keys: ClassVar[Sequence[str]] = ["Type", "Pattern", "ForeColor.RGB", "BackColor.RGB", "Visible"]
+    pattern: int 
+    _keys: ClassVar[Sequence[str]] = ["Pattern", "ForeColor.RGB", "BackColor.RGB", "Visible"]
     _accessor: ClassVar[CrudeApiAccesssor] = CrudeApiAccesssor(_keys)
     
-    def apply_api(self, api):
-        self._accessor.write(api, self.data)
 
     @classmethod
     def from_api(cls, api) -> Self:
         data = cls._accessor.read(api)
-        return cls.model_validate({"data": data})
+        return cls(data=data, pattern=api.Pattern)
+
+    def apply_api(self, api):
+        api.Patterned(self.pattern)
+        self._accessor.write(api, self.data)
+
 
 class NaiveGradientFillFormat(ApiApplyBaseModel):
     type: Literal[MsoFillType.FillGradient] = MsoFillType.FillGradient
@@ -118,12 +123,13 @@ class NaiveFallbackFormat(ApiApplyBaseModel):
     type: int
     
     def apply_api(self, api):
-        api.Type = self.type
+        print("This FillFormat is out of scope", api.Type)
+        #api.Type = self.type
 
     @classmethod
     def from_api(cls, api) -> Self:
+        print("This FillFormat is out of scope", api.Type)
         return cls(type=api.Type)
-
 
 type NaiveTypeFormat = NaiveSolidFillFormat | NaivePatternedFillFormat | NaiveGradientFillFormat | NaiveFallbackFormat
 

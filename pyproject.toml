@@ -20,7 +20,7 @@ dependencies = [
     "premailer",
     "toml",
     "pydantic",
-    "fairyimage@git+https://github.com/Sillte/fairyimage.git@master"
+    "fairyimage@git+https://github.com/Sillte/fairyimage.git@master",
 ]
 
 [project.optional-dependencies]

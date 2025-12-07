@@ -10,23 +10,16 @@ Desire:
 
 """
 
-from typing import Self
-from collections.abc import Sequence
 import numpy as np
-import pandas as pd
 from fairypptx._table.table_api_writer import TableApiWriter
-from fairypptx import constants
-from fairypptx.constants import msoTrue, msoFalse
 
-from fairypptx.color import Color
+
 from fairypptx.core.resolvers import resolve_table, resolve_shapes
 from fairypptx.core.types import COMObject
 
-from fairypptx.object_utils import is_object, upstream, stored
 from fairypptx.object_utils import registry_utils
 
-from fairypptx._table import Cell, Row, Rows, Column, Columns
-from fairypptx._table.stylist import TableStylist
+from fairypptx._table import Cell, Rows, Columns, Row, Column
 from fairypptx._table.table_api_writer import TableApiWriter 
 
 class Table:
@@ -93,15 +86,19 @@ class Table:
         return self.to_numpy()  
 
     def register(self, key, disk=True):
-        stylist = TableStylist(self)
+        from fairypptx.editjson.table import NaiveTableStyle
+        editparam = NaiveTableStyle.from_entity(self)
+        target = editparam.model_dump()
         registry_utils.register(
-            self.__class__.__name__, key, stylist, extension=".pkl", disk=disk
+            self.__class__.__name__, key, target, extension=".json", disk=disk
         )
 
     def like(self, key):
+        from fairypptx.editjson.table import NaiveTableStyle
         if isinstance(key, str):
-            stylist = registry_utils.fetch(self.__class__.__name__, key)
-            stylist(self)
+            target = registry_utils.fetch(self.__class__.__name__, key)
+            editparam = NaiveTableStyle.model_validate(target)
+            editparam.apply(self)
             return self
         raise TypeError(f"Currently, type {type(style)} is not accepted.")
 

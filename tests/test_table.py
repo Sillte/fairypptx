@@ -95,8 +95,18 @@ def test_tighten():
     table = Table.empty((2, 2))
     table.rows[1].shapes[0].text = "OneLine\nTwoLine\nThreeLine"
     table.rows.tighten()
-    
+
+def test_like():
+    # The case without texts.
+    table = Table.empty((4, 2))
+    style_id = "{AF606853-7671-496A-8E4F-DF71F8EC918B}" # Non normal ID.
+    table.api.ApplyStyle(style_id)
+    table.register("__pytest__")
+    table = Table.empty((4, 2))
+    assert table.api.Style.Id != style_id
+    table.like("__pytest__")
+    assert table.api.Style.Id == style_id
+
 
 if __name__ == "__main__":
-    # test_tighten()
     pytest.main([__file__, "--capture=no"])

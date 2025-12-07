@@ -8,7 +8,7 @@ from fairypptx.constants import msoTrue, msoFalse
 
 from fairypptx._shape.box import Box
 from fairypptx import object_utils
-from fairypptx.object_utils import is_object, upstream, stored
+from fairypptx.object_utils import upstream, stored
 from fairypptx.core.types import COMObject 
 
 from fairypptx.core.resolvers import resolve_shape 
@@ -16,7 +16,6 @@ from fairypptx.core.resolvers import resolve_shape
 from fairypptx._shape import FillFormatProperty
 from fairypptx._shape import LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
-from fairypptx._shape.stylist import ShapeStylist
 from fairypptx import registry_utils
 
 if TYPE_CHECKING:
@@ -93,16 +92,20 @@ class Shape(LocationMixin):
 
 
     def like(self, style):
+        from fairypptx.editjson.shape import NaiveShapeStyle 
         if isinstance(style, str):
-            stylist = registry_utils.fetch(self.__class__.__name__, style)
-            stylist(self)
+            json_target = registry_utils.fetch(self.__class__.__name__, style)
+            style = NaiveShapeStyle.model_validate(json_target)
+            style.apply(self)
             return self
         raise TypeError(f"Currently, type {type(style)} is not accepted.")
 
     def register(self, key, disk=True):
-        stylist = ShapeStylist(self)
+        from fairypptx.editjson.shape import NaiveShapeStyle 
+        basemodel = NaiveShapeStyle.from_entity(self)
+        json_target = basemodel.model_dump()
         registry_utils.register(
-            self.__class__.__name__, key, stylist, extension=".pkl", disk=disk
+            self.__class__.__name__, key, json_target, extension=".json", disk=disk
         )
 
     def get_styles(self):

@@ -83,5 +83,16 @@ def crude_api_write(api: COMObject, data:Mapping[str, Any]) -> COMObject:
         f_setattr(api, prop, value)
     return api
 
+def remove_invalidity(api:COMObject, data: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Remain only the valid keys for `api` object. 
+    """
+    remove_keys = set()
+    for key, value in data.items():
+        try:
+            f_setattr(api, key, value)
+        except ValueError:
+            remove_keys.add(key)
+    return {key: value for key, value in data.items() if key not in remove_keys}
+
 
 

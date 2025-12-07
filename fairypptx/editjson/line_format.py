@@ -8,7 +8,7 @@ from fairypptx import constants
 
 from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
 from fairypptx.object_utils import setattr, getattr
-from fairypptx.editjson.utils import get_discriminator_mapping, CrudeApiAccesssor, crude_api_read, f_setattr, crude_api_write
+from fairypptx.editjson.utils import get_discriminator_mapping, CrudeApiAccesssor, crude_api_read, f_setattr, crude_api_write,  remove_invalidity
 from pprint import pprint
 from fairypptx.enums import MsoFillType
 from fairypptx.editjson.protocols import ApiApplyBaseModel, EditParamProtocol
@@ -47,19 +47,12 @@ class NaiveLineFormatStyle(BaseModel):
         if getattr(api, "EndArrowheadStyle") != constants.msoArrowheadNone:
             keys += ["EndArrowheadStyle", "EndArrowheadLength", "EndArrowheadWidth"]
 
+        data.update(crude_api_read(api, keys))
         # (2021/05/19)
         # For some keys, invalid values are initially set.
         # `setattr` of invalid values raises `ValueError`.
         # Using this knowledge, remove the not-apt keys.
-
-        data.update(crude_api_read(api, keys))
-        remove_keys = set()
-        for key, value in data.items():
-            try:
-                f_setattr(api, key, value)
-            except ValueError:
-                remove_keys.add(key)
-        data = {key: value for key, value in data.items() if key not in remove_keys}
+        data = remove_invalidity(api, data)
 
         return cls(body=data)
 
@@ -69,6 +62,7 @@ class NaiveLineFormatStyle(BaseModel):
         """
         crude_api_write(entity.api, self.body)
         return entity
+
 
 if __name__ == "__main__":
     from fairypptx import Shape  
