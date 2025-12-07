@@ -7,12 +7,13 @@ from fairypptx._shape import LineFormat
 from fairypptx import constants
 
 from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
+from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.utils import CrudeApiAccesssor, crude_api_read, crude_api_write, get_discriminator_mapping, remove_invalidity
 from fairypptx.object_utils import setattr, getattr
 from fairypptx._text import ParagraphFormat
-from fairypptx.editjson.utils import get_discriminator_mapping, CrudeApiAccesssor, crude_api_read, f_setattr, crude_api_write, remove_invalidity
 from pprint import pprint
 from fairypptx.enums import MsoFillType
-from fairypptx.editjson.protocols import ApiApplyBaseModel, EditParamProtocol
+from fairypptx.editjson.protocols import EditParamProtocol
 from pywintypes import com_error
 
 

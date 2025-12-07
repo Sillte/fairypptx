@@ -7,60 +7,27 @@ from fairypptx._shape import LineFormat
 from fairypptx import constants
 
 from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
-from fairypptx.object_utils import setattr, getattr
-from fairypptx.editjson.utils import get_discriminator_mapping, CrudeApiAccesssor, crude_api_read, f_setattr, crude_api_write,  remove_invalidity
+from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.utils import CrudeApiAccesssor, crude_api_read, crude_api_write, get_discriminator_mapping, remove_invalidity
 from pprint import pprint
 from fairypptx.enums import MsoFillType
-from fairypptx.editjson.protocols import ApiApplyBaseModel, EditParamProtocol
+from fairypptx.editjson.protocols import EditParamProtocol
 from pywintypes import com_error
+from fairypptx._shape.line_format import LineFormatApiBridge
 
 
 class NaiveLineFormatStyle(BaseModel):
-    body: Mapping[str, Any]
-
-    _common_keys: ClassVar[Sequence[str]] = [
-            "BackColor.RGB",
-            "DashStyle",
-            "ForeColor.RGB",
-            "InsetPen",
-            "Pattern",
-            "Transparency",
-            "Visible",
-            "Weight",
-            "Style"]
+    api_bridge: LineFormatApiBridge
 
     @classmethod
     def from_entity(cls, entity: LineFormat) -> Self:
-        """Generate itself from the entity of `fairpptx.PPTXObject`
-        """
-        data = dict()
-        data["Style"] = constants.msoLineSingle
-        data["ForeColor.RGB"] = 0
-        data["Visible"] = constants.msoTrue
-        data["Transparency"] = 0
-
-        api = entity.api
-        keys = list(cls._common_keys)
-
-        if getattr(api, "BeginArrowheadStyle") != constants.msoArrowheadNone:
-            keys += ["BeginArrowheadStyle", "BeginArrowheadLength", "BeginArrowheadWidth"]
-        if getattr(api, "EndArrowheadStyle") != constants.msoArrowheadNone:
-            keys += ["EndArrowheadStyle", "EndArrowheadLength", "EndArrowheadWidth"]
-
-        data.update(crude_api_read(api, keys))
-        # (2021/05/19)
-        # For some keys, invalid values are initially set.
-        # `setattr` of invalid values raises `ValueError`.
-        # Using this knowledge, remove the not-apt keys.
-        data = remove_invalidity(api, data)
-
-        return cls(body=data)
-
+        api_bridge = LineFormatApiBridge.from_api(entity.api)
+        return cls(api_bridge=api_bridge)
 
     def apply(self, entity: LineFormat) -> LineFormat:
         """Apply this edit param to the entity.
         """
-        crude_api_write(entity.api, self.body)
+        self.api_bridge.apply_api(entity.api)
         return entity
 
 

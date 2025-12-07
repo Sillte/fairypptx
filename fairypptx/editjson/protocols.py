@@ -1,8 +1,6 @@
 from typing import Self, runtime_checkable
 from typing import Protocol
-from fairypptx.core.types import PPTXObjectProtocol, COMObject
-from pydantic import BaseModel
-from abc import ABC, abstractmethod
+from fairypptx.core.types import PPTXObjectProtocol
 
 
 @runtime_checkable
@@ -18,17 +16,6 @@ class EditParamProtocol[T: PPTXObjectProtocol](Protocol):
         """
         ...
     
-
-class ApiApplyBaseModel(BaseModel, ABC):
-    @classmethod
-    @abstractmethod
-    def from_api(cls, api: COMObject) -> Self:
-        ...
-
-    @abstractmethod
-    def apply_api(self, api: COMObject) -> COMObject:
-        ...
-
 
 if __name__ == "__main__":
     pass

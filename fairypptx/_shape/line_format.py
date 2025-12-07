@@ -3,80 +3,73 @@ from fairypptx import constants
 from fairypptx.object_utils import ObjectDictMixin, getattr, setattr
 from fairypptx.color import Color
 
-class LineFormat(ObjectDictMixin):
-    """LineFormat.
+from fairypptx import constants
+from fairypptx.color import Color
 
-    Note
-    ------------------------------------
-    Insufficient Implementation (2020-04-19).
-    Especially, for `arrow`s.
+from typing import Any, Mapping, Literal, ClassVar, Sequence, Self, Annotated, cast
+from pprint import pprint
+from fairypptx.enums import MsoFillType
+from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
+from fairypptx.core.types import COMObject
 
-    """
-    data = dict()
-    data["Style"] = constants.msoLineSingle
-    data["ForeColor.RGB"] = 0
-    data["Visible"] = constants.msoTrue
-    data["Transparency"] = 0
 
-    common_keys = [
-        "BackColor.RGB",
-        "DashStyle",
-        "ForeColor.RGB",
-        "InsetPen",
-        "Pattern",
-        "Transparency",
-        "Visible",
-        "Weight",
-        "Style",
-    ]
+class LineFormatApiBridge(ApiBridgeBaseModel):
+    api_data: Mapping[str, Any]
 
-    def to_dict(self, api_object):
-        # Minimum specification
-        if getattr(api_object, "Visible") != constants.msoTrue:
-            return {"Visible": constants.msoFalse }
+    _common_keys: ClassVar[Sequence[str]] = [
+            "BackColor.RGB",
+            "DashStyle",
+            "ForeColor.RGB",
+            "InsetPen",
+            "Pattern",
+            "Transparency",
+            "Visible",
+            "Weight",
+            "Style"]
 
-        keys = self.common_keys
+    @classmethod
+    def from_api(cls, api) -> Self:
+        data = dict()
+        data["Style"] = constants.msoLineSingle
+        data["ForeColor.RGB"] = 0
+        data["Visible"] = constants.msoTrue
+        data["Transparency"] = 0
 
-        if getattr(api_object, "BeginArrowheadStyle") != constants.msoArrowheadNone:
+        keys = list(cls._common_keys)
+
+        if getattr(api, "BeginArrowheadStyle") != constants.msoArrowheadNone:
             keys += ["BeginArrowheadStyle", "BeginArrowheadLength", "BeginArrowheadWidth"]
-        if getattr(api_object, "EndArrowheadStyle") != constants.msoArrowheadNone:
+        if getattr(api, "EndArrowheadStyle") != constants.msoArrowheadNone:
             keys += ["EndArrowheadStyle", "EndArrowheadLength", "EndArrowheadWidth"]
-        d = {key: getattr(api_object, key) for key in keys}
+        data.update(crude_api_read(api, keys))
 
-        # (2021/05/19)
-        # For some keys, invalid values are initially set.
-        # `setattr` of invalid values raises `ValueError`.
-        # If these values are stored as `dict`, 
-        # failure transpire in `apply` of `ObjectDictMixin`. 
-        # Hence, the following procedure is performed.
-        #
-        # If it takes times, I'd  like to consider
-        # to apply check with the limited sub-group of `keys`.
-        remove_keys = set()
-        for key, value in d.items():
-            try:
-                setattr(api_object, key, value)
-            except ValueError:
-                remove_keys.add(key)
-        d = {key: value for key, value in d.items() if key not in remove_keys}
+        data = remove_invalidity(api, data)
+        return cls(api_data=data)
+    
+    def apply_api(self, api):
+        crude_api_write(api, self.api_data)
+        return api
 
-        # (2021/05/19) I feel the following procedure becomes unnecessary, 
-        #  by `remove_keys`
-        # Invalid (not supported) values are over-written.
-        #if d["DashStyle"] == constants.msoLineDashStyleMixed:
-        #    d["DashStyle"] = constants.msoLineSolid
 
-        return d
+class LineFormat:
+    def __init__(self, api):
+        self._api = api
+        
+    @property
+    def api(self) -> COMObject:
+        return self._api 
+
 
     @property
-    def color(self): 
+    def color(self) -> Color: 
         int_rgb = self.api.ForeColor.RGB
         color = Color(int_rgb)
         alpha = 1 - self.api.Transparency 
         return Color((*color.rgb, alpha))
 
     @color.setter
-    def color(self, value): 
+    def color(self, value: Color): 
         color = Color(value)
         rgb, alpha = color.as_int(), color.alpha
         self.api.ForeColor.RGB = rgb
@@ -95,6 +88,13 @@ class LineFormat(ObjectDictMixin):
     def weight(self, value):
         self.api.Visible = True
         self.api.Weight = value
+        
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, LineFormat):
+            return False
+        api_bridge = LineFormatApiBridge.from_api(self.api)
+        api_bridge1 = LineFormatApiBridge.from_api(other.api)
+        return api_bridge.model_dump(exclude_defaults=True)  == api_bridge1.model_dump(exclude_defaults=True)
 
 
 class LineFormatProperty:
@@ -111,7 +111,8 @@ class LineFormatProperty:
         if value is None:
             Line.Visible = False
         elif isinstance(value, LineFormat):
-            value.apply(Line)
+            api_bridge = LineFormatApiBridge.from_api(value.api)
+            api_bridge.apply_api(Line)
         elif isinstance(value, int):
             if 1 <= value <= 50:
                 # Line Weight.
@@ -138,6 +139,3 @@ class LineFormatProperty:
             Line.Transparency = 1 - value.alpha
         else:
             raise ValueError(f"`{value}` cannot be set at `{self.__class__.__name__}`.")
-
-
-

@@ -5,8 +5,9 @@ from pywintypes import com_error
 from fairypptx import constants
 
 from fairypptx._text import Font
+from fairypptx.core.utils import crude_api_read
 from fairypptx.object_utils import getattr as f_getattr, setattr as f_setattr
-from fairypptx.editjson.utils import crude_api_write, crude_api_read
+from fairypptx.core.utils import crude_api_write
 
 
 class NaiveFontEditParam(BaseModel):

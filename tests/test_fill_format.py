@@ -6,13 +6,19 @@ from fairypptx import constants
 from fairypptx import Application
 from fairypptx import constants
 
-def test_gradation():
+def test_one_color_gradation():
     """Test about Gradation copy. 
     """
     in_shape = Shape.make(1)
     in_shape.fill.api.OneColorGradient(1, 1, 1)
-    # in_shape.fill.api.TwoColorGradient(1, 1)
+    out_shape = Shape.make(2)
+    assert in_shape.fill != out_shape.fill
+    out_shape.fill = in_shape.fill
+    assert in_shape.fill == out_shape.fill
 
+def test_two_color_gradation():
+    in_shape = Shape.make(1)
+    in_shape.fill.api.TwoColorGradient(1, 2)
     out_shape = Shape.make(2)
     assert in_shape.fill != out_shape.fill
     out_shape.fill = in_shape.fill

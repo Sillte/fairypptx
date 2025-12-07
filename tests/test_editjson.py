@@ -1,4 +1,4 @@
-from fairypptx.editjson.utils import get_discriminator_mapping
+from fairypptx.core.utils import get_discriminator_mapping
 import pytest
 
 from pydantic import Field
