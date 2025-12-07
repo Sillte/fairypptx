@@ -44,6 +44,7 @@ class Text(UserString):
 
     def __init__(self, arg, **kwargs):
         self.data = self._construct_data(arg)
+        print("arg", arg)
         self.font, self.paragraphformat = self._construct_format(arg)
 
     def _construct_data(self, arg):
@@ -78,8 +79,8 @@ class Text(UserString):
             self.font = registry_utils.fetch("Font", target)
             self.paragraphformat = registry_utils.fetch("ParagraphFormat", target)
         elif isinstance(target, (Text, TextRange)):
-            self.font = dict(target.font)
-            self.paragraphformat = dict(target.paragraphformat)
+            self.font = target.font
+            self.paragraphformat = target.paragraphformat
 
 
 class Font(ObjectDictMixin):
@@ -143,70 +144,71 @@ class Font(ObjectDictMixin):
         self["Size"] = value
 
 
-class ParagraphFormat(ObjectDictMixin2):
-    """Represents the Font Information. 
-
-    Note
-    -------------------------------------
-    Curently, About `data`, the order of key is important
-    since some keys (I infer ``Bullet`.Character`?) change the other properties implicitly.
-    This knowledge must be also taken care by users to customize.
-    [TODO] You can modify this. See ``FillFormat``.
-
-
-    Wonder
-    -----------------------------------------
-    BulletFormat is introduced or not.
-    * https://docs.microsoft.com/ja-jp/office/vba/api/powerpoint.bulletformat.number
-    When there is a tree structure of ObjectDictMixin exist, `apply` should be modified.
-
-    """
-    data = dict()
-    data2 = dict()
-
-    data["FarEastLineBreakControl"] = None
-    data["Alignment"] = None
-    data["BaseLineAlignment"] = None
-    data["HangingPunctuation"] = None
-    data["LineRuleAfter"] = None
-    data["LineRuleBefore"] = None
-    data["LineRuleWithin"] = None
-    data["SpaceAfter"] = None
-    data["SpaceBefore"] = None
-    data["SpaceWithin"] = None
-
-    # The order is very important!
-    # Especially, `Type` and `Visible`!.
-    data["Bullet.Type"] = None
-    data["Bullet.Visible"] = None
-    data["Bullet.Character"] = None
-    data["Bullet.Font.Name"] = None
-
-    data2["FirstLineIndent"] = None
-    data2["LeftIndent"] = None
-
-    readonly = []
-    name = None
-
-    def apply(self, api):
-        excludes = set()
-        if self.data["Bullet.Type"] != constants.ppBulletUnnumbered:
-            excludes.add("Bullet.Character")
-            excludes.add("Bullet.Font.Name")
-        api2 = self.to_api2(api)
-
-        readonly_props = set(self.readonly) | excludes
-
-        for key, value in self.data.items():
-            if key not in readonly_props:
-                if value is not None:
-                    setattr(api, key, value)
-
-        for key, value in self.data2.items():
-            if key not in readonly_props:
-                if value is not None:
-                    setattr(api2, key, value)
-        return api
+from fairypptx._text.paragraph_format import ParagraphFormat
+#class ParagraphFormat(ObjectDictMixin2):
+#    """Represents the Font Information. 
+#
+#    Note
+#    -------------------------------------
+#    Curently, About `data`, the order of key is important
+#    since some keys (I infer ``Bullet`.Character`?) change the other properties implicitly.
+#    This knowledge must be also taken care by users to customize.
+#    [TODO] You can modify this. See ``FillFormat``.
+#
+#
+#    Wonder
+#    -----------------------------------------
+#    BulletFormat is introduced or not.
+#    * https://docs.microsoft.com/ja-jp/office/vba/api/powerpoint.bulletformat.number
+#    When there is a tree structure of ObjectDictMixin exist, `apply` should be modified.
+#
+#    """
+#    data = dict()
+#    data2 = dict()
+#
+#    data["FarEastLineBreakControl"] = None
+#    data["Alignment"] = None
+#    data["BaseLineAlignment"] = None
+#    data["HangingPunctuation"] = None
+#    data["LineRuleAfter"] = None
+#    data["LineRuleBefore"] = None
+#    data["LineRuleWithin"] = None
+#    data["SpaceAfter"] = None
+#    data["SpaceBefore"] = None
+#    data["SpaceWithin"] = None
+#
+#    # The order is very important!
+#    # Especially, `Type` and `Visible`!.
+#    data["Bullet.Type"] = None
+#    data["Bullet.Visible"] = None
+#    data["Bullet.Character"] = None
+#    data["Bullet.Font.Name"] = None
+#
+#    data2["FirstLineIndent"] = None
+#    data2["LeftIndent"] = None
+#
+#    readonly = []
+#    name = None
+#
+#    def apply(self, api):
+#        excludes = set()
+#        if self.data["Bullet.Type"] != constants.ppBulletUnnumbered:
+#            excludes.add("Bullet.Character")
+#            excludes.add("Bullet.Font.Name")
+#        api2 = self.to_api2(api)
+#
+#        readonly_props = set(self.readonly) | excludes
+#
+#        for key, value in self.data.items():
+#            if key not in readonly_props:
+#                if value is not None:
+#                    setattr(api, key, value)
+#
+#        for key, value in self.data2.items():
+#            if key not in readonly_props:
+#                if value is not None:
+#                    setattr(api2, key, value)
+#        return api
 
 
 

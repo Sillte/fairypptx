@@ -109,7 +109,7 @@ class TextRange:
 
         api_object = insert_func(str(text))
         tr = TextRange(api_object)
-        tr.text  = text
+        tr.api.Text  = text
         return tr
 
     @property

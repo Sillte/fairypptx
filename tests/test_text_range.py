@@ -203,8 +203,8 @@ def test_paragraphformat():
     tr = TextRange.make_itemization(["P-ITEM1", "P-ITEM2", "P-ITEM3"])
     tr.api.ParagraphFormat.Bullet.Type = constants.ppBulletUnnumbered
     ph = tr.paragraphformat
-    assert ph["Bullet.Type"] == constants.ppBulletUnnumbered
-    ph["Bullet.Type"] = constants.ppBulletNumbered
+    assert ph.api.Bullet.Type == constants.ppBulletUnnumbered
+    ph.api.Bullet.Type = constants.ppBulletNumbered
     tr.paragraphformat = ph
     assert tr.api.ParagraphFormat.Bullet.Type == constants.ppBulletNumbered
     tr.shape.tighten()

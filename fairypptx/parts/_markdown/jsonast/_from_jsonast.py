@@ -172,7 +172,7 @@ class Converter:
             return 
 
         from itertools import takewhile
-        text = paragraphs[-1].text
+        text = str(paragraphs[-1].api.Text)
         n_tail_cr = len(list(takewhile(lambda t: t == "\r", reversed(text))))
         # I do not why, but `len(text)-` seems required.  
         stem = text[:len(text) - n_tail_cr]

@@ -126,7 +126,7 @@ def test_api2():
     assert is_object(to_api2(shape.textrange.api.ParagraphFormat), "ParagraphFormat2")
 
     # TextRange's regision should be compatible.
-    assert to_api2(shape.textrange.characters[4].api).Text == shape.text[4]
+    assert to_api2(shape.textrange.characters[4].api).Text == shape.textrange.api.Text[4]
     
 
 if __name__ == "__main__":

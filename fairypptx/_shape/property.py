@@ -15,7 +15,10 @@ class TextProperty:
     def __set__(self, shape, value):
         from fairypptx.text_range import TextRange
         tr = TextRange(shape)
-        tr.text = value
+        if isinstance(value, str):
+            tr.api.Text = value
+        else:
+            assert False
 
 
 class TextsProperty:

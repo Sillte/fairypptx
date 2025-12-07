@@ -233,7 +233,7 @@ def run_to_inlines(textrange):
     def _to_str(s):
         return {"t": "Str", "c": str(s)}
 
-    text = textrange.text.rstrip("\r")
+    text = str(textrange.api.Text).rstrip("\r")
     tokens = text.split("\013")  # vertical tag.
     result = []
     for i, token in enumerate(tokens):
