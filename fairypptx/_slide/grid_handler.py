@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union
+from typing import List
 from fairypptx._shape.box import Box
 from fairypptx.slide import Slide
 
@@ -28,7 +28,7 @@ class RangeIndexer:
         assert False
         return self.to_index(target)
 
-    def to_index(self, target):
+    def to_index(self, target) -> int:
         """Return the index of the value.
         Notice that `-1` and `len(self.pivots)`
         means the outside of the pivots.
@@ -72,11 +72,10 @@ class RangeIndexer:
         return result
 
 
-z_values = [0, 1, 3.5]
-indexer = RangeIndexer(z_values)
-assert indexer.to_index(2.0) == 1
-assert indexer.to_index(-45) == -1
-# exit(0)
+#z_values = [0, 1, 3.5]
+#indexer = RangeIndexer(z_values)
+#assert indexer.to_index(2.0) == 1
+#assert indexer.to_index(-45) == -1
 
 
 class GridHandler:

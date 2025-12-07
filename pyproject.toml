@@ -19,6 +19,7 @@ dependencies = [
     "pywin32",
     "premailer",
     "toml",
+    "pydantic",
     "fairyimage@git+https://github.com/Sillte/fairyimage.git@master"
 ]
 

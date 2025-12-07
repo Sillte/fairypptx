@@ -1,85 +1,26 @@
-from collections.abc import Sequence
 from collections import UserString
 from pywintypes import com_error
-from typing import Any, Self, Literal
-from pywintypes import com_error
+from typing import Any, Self, Literal, TYPE_CHECKING 
 from PIL import Image
 from fairypptx import constants
+from fairypptx._shape.mixins import LocationMixin
 from fairypptx.constants import msoTrue, msoFalse
 
 from fairypptx._shape.box import Box
-from fairypptx.core.application import Application
 from fairypptx import object_utils
 from fairypptx.object_utils import is_object, upstream, stored
-from fairypptx.core.types import COMObject, PPTXObjectProtocol 
+from fairypptx.core.types import COMObject 
 
 from fairypptx.core.resolvers import resolve_shape 
 
-
-from fairypptx._text import Text
-from fairypptx._shape import FillFormat, FillFormatProperty
-from fairypptx._shape import LineFormat, LineFormatProperty
+from fairypptx._shape import FillFormatProperty
+from fairypptx._shape import LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape.stylist import ShapeStylist
-from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner, ShapesArranger, ShapesLocator
 from fairypptx import registry_utils
 
-
-class LocationMixin:
-    """This Mixin handles the functionality of geometry information of `Shape`.
-    This Mixin must be applicable to all the `Shape` in the domain of COMObject.
-    """
-
-    @property
-    def left(self: PPTXObjectProtocol) -> float:
-        return self.api.Left
-
-    @left.setter
-    def left(self: PPTXObjectProtocol, value: float) -> None:
-        self.api.Left = value
-
-    @property
-    def top(self: PPTXObjectProtocol) -> float:
-        return self.api.Top
-
-    @top.setter
-    def top(self: PPTXObjectProtocol, value: float) -> None:
-        self.api.Top = value
-
-    @property
-    def width(self: PPTXObjectProtocol) -> float:
-        return self.api.Width
-
-    @width.setter
-    def width(self: PPTXObjectProtocol, value: float) -> None:
-        self.api.Width = value
-
-    @property
-    def height(self: PPTXObjectProtocol) -> None:
-        return self.api.Height
-
-    @height.setter
-    def height(self: PPTXObjectProtocol, value: float) -> None:
-        self.api.Height = value
-
-    @property
-    def size(self: PPTXObjectProtocol) -> tuple[float, float]:
-        return (self.api.Width, self.api.Height)
-
-    @size.setter
-    def size(self: PPTXObjectProtocol, value: tuple[float, float]) -> None:
-        self.api.Width, self.api.Height = value
-
-    @property
-    def rotation(self: PPTXObjectProtocol) -> float:
-        return self.api.Rotation
-
-    @rotation.setter
-    def rotation(self: PPTXObjectProtocol, value: float) -> None: 
-        self.api.Rotation = value
-
-    def rotate(self: PPTXObjectProtocol, degree: float) -> None:
-        self.api.Rotation += degree
+if TYPE_CHECKING:
+    from fairypptx import ShapeRange
 
 
 class Shape(LocationMixin):
@@ -259,6 +200,8 @@ class ShapeFactory:
             shape = ShapeFactory.make_shape_from_type(arg, **kwargs)
         else:
             raise ValueError(f"`{type(arg)}`, `{arg}` is not interpretted.")
+
+        from fairypptx._shape.location import ShapesLocator
         ShapesLocator(mode="center")(shape)
         return shape
 

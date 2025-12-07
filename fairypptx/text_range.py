@@ -1,5 +1,5 @@
 import itertools
-from typing import Sequence, TYPE_CHECKING, Self, Literal
+from typing import Sequence, TYPE_CHECKING, Literal
 
 
 from collections.abc import Sequence
@@ -13,7 +13,6 @@ from fairypptx import constants
 from fairypptx._text import Text, Font, ParagraphFormat
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
 
-from fairypptx.text_frame import TextFrame  # NOQA
 from fairypptx.core.resolvers import resolve_text_range
 from fairypptx.core.types import COMObject
 

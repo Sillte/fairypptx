@@ -163,30 +163,8 @@ def resolve_shape_range(arg: PPTXObjectProtocol | COMObject | None = None) -> CO
             elif Selection.Type == constants.ppSelectionText:
                 # Even if Seleciton.Type is ppSelectionText, `Selection.ShapeRange` return ``Shape``.
                 return Selection.ShapeRange
-        slide_api = resolve_slide()
-        return slide_api.Range()
-    raise NotImplementedError()
-
-def resolve_shape(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
-    """Return the COMObject of `Shape`."""
-
-    if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
-        if isinstance(arg, PPTXObjectProtocol):
-            api: COMObject = arg.api 
-        else:
-            api = arg
-        if is_object(api, "Shape"):
-            return api
-        elif is_object(api, "Shapes"):
-            return api.Item(1)
-        elif is_object(api, "ShapeRange"):
-            return api.Item(1)
-
-        msg = f"`{arg}` is not acceptable for `Shape`."
-        raise ValueError(msg)
-    if arg is None:
-        App = Application().api
-        return App.ActivePresentation.Slides
+        shapes_api = resolve_shapes()
+        return shapes_api.Range()
     raise NotImplementedError()
 
 
@@ -230,6 +208,7 @@ def resolve_shapes(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObje
                     shape_objects = [shape for shape in Selection.ShapeRange]
                 return shape_objects[0].Parent.Shapes
     return resolve_slide().Shapes
+
 
 def resolve_shape(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
     if isinstance(arg, PPTXObjectProtocol) or is_object(arg):
