@@ -181,22 +181,16 @@ def test_font():
     tr = TextRange(shape)
     tr.api.Font.Size = 17
     font = tr.font
-    assert font["Size"] == 17
-    font["Size"] = 15
+    assert font.api.Size == 17
+    font.api.Size = 15
     tr.font = font
     assert tr.api.Font.Size == 15
 
-    # Setting method 1
-    # Directory set it using `Object` instance.
     shape.textrange.font.api.Color.RGB = 1
     assert shape.textrange.font.color == Color(1)
 
-    # Setting method2 using `ObjectMixinDict`.
-    shape.textrange.font["Color.RGB"] = 3
+    shape.textrange.font.api.Color.RGB = 3
     assert shape.textrange.font.color == Color(3)
-
-    shape.textrange.font.color = 4
-    assert shape.textrange.font["Color.RGB"] == 4
 
 
 def test_paragraphformat():

@@ -14,7 +14,7 @@ def test_getitem():
         shape.api.Left = index * 50
         shape.api.Top = 50
         shape.text = f"index{str(index)}"
-        shape.textrange.font["Size"] = 12
+        shape.textrange.font.size = 12
         shape.api.Width = 50
         shape.api.Height = 50
     assert len(slide.shapes) == count, "Added shapes."

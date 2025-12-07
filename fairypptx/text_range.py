@@ -213,8 +213,9 @@ class TextRange:
 
     @font.setter
     def font(self, param):
-        for key, value in param.items():
-            object_utils.setattr(self.api.Font, key, value)
+        font = Font(self.api.Font)
+        font.apply(param)
+
 
     @property
     def paragraphformat(self):
