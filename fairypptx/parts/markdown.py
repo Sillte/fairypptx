@@ -21,7 +21,7 @@ Currently, this contrains a lot of problems.
 """
 from pathlib import Path
 from typing import Sequence
-from fairypptx import Slide, ShapeRange, Shape, TextRange, Application, Text, Table
+from fairypptx import Slide, ShapeRange, Shape, TextRange, Application
 from fairypptx import constants
 
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist

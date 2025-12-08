@@ -4,22 +4,21 @@ Note
 -----------------------
 
 """
-from fairypptx._text import Text
+from typing import TYPE_CHECKING, Sequence
+
+if TYPE_CHECKING:
+    from fairypptx.shape import Shape
+
 
 class TextProperty:
-    def __get__(self, shape, klass=None):
+    def __get__(self, shape: "Shape", klass=None) -> str:
         if shape is None:
             raise AttributeError("Cannot accept.")
-        return Text(shape.api.TextFrame.TextRange)
+        return str(shape.api.TextFrame.TextRange.Text)
 
-    def __set__(self, shape, value):
+    def __set__(self, shape: "Shape", value: str):
         from fairypptx.text_range import TextRange
-        tr = TextRange(shape)
-        if isinstance(value, str):
-            tr.api.Text = value
-        else:
-            assert False
-
+        TextRange(shape).api.Text = value
 
 class TextsProperty:
     """
@@ -27,13 +26,11 @@ class TextsProperty:
     --------------------------------------
     `texts` corresponds to `textrange.runs`.
     """
-    def __get__(self, shape, klass=None):
-        if shape is None:
-            raise AttributeError()
-        return [Text(elem) for elem in shape.textrange.api.Runs()]
+    def __get__(self, shape: "Shape", klass=None) -> Sequence[str]:
+        return [elem.Text for elem in shape.textrange.api.Runs()]
 
-    def __set__(self, shape, value):
-        from fairypptx import TextRange
+    def __set__(self, shape: "Shape", value: Sequence[str]) -> None:
+        from fairypptx.text_range import TextRange
         tr = TextRange(shape.api.TextFrame.TextRange)
         if not value:
             tr.text = ""

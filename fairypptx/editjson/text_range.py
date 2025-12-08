@@ -3,7 +3,6 @@ from fairypptx import constants
 
 from typing import Any, Mapping, Self, Sequence
 from fairypptx.text_range import TextRange
-from fairypptx._text import Font, ParagraphFormat, Text
 from fairypptx.editjson.font import NaiveFontEditParam
 from fairypptx.editjson.paragraph_format import NaiveParagraphFormatStyle
 from dataclasses import dataclass 

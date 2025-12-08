@@ -16,7 +16,6 @@ from fairypptx.shape_range import ShapeRange # NOQA
 from fairypptx.shapes import Shapes # NOQA
 from fairypptx.text_frame import TextFrame # NOQA
 from fairypptx.text_range import TextRange # NOQA
-from fairypptx.text_range import Text # NOQA
 from fairypptx.table import Table # NOQA
 
 from fairypptx.parts.markdown import Markdown

@@ -10,7 +10,7 @@ from fairypptx.object_utils import is_object, upstream
 from fairypptx import registry_utils
 from fairypptx.core.application import Application
 from fairypptx import constants
-from fairypptx._text import Text, Font, ParagraphFormat
+from fairypptx._text import  Font, ParagraphFormat
 from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
 
 from fairypptx.core.resolvers import resolve_text_range
@@ -197,15 +197,13 @@ class TextRange:
 
 
     @property
-    def text(self):
-        return Text(self)
+    def text(self) -> str:
+        return str(self.api.Text)
 
     @text.setter
-    def text(self, arg):
-        text = Text(arg)
-        self.api.Text = str(text)
-        self.font = text.font
-        self.paragraphformat = text.paragraphformat
+    def text(self, arg: str):
+        self.api.Text = arg
+
 
     @property
     def font(self):
