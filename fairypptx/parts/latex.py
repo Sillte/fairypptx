@@ -6,7 +6,7 @@ I wonder what is appropriate name for these concepts....
 from fairypptx import TextRange, Shape, Shapes, Slide, GroupShape
 from fairypptx import Color
 from fairypptx import Shape
-from fairypptx.registry_utils import yield_temporary_path
+from fairypptx.registry_utils import yield_temporary_path, yield_temporary_dump
 from fairypptx.constants import msoTrue, msoFalse
 from fairypptx import constants
 
@@ -113,7 +113,7 @@ class Latex:
         # and write the state of `self`
         shapes_api = upstream(self.shape.api, "Slide").Shapes
 
-        with yield_temporary_path(image) as path:
+        with yield_temporary_dump(image) as path:
             output_image_shape = shapes_api.AddPicture(
                 path, msoFalse, msoTrue, Left=left, Top=top, Width=width, Height=height
             )

@@ -32,15 +32,17 @@ For these functions, it is expected to use this picture.
 """
 
 from pathlib import Path
-from contextlib import contextmanager
-from collections.abc import Mapping
+
 from collections import defaultdict
 import shutil
-import subprocess
-import weakref
 import json
 import pickle
 
+from fairypptx.registry_utils.temporary_path import yield_temporary_path  #NOQA
+from fairypptx.registry_utils.temporary_path import yield_temporary_dump
+from fairypptx.registry_utils.structure_registry import JsonRegistry, BaseModelRegistry  # NOQA.
+
+ 
 __registry = defaultdict(dict)
 
 
@@ -192,72 +194,6 @@ def _solve_extension(target, extension):
     return ".pkl"
 
 
-@contextmanager
-def yield_temporary_path(memory=None, suffix: str=None):
-    """Generate `temporary` file within this context.
-
-    Args: 
-        memory: the target object, it's used when you want to dump `memory` into `HDD`. 
-        suffix: the suffix of the file. 
- 
-    This is intended to be used for calling a part of Microsoft Object Model function. 
-    Hence, the type of `memory` is limited, I suppose.   
-
-    This function assumes 2 scenes. 
-
-    1. When you use `path` as the input of `Method of Object Model`.
-        - For this usage, you should specify `memory` at call.
-    2. When you use `path` as the output of `Method of Object Model`.
-        - For this usage, you should specify `suffix` at call.
-
-    Note:
-        As of today (2022-01-04), the generation of `folder` is out of scope.   
-    """
-    import uuid
-    import os
-    from PIL import Image
-
-    if memory is None and suffix is None:
-        raise TypeError("Either of `memory` or `suffix` must be specified.")
-
-    if memory is not None and suffix is not None:
-        raise TypeError("Don't specify both of `memory` or `suffix`.")
-
-
-    temporary_folder = _registry_folder()  / "__temporary__"
-    temporary_folder.mkdir(exist_ok=True, parents=True)
-    stem = uuid.uuid1()
-
-    if memory is not None:
-        if isinstance(memory, Image.Image):
-            path = temporary_folder / f"{stem}.png"
-            memory.save(path)
-        elif isinstance(memory, bytes):
-            path = temporary_folder / f"{stem}"
-            path.write_bytes(memory)
-        elif isinstance(memory, (str)):
-            path = temporary_folder / f"{stem}"
-            path.write_text(memory, "utf8")
-        else:
-            raise TypeError("The given memory cannot be handled. ", memory.__class__)
-    elif suffix is not None:
-        if not suffix.startswith("."):
-            suffix = f".{suffix}"
-        path = temporary_folder / "{stem}{suffix}"
-    else:
-        raise 
-
-    try:
-        yield path
-    except Exception as e:
-        if path.exists():
-            os.unlink(path)
-        raise e
-    else:
-        if path.exists():
-            os.unlink(path)
-
-
 if __name__ == "__main__":
     _registry_folder()
     data = {"first": 1, "second":2}
@@ -269,7 +205,7 @@ if __name__ == "__main__":
 
     from PIL import Image
     image = Image.new("RGB", size=(1, 2))
-    with yield_temporary_path(image) as k:
+    with yield_temporary_dump(image) as k:
         s = k
     print(s.exists())
     print(REGISTRY_FOLDER)

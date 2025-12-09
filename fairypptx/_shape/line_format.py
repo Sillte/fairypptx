@@ -1,6 +1,6 @@
 from collections.abc import Sequence 
 from fairypptx import constants
-from fairypptx.object_utils import ObjectDictMixin, getattr, setattr
+from fairypptx.object_utils import getattr, setattr
 from fairypptx.color import Color
 
 from fairypptx import constants

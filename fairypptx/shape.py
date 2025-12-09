@@ -1,3 +1,4 @@
+from typing import cast
 from collections import UserString
 from pywintypes import com_error
 from typing import Any, Self, Literal, TYPE_CHECKING 
@@ -5,6 +6,7 @@ from PIL import Image
 from fairypptx import constants
 from fairypptx._shape.mixins import LocationMixin
 from fairypptx.constants import msoTrue, msoFalse
+from fairypptx.registry_utils import BaseModelRegistry
 
 from fairypptx._shape.box import Box
 from fairypptx import object_utils
@@ -91,22 +93,24 @@ class Shape(LocationMixin):
         return ShapeFactory.make_textbox(arg)
 
 
-    def like(self, style):
-        from fairypptx.editjson.shape import NaiveShapeStyle 
-        if isinstance(style, str):
-            json_target = registry_utils.fetch(self.__class__.__name__, style)
-            style = NaiveShapeStyle.model_validate(json_target)
-            style.apply(self)
-            return self
-        raise TypeError(f"Currently, type {type(style)} is not accepted.")
+    def like(self, style: str):
+        from fairypptx.editjson.protocols import EditParamProtocol
+        basemodel = BaseModelRegistry.fetch("Shape", style)
+        basemodel = cast(EditParamProtocol[Shape], basemodel)
+        basemodel.apply(self)
 
-    def register(self, key, disk=True):
-        from fairypptx.editjson.shape import NaiveShapeStyle 
-        basemodel = NaiveShapeStyle.from_entity(self)
-        json_target = basemodel.model_dump()
-        registry_utils.register(
-            self.__class__.__name__, key, json_target, extension=".json", disk=disk
-        )
+    def register(self, sytle: str, style_type: None | str | type=None):
+        from fairypptx.editjson.style_type_registry import ShapeStyleTypeRegistry 
+        if not isinstance(style_type, type):
+            style_type = ShapeStyleTypeRegistry.fetch(style_type) 
+        basemodel = style_type.from_entity(self) 
+        BaseModelRegistry.put(basemodel, "Shape", sytle)
+
+        #basemodel = NaiveShapeStyle.from_entity(self)
+        #json_target = basemodel.model_dump()
+        #registry_utils.register(
+        #    self.__class__.__name__, key, json_target, extension=".json", disk=disk
+        #)
 
     def get_styles(self):
         """Return available styles.
@@ -226,7 +230,7 @@ class ShapeFactory:
         from fairypptx import Slide
         from fairypptx import Slide
         shapes = Slide().shapes
-        with registry_utils.yield_temporary_path(arg) as path: 
+        with registry_utils.yield_temporary_dump(arg) as path: 
             shape_object = shapes.api.AddPicture(
                 path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1], **kwargs
             )

@@ -17,7 +17,7 @@ from fairypptx.core.models import ApiBridgeBaseModel
 from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
 from fairypptx.core.types import COMObject
 
-from fairypptx.object_utils import ObjectDictMixin, to_api2, getattr, is_object, setattr, ObjectDictMixin2
+from fairypptx.object_utils import to_api2, getattr, is_object, setattr
 from fairypptx.object_utils import getattr as f_getattr
 
 

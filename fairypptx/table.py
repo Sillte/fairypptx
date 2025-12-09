@@ -17,7 +17,7 @@ from fairypptx._table.table_api_writer import TableApiWriter
 from fairypptx.core.resolvers import resolve_table, resolve_shapes
 from fairypptx.core.types import COMObject
 
-from fairypptx.object_utils import registry_utils
+from fairypptx import registry_utils
 
 from fairypptx._table import Cell, Rows, Columns, Row, Column
 from fairypptx._table.table_api_writer import TableApiWriter 
