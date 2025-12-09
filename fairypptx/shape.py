@@ -1,7 +1,7 @@
 from typing import cast
 from collections import UserString
 from pywintypes import com_error
-from typing import Any, Self, Literal, TYPE_CHECKING, Sequence 
+from typing import Any, Literal, TYPE_CHECKING, Sequence, Self, Literal
 from PIL import Image
 from fairypptx import constants
 from fairypptx._shape.mixins import LocationMixin
@@ -14,10 +14,12 @@ from fairypptx.object_utils import upstream, stored
 from fairypptx.core.types import COMObject 
 
 from fairypptx.core.resolvers import resolve_shape 
+from fairypptx.core.utils import swap_props 
 
 from fairypptx._shape import FillFormatProperty
 from fairypptx._shape import LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
+from fairypptx._shape import api_functions
 from fairypptx import registry_utils
 
 if TYPE_CHECKING:
@@ -55,8 +57,8 @@ class Shape(LocationMixin):
     def select(self, replace=True):
         return self.api.Select(replace)
 
-    def resize(self, *, fontsize=None):
-        from fairypptx.text import FontResizer
+    def resize(self, *, fontsize: int | None = None):
+        from fairypptx._text.editor import FontResizer 
         if fontsize is not None:
             FontResizer(fontsize=fontsize, mode="min")(self.textrange)
             self.tighten()
@@ -112,42 +114,23 @@ class Shape(LocationMixin):
         """
         return BaseModelRegistry.get_keys("Shape")
 
-    def tighten(self, *, oneline=False):
+    def tighten(self, *, oneline: bool =False) -> None:
         """Tighten the Shape according to Text.
 
         Args:
             oneline: Modify so that text becomes 1 line.
         """
-        if self.api.HasTextFrame:
-            if oneline is True:
-                self.api.TextFrame.TextRange.Text = self.text.replace("\r", "").replace(
-                    "\n", ""
-                )
-            with stored(self.api, ("TextFrame.AutoSize", "TextFrame.WordWrap")):
-                self.api.TextFrame.AutoSize = constants.ppAutoSizeShapeToFitText
-                self.api.TextFrame.WordWrap = constants.msoFalse
-        return self
+        api_functions.tighten(self.api, oneline=oneline)
 
-    def swap(self, other):
+
+    def swap(self, other: Self):
         attrs = ["Left", "Top"]
-        ps1 = [object_utils.getattr(self, attr) for attr in attrs]
-        ps2 = [object_utils.getattr(other, attr) for attr in attrs]
-        for attr, p1, p2 in zip(attrs, ps1, ps2):
-            object_utils.setattr(self, attr, p2)
-            object_utils.setattr(other, attr, p1)
-        return self
-
-    def to_image(self, mode="RGBA"):
-        with registry_utils.yield_temporary_path(suffix=".png") as path:
-            self.api.Export(path, constants.ppShapeFormatPNG)
-            image = Image.open(path).copy()
-        return image.convert(mode)
+        swap_props(self.api, other.api, attrs)
 
 
-    def is_table(self):
-        """Return whether this Shape is Table or not.
-        """
-        return self.api.Type == constants.msoTable
+    def to_image(self, mode: Literal["RGBA", "RGB"] ="RGBA") -> Image.Image:
+        return api_functions.to_image(self.api, mode)
+
 
     def is_child(self):
         """Return whether this is child or not. 
@@ -155,7 +138,7 @@ class Shape(LocationMixin):
         return self.api.Child == constants.msoTrue
 
     @property
-    def parent(self):
+    def parent(self) -> "Shape":
         assert self.is_child()
         return Shape(self.api.ParentGroup)
 
@@ -169,6 +152,9 @@ class GroupShape(Shape):
     def children(self) -> "ShapeRange":
         from fairypptx.shape_range import ShapeRange
         return ShapeRange([elem for elem in self.api.GroupItems])
+
+class TableShape(Shape):
+    pass
 
 
 class ShapeFactory:
@@ -193,7 +179,6 @@ class ShapeFactory:
 
     @staticmethod
     def make(arg: Any, **kwargs):
-        from fairypptx import Shapes 
         if isinstance(arg, Image.Image):
             shape = ShapeFactory.make_shape_with_image(arg)
         elif isinstance(arg, (str, UserString)):
@@ -210,7 +195,7 @@ class ShapeFactory:
     @staticmethod
     def make_textbox(arg: str | UserString) -> Shape:
         shape = ShapeFactory.make_shape_from_type(constants.msoShapeRectangle)
-        shape.text = arg
+        shape.textrange.api.Text = arg
         shape.tighten()
         return shape
 

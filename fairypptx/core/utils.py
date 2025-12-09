@@ -93,3 +93,11 @@ def remove_invalidity(api:COMObject, data: Mapping[str, Any]) -> Mapping[str, An
         except ValueError:
             remove_keys.add(key)
     return {key: value for key, value in data.items() if key not in remove_keys}
+
+
+def swap_props(api1: COMObject, api2: COMObject, attrs: Sequence[str]) -> None:
+    ps1 = [f_getattr(api1, attr) for attr in attrs]
+    ps2 = [f_getattr(api2, attr) for attr in attrs]
+    for attr, p1, p2 in zip(attrs, ps1, ps2):
+        f_setattr(api1, attr, p2)
+        f_setattr(api2, attr, p1)

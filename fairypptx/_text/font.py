@@ -12,7 +12,7 @@ from collections.abc import Sequence
 from fairypptx import constants
 from fairypptx.color import Color
 
-from typing import Any, Mapping, Literal, ClassVar, Sequence, Self, Annotated, cast
+from typing import Any, Mapping, ClassVar, Sequence, Self
 from fairypptx.core.models import ApiBridgeBaseModel
 from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
 from fairypptx.core.types import COMObject

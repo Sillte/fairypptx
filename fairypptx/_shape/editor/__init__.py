@@ -9,7 +9,7 @@ import numpy as np
 import _ctypes
 from pywintypes import com_error
 from fairypptx import constants
-from fairypptx.shape import Shape
+from fairypptx.shape import Shape, TableShape
 from fairypptx.shape import Box
 from fairypptx.table import Table
 
@@ -315,7 +315,7 @@ class BoundingResizer:
             shape.api.Height = shape.api.Height * ratios[0]
 
             # For Table.
-            if shape.is_table():
+            if isinstance(shape, TableShape):
                 table = Table(shape)
                 for row in table.rows:
                     for cell in row:
