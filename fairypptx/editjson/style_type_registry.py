@@ -1,6 +1,7 @@
 from fairypptx.editjson.protocols import EditParamProtocol
 from fairypptx.editjson.shape import NaiveShapeStyle
 from fairypptx.editjson.text_range import NaiveTextRangeParagraphStyle
+from fairypptx.editjson.table import NaiveTableStyle
 
 
 class PPTXObjectStyleTypeRegistry:
@@ -36,4 +37,5 @@ class PPTXObjectStyleTypeRegistry:
 
 ShapeStyleTypeRegistry = PPTXObjectStyleTypeRegistry(NaiveShapeStyle)
 TextRangeStyleTypeRegistry = PPTXObjectStyleTypeRegistry(NaiveTextRangeParagraphStyle)
+TableStyleTypeRegistry = PPTXObjectStyleTypeRegistry(NaiveTableStyle)
 

@@ -1,8 +1,9 @@
 import itertools
-from typing import Sequence, TYPE_CHECKING, Literal
+from typing import Sequence, TYPE_CHECKING, Literal, cast
 
 
 from collections.abc import Sequence
+from fairypptx.registry_utils import BaseModelRegistry
 
 from fairypptx import Application
 from fairypptx import object_utils
@@ -245,23 +246,19 @@ class TextRange:
         return result
 
 
-    def register(self, key, disk=True):
-        """ Currently, depending of Paragraphs,
-        Style specification rule is ambiguous. 
-        Here, (IndentLevel, #paragraphs)'s format is stored.
-        Well, then, I wonder whether other mode is introduced or not.
+    def register(self, style: str, style_type: str | None | type = None) -> None:
+        from fairypptx.editjson.style_type_registry import TextRangeStyleTypeRegistry
+        if not isinstance(style_type, type): 
+            style_type = TextRangeStyleTypeRegistry.fetch(style_type)
+        edit_param = style_type.from_entity(self)
+        BaseModelRegistry.put(edit_param, "TextRange", style)
 
-        """
-        formatter = ParagraphTextRangeStylist(self)
-        registry_utils.register("TextRange", key, formatter, extension=".pkl", disk=disk)
 
-    def like(self, style):
-        if isinstance(style, str):
-            formatter = registry_utils.fetch("TextRange", style)
-            formatter(self)
-            return self
-        else:
-            raise ValueError("Cannot handle, yet.")
+    def like(self, style: str) -> None:
+        from fairypptx.editjson.protocols import EditParamProtocol
+        edit_param = BaseModelRegistry.fetch("TextRange", style)
+        edit_param = cast(EditParamProtocol, edit_param)
+        edit_param.apply(self)
 
     @classmethod
     def make(cls, arg):

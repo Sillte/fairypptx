@@ -1,7 +1,7 @@
 from typing import cast
 from collections import UserString
 from pywintypes import com_error
-from typing import Any, Self, Literal, TYPE_CHECKING 
+from typing import Any, Self, Literal, TYPE_CHECKING, Sequence 
 from PIL import Image
 from fairypptx import constants
 from fairypptx._shape.mixins import LocationMixin
@@ -106,16 +106,11 @@ class Shape(LocationMixin):
         basemodel = style_type.from_entity(self) 
         BaseModelRegistry.put(basemodel, "Shape", sytle)
 
-        #basemodel = NaiveShapeStyle.from_entity(self)
-        #json_target = basemodel.model_dump()
-        #registry_utils.register(
-        #    self.__class__.__name__, key, json_target, extension=".json", disk=disk
-        #)
 
-    def get_styles(self):
+    def get_styles(self) -> Sequence[str]:
         """Return available styles.
         """
-        return registry_utils.keys(self.__class__.__name__)
+        return BaseModelRegistry.get_keys("Shape")
 
     def tighten(self, *, oneline=False):
         """Tighten the Shape according to Text.

@@ -10,6 +10,7 @@ Desire:
 
 """
 
+from typing import cast
 import numpy as np
 from fairypptx._table.table_api_writer import TableApiWriter
 
@@ -21,6 +22,7 @@ from fairypptx import registry_utils
 
 from fairypptx._table import Cell, Rows, Columns, Row, Column
 from fairypptx._table.table_api_writer import TableApiWriter 
+from fairypptx.registry_utils import BaseModelRegistry
 
 class Table:
     def __init__(self, arg=None):
@@ -85,22 +87,19 @@ class Table:
     def values(self):
         return self.to_numpy()  
 
-    def register(self, key, disk=True):
-        from fairypptx.editjson.table import NaiveTableStyle
-        editparam = NaiveTableStyle.from_entity(self)
-        target = editparam.model_dump()
-        registry_utils.register(
-            self.__class__.__name__, key, target, extension=".json", disk=disk
-        )
+    def register(self, style: str, style_type: str | None | type = None) -> None:
+        from fairypptx.editjson.style_type_registry import TableStyleTypeRegistry
+        if not isinstance(style_type, type): 
+            style_type = TableStyleTypeRegistry.fetch(style_type)
+        edit_param = style_type.from_entity(self)
+        BaseModelRegistry.put(edit_param, "Table", style)
 
-    def like(self, key):
-        from fairypptx.editjson.table import NaiveTableStyle
-        if isinstance(key, str):
-            target = registry_utils.fetch(self.__class__.__name__, key)
-            editparam = NaiveTableStyle.model_validate(target)
-            editparam.apply(self)
-            return self
-        raise TypeError(f"Currently, type {type(style)} is not accepted.")
+
+    def like(self, style: str):
+        from fairypptx.editjson.protocols import EditParamProtocol
+        edit_param = BaseModelRegistry.fetch("Table", style)
+        edit_param = cast(EditParamProtocol, edit_param)
+        edit_param.apply(self)
 
 
 
