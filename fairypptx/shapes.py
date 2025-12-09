@@ -46,16 +46,12 @@ class Shapes:
         return Slide(self.api.Parent) 
 
     @property
-    def circumscribed_box(self):
+    def circumscribed_box(self) -> Box:
         """Return Box which circumscribes `Shapes`.
         """
         boxes = [shape.box for shape in self]
-        c_left = min(box.left for box in boxes)
-        c_top = min(box.top for box in boxes)
-        c_right = max(box.right for box in boxes)
-        c_bottom = max(box.bottom for box in boxes)
-        c_box = Box(left=c_left, top=c_top, width=c_right - c_left, height=c_bottom - c_top)
-        return c_box
+        return Box.cover(boxes)
+
 
     def select(self) -> Self:
         """ Select.
@@ -66,7 +62,7 @@ class Shapes:
             shape.api.Select(msoFalse)
         return self
 
-    def tighten(self):
+    def tighten(self) -> None:
         for shape in self:
             shape.tighten()
         return self

@@ -9,8 +9,7 @@ from fairypptx.constants import msoTrue, msoFalse
 from fairypptx.registry_utils import BaseModelRegistry
 
 from fairypptx._shape.box import Box
-from fairypptx import object_utils
-from fairypptx.object_utils import upstream, stored
+from fairypptx.object_utils import upstream
 from fairypptx.core.types import COMObject 
 
 from fairypptx.core.resolvers import resolve_shape 
