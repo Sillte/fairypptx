@@ -1,11 +1,11 @@
 from typing import cast
 from collections import UserString
 from pywintypes import com_error
-from typing import Any, Literal, TYPE_CHECKING, Sequence, Self, Literal
+from typing import Any, Literal, TYPE_CHECKING, Sequence, Self
+
 from PIL import Image
 from fairypptx import constants
 from fairypptx._shape.mixins import LocationMixin
-from fairypptx.constants import msoTrue, msoFalse
 from fairypptx.registry_utils import BaseModelRegistry
 
 from fairypptx._shape.box import Box
@@ -14,15 +14,16 @@ from fairypptx.core.types import COMObject
 
 from fairypptx.core.resolvers import resolve_shape 
 from fairypptx.core.utils import swap_props 
+from fairypptx._shape.api_factory import ShapeApiFactory
 
 from fairypptx._shape import FillFormatProperty
 from fairypptx._shape import LineFormatProperty
 from fairypptx._shape import TextProperty, TextsProperty
 from fairypptx._shape import api_functions
-from fairypptx import registry_utils
 
 if TYPE_CHECKING:
     from fairypptx import ShapeRange
+    from fairypptx import Slide
 
 
 class Shape(LocationMixin):
@@ -34,11 +35,22 @@ class Shape(LocationMixin):
     def __new__(cls, arg: Any = None) -> "Shape":
         # NOTE: For the direction of the dependency, 
         # `Factory` is imported here. 
-        klass = ShapeFactory.get_class(arg)
-        return super().__new__(klass)
+        api = resolve_shape(arg)
+        # For some `arg`, `Type` is not accessible.
+        try:
+            t = api.Type
+        except com_error:
+            t = None
+        match t:
+            case constants.msoGroup:
+                klass = GroupShape
+            case _:
+                klass = cls
+        return object.__new__(klass)
 
     def __init__(self, arg=None):
         self._api = resolve_shape(arg) 
+
 
     @property
     def api(self) -> COMObject:
@@ -53,8 +65,8 @@ class Shape(LocationMixin):
         return Box.from_api(self.api)
 
 
-    def select(self, replace=True):
-        return self.api.Select(replace)
+    def select(self, replace_: bool=True):
+        return self.api.Select(replace_)
 
     def resize(self, *, fontsize: int | None = None):
         from fairypptx._text.editor import FontResizer 
@@ -157,73 +169,99 @@ class TableShape(Shape):
 
 
 class ShapeFactory:
+    """High-level factory for creating Shape wrappers.
+
+    This factory accepts various input types (Image, str, int) and returns
+    Shape wrappers ready for use. Internally, it uses ShapeApiFactory to
+    create the low-level COM objects, then wraps them using Shape.from_api().
+    """
 
     @staticmethod
-    def get_class(arg: None) -> type[Shape]:
-        """This function is intended to generate a class 
-        from PPTXObejct or COMObject. 
+    def make(arg: Any, **kwargs) -> Shape:
+        """Create a Shape from an image, text string, or shape type constant.
+
+        Args:
+            arg: PIL.Image, str/UserString (text), or int (shape type constant).
+            **kwargs: Additional arguments for shape positioning/sizing.
+
+        Returns:
+            A Shape wrapper (or GroupShape if appropriate).
         """
-        api = resolve_shape(arg)
-        # For some `arg`, `Type` is not accessible.
-        try:
-            t = api.Type
-        except com_error:
-            t = None
-        if t == constants.msoGroup:
-            return GroupShape
-        return Shape
-
-    # Base on the argument given by user, 
-    # Factory selects the apt Shape.
-
-    @staticmethod
-    def make(arg: Any, **kwargs):
         if isinstance(arg, Image.Image):
-            shape = ShapeFactory.make_shape_with_image(arg)
+            shape_api = ShapeApiFactory.add_picture(arg, **kwargs)
         elif isinstance(arg, (str, UserString)):
-            shape = ShapeFactory.make_textbox(arg, **kwargs)
+            shape_api = ShapeApiFactory.add_textbox(str(arg), **kwargs)
         elif isinstance(arg, int):
-            shape = ShapeFactory.make_shape_from_type(arg, **kwargs)
+            shape_api = ShapeApiFactory.add_shape_from_type(arg, **kwargs)
         else:
-            raise ValueError(f"`{type(arg)}`, `{arg}` is not interpretted.")
+            raise ValueError(f"Unsupported arg type: {type(arg)}, value: {arg}")
 
+        shape = Shape(shape_api)
         from fairypptx._shape.location import ShapesLocator
         ShapesLocator(mode="center")(shape)
         return shape
 
     @staticmethod
-    def make_textbox(arg: str | UserString) -> Shape:
-        shape = ShapeFactory.make_shape_from_type(constants.msoShapeRectangle)
-        shape.textrange.api.Text = arg
+    def make_textbox(text: str, **kwargs) -> Shape:
+        """Create a textbox with the given text, auto-sized to content.
+
+        Args:
+            text: Text content for the textbox.
+            **kwargs: Additional shape arguments.
+
+        Returns:
+            A Shape wrapper with text, tightened to content.
+        """
+        shape_api = ShapeApiFactory.add_textbox(text, **kwargs)
+        shape = Shape(shape_api)
         shape.tighten()
         return shape
 
     @staticmethod
-    def make_shape_from_type(arg: int, **kwargs) -> Shape:
-        from fairypptx import Slide
-        shapes = Slide().shapes
-        return shapes.add(arg, **kwargs)
+    def make_shape_from_type(type_id: int, **kwargs) -> Shape:
+        """Create a shape of the specified type.
+
+        Args:
+            type_id: COM shape type constant (e.g., constants.msoShapeRectangle).
+            **kwargs: Additional shape arguments.
+
+        Returns:
+            A Shape wrapper.
+        """
+        shape_api = ShapeApiFactory.add_shape_from_type(type_id, **kwargs)
+        return Shape(shape_api)
 
     @staticmethod
-    def make_shape_with_image(arg: Image.Image, **kwargs) -> Shape:
-        from fairypptx import Slide
-        from fairypptx import Slide
-        shapes = Slide().shapes
-        with registry_utils.yield_temporary_dump(arg) as path: 
-            shape_object = shapes.api.AddPicture(
-                path, msoFalse, msoTrue, Left=0, Top=0, Width=arg.size[0], Height=arg.size[1], **kwargs
-            )
-            shape = Shape(shape_object)
-            shape.width = arg.size[0] 
-            shape.height = arg.size[1]
+    def make_shape_with_image(image: Image.Image, **kwargs) -> Shape:
+        """Add a picture to the slide.
+
+        Args:
+            image: PIL.Image object.
+            **kwargs: Additional shape arguments (position, size overrides).
+
+        Returns:
+            A Shape wrapper around the picture.
+        """
+        shape_api = ShapeApiFactory.add_picture(image, **kwargs)
+        shape = Shape(shape_api)
+        # Set explicit dimensions if not already provided by AddPicture
+        shape.width = image.width
+        shape.height = image.height
         return shape
 
     @staticmethod
-    def make_arrow(arg: Literal["right", "left", "up", "down", "both"] = "right") -> Shape:
-        m = {"right": constants.msoShapeRightArrow, "left": constants.msoShapeLeftArrow,
-         "up": constants.msoShapeUpArrow, "down": constants.msoShapeDownArrow, 
-         "both": constants.msoShapeLeftRightArrow}
-        return ShapeFactory.make_shape_from_type(m[arg])
+    def make_arrow(direction: Literal["right", "left", "up", "down", "both"] = "right", **kwargs) -> Shape:
+        """Create an arrow shape in the specified direction.
+
+        Args:
+            direction: One of "right", "left", "up", "down", "both".
+            **kwargs: Additional shape arguments.
+
+        Returns:
+            A Shape wrapper for the arrow.
+        """
+        shape_api = ShapeApiFactory.make_arrow(direction, **kwargs)
+        return Shape(shape_api)
 
 
 # High-level APIs are loaded here.

@@ -30,7 +30,7 @@ class ShapesLocator:
         elif self.mode == "blank":
             self._to_blank_area(shapes)
         else:
-            raise ValueError(f"Invalid mode `{mode}`.")
+            raise ValueError(f"Invalid mode `{self.mode}`.")
         return arg 
 
     def _to_shapes(self, arg):

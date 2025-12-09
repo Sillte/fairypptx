@@ -39,8 +39,8 @@ class SerializerProtocol[T](Protocol):
 
     - `file_type` should return the short file-type identifier used by the
       registry (e.g. "json", "pkl").
-    - `to_data` converts a Python object into the storage type `T`.
-    - `from_data` converts storage value `T` back to a Python object (or
+    - `to_atomic` converts a Python object into the storage type `T`.
+    - `from_atomic` converts storage value `T` back to a Python object (or
       returns `None` when input is `None`).
     """
 
@@ -48,10 +48,10 @@ class SerializerProtocol[T](Protocol):
     def file_type(self) -> FileType:
         ...
 
-    def to_data(self, in_data: Any) -> T:
+    def to_atomic(self, data: Any) -> T:
         ...
 
-    def from_data(self, out_data: T | None) -> Any | None:
+    def from_atomic(self, atomic: T | None) -> Any | None:
         ...
 
 class JsonSerializer(SerializerProtocol[str]):
@@ -67,13 +67,13 @@ class JsonSerializer(SerializerProtocol[str]):
     def file_type(self) -> FileType: 
         return "json"
 
-    def to_data(self, in_data: Any) -> str:
-        return json.dumps(in_data, indent=4)
+    def to_atomic(self, data: Any) -> str:
+        return json.dumps(data, indent=4)
 
-    def from_data(self, out_data: str | None) -> Any | None:
-        if out_data:
+    def from_atomic(self, atomic: str | None) -> Any | None:
+        if atomic:
             # json.loads does not accept an `indent` argument; just parse.
-            return json.loads(out_data)
+            return json.loads(atomic)
         return None
 
 class BaseModelSerializer(SerializerProtocol[str]):
@@ -81,17 +81,16 @@ class BaseModelSerializer(SerializerProtocol[str]):
     def file_type(self) -> FileType: 
         return "basemodel"
 
-    def to_data(self, in_data: BaseModel) -> str:
+    def to_atomic(self, data: BaseModel) -> str:
         return json.dumps({
-            "__class__": in_data.__class__.__module__ + "." + in_data.__class__.__name__,
-            "__data__": in_data.model_dump()
+            "__class__": data.__class__.__module__ + "." + data.__class__.__name__,
+            "__data__": data.model_dump()
         }, indent=4)
 
-    def from_data(self, out_data: str | None) -> BaseModel | None:
-        if not out_data:
+    def from_atomic(self, atomic: str | None) -> BaseModel | None:
+        if not atomic:
             return None
-
-        raw = json.loads(out_data)
+        raw = json.loads(atomic)
         class_path = raw["__class__"]
         data = raw["__data__"]
 
@@ -243,7 +242,7 @@ class StructureRegistry[T_data, T_id]:
         """
         category = self._to_category(category)
         id_ = self._to_storage_id(category, key)
-        storage_data = self.serializer.to_data(obj)
+        storage_data = self.serializer.to_atomic(obj)
         self.accessor.write(id_, storage_data)
         self._fetch_from_storage.cache_clear()
 
@@ -294,7 +293,7 @@ class StructureRegistry[T_data, T_id]:
         """
         id_ = self._to_storage_id(category, key)
         storage_data = self.accessor.read(id_)
-        return self.serializer.from_data(storage_data)
+        return self.serializer.from_atomic(storage_data)
 
     def _to_storage_id(self, category: Category, key: str) -> T_id:
         """Return the low-level storage identifier for the given logical id."""
