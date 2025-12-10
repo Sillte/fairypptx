@@ -5,7 +5,7 @@ from fairypptx._shape import FillFormat
 from pprint import pprint
 from fairypptx.enums import MsoFillType
 from pywintypes import com_error
-from fairypptx.fill_format import FillFormatApiBridge
+from fairypptx.apis.fill_format.bridge import FillFormatApiBridge
 
 
 class NaiveFillFormatStyle(BaseModel):
