@@ -192,7 +192,8 @@ def resolve_shapes(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObje
             raise ValueError(f"Cannot interpret `arg`; {arg}.") 
         
         # [TODO] This judge may be too loose....
-        return apis[0].Parent.Shapes
+        if apis[0].Parent.Shapes:
+            return apis[0].Parent.Shapes
 
     if arg is None:
         App = Application().api
@@ -206,7 +207,8 @@ def resolve_shapes(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObje
                     shape_objects = [shape for shape in Selection.ChildShapeRange]
                 else:
                     shape_objects = [shape for shape in Selection.ShapeRange]
-                return shape_objects[0].Parent.Shapes
+                if shape_objects and shape_objects[0].Parent.Shapes:
+                    return shape_objects[0].Parent.Shapes
     return resolve_slide().Shapes
 
 

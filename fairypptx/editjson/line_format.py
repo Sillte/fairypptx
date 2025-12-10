@@ -13,7 +13,7 @@ from pprint import pprint
 from fairypptx.enums import MsoFillType
 from fairypptx.editjson.protocols import EditParamProtocol
 from pywintypes import com_error
-from fairypptx._shape.line_format import LineFormatApiBridge
+from fairypptx.line_format import LineFormatApiBridge
 
 
 class NaiveLineFormatStyle(BaseModel):

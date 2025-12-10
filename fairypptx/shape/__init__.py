@@ -8,7 +8,7 @@ from fairypptx import constants
 from fairypptx._shape.mixins import LocationMixin
 from fairypptx.registry_utils import BaseModelRegistry
 
-from fairypptx._shape.box import Box
+from fairypptx.box import Box
 from fairypptx.object_utils import upstream
 from fairypptx.core.types import COMObject 
 
@@ -33,8 +33,6 @@ class Shape(LocationMixin):
     texts = TextsProperty()
 
     def __new__(cls, arg: Any = None) -> "Shape":
-        # NOTE: For the direction of the dependency, 
-        # `Factory` is imported here. 
         api = resolve_shape(arg)
         # For some `arg`, `Type` is not accessible.
         try:
@@ -218,7 +216,7 @@ class ShapeFactory:
         return shape
 
     @staticmethod
-    def make_shape_from_type(type_id: int, **kwargs) -> Shape:
+    def make_shape_from_type(type_: int, **kwargs) -> Shape:
         """Create a shape of the specified type.
 
         Args:
@@ -228,7 +226,7 @@ class ShapeFactory:
         Returns:
             A Shape wrapper.
         """
-        shape_api = ShapeApiFactory.add_shape_from_type(type_id, **kwargs)
+        shape_api = ShapeApiFactory.add_shape_from_type(type_, **kwargs)
         return Shape(shape_api)
 
     @staticmethod

@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 #from fairypptx.box import Box, Interval, EmptySet, intersection_over_union, intersection_over_cover
-from fairypptx._shape.box import Box, Interval, EmptySet
+from fairypptx.box import Box, Interval, EmptySet
 
 def test_box():
     box = Box.from_numbers(10, 11, 12, 13)

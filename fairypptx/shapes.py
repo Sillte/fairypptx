@@ -2,7 +2,7 @@ from typing import Iterator, Self
 
 from fairypptx.constants import msoFalse
 
-from fairypptx._shape.box import Box  # NOQA
+from fairypptx.box import Box  # NOQA
 from fairypptx.core.application import Application
 from fairypptx.core.resolvers import resolve_shapes
 from fairypptx.core.types import COMObject

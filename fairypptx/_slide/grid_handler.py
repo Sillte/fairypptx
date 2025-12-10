@@ -1,6 +1,6 @@
 import numpy as np
 from typing import List
-from fairypptx._shape.box import Box
+from fairypptx.box import Box
 from fairypptx.slide import Slide
 
 

@@ -5,7 +5,7 @@
 from typing import Union
 import numpy as np
 from collections import defaultdict
-from fairypptx._shape.box import Box
+from fairypptx.box import Box
 from fairypptx.slide import GridHandler
 
 

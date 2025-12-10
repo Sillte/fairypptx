@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Iterable, Tuple, Union
 import colorsys
 
+
 # Shortened here for readability — can include all 140 if needed
 CSS_COLORS = {
     "black": "#000000",
@@ -127,6 +128,7 @@ class _Color:
 #                      Color class (complete)
 # ================================================================
 
+
 class Color:
     """RGBA color class.
     Internally:
@@ -235,6 +237,8 @@ class Color:
     # ============================================================
     def __str__(self):
         return f"Color({self.as_hex(with_alpha=(self.a < 1))})"
+
+type ColorLike = Color | _Color | tuple[int | float, int | float, int | float] |  tuple[int | float, int | float, int | float] |  str
 
 
 def make_hue_circle(seed_color, n_color=5):

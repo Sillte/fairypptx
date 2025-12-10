@@ -25,8 +25,6 @@ class ShapeApiFactory:
     which slide receives the shapes while providing a sensible default.
     """
 
-
-
     @staticmethod
     def add_shape_from_type(type_: int, shapes_api: COMObject | None = None, **kwargs) -> COMObject:
         """Create a shape of a given type.

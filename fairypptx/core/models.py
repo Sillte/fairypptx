@@ -1,4 +1,5 @@
 from fairypptx.core.types import COMObject
+from typing import Any 
 
 
 from pydantic import BaseModel
@@ -17,3 +18,11 @@ class ApiBridgeBaseModel(BaseModel, ABC):
     @abstractmethod
     def apply_api(self, api: COMObject) -> COMObject:
         ...
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, self.__class__):
+            return False
+        return (
+            self.model_dump(exclude_defaults=True)
+            == other.model_dump(exclude_defaults=True)
+        )

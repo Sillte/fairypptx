@@ -5,7 +5,7 @@ from fairypptx.presentation import Presentation
 from fairypptx.core.resolvers import resolve_slide
 from fairypptx import constants
 
-from fairypptx._shape.box import Box
+from fairypptx.box import Box
 from fairypptx.registry_utils import yield_temporary_path
 from fairypptx.object_utils import is_object, upstream
 

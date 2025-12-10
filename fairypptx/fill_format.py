@@ -1,22 +1,24 @@
 from pywintypes import com_error
 
-from collections import defaultdict
 from fairypptx import constants
-from fairypptx.color import Color
+from fairypptx.color import Color, ColorLike
+from fairypptx.core.types import COMObject
 
-from typing import Any, Mapping, Literal, ClassVar, Sequence, Self, Annotated, cast
+from typing import Any, Mapping, Literal, ClassVar, Sequence, Self, Annotated, cast, TYPE_CHECKING
 from fairypptx.core.utils import get_discriminator_mapping
 from fairypptx.core.utils import CrudeApiAccesssor
-from pprint import pprint
 from fairypptx.enums import MsoFillType
 from fairypptx.core.models import ApiBridgeBaseModel
 from pywintypes import com_error
+
+if TYPE_CHECKING:
+    from fairypptx.shape import Shape
 
 
 class NaiveSolidFillFormat(ApiBridgeBaseModel):
     type: Literal[MsoFillType.FillSolid] = MsoFillType.FillSolid
     data: Mapping[str, Any]
-    _keys: ClassVar[Sequence[str]] = ["ForeColor.RGB", "Visible", "Transparency", "Visible"]
+    _keys: ClassVar[Sequence[str]] = ["ForeColor.RGB", "Visible", "Transparency"]
     _accessor: ClassVar[CrudeApiAccesssor] = CrudeApiAccesssor(_keys)
 
     def apply_api(self, api):
@@ -26,7 +28,7 @@ class NaiveSolidFillFormat(ApiBridgeBaseModel):
     def from_api(cls, api) -> Self:
         api.Solid()
         data = cls._accessor.read(api)
-        return cls.model_validate({"data": data})
+        return cls(data=data)
 
 
 class NaivePatternedFillFormat(ApiBridgeBaseModel):
@@ -125,6 +127,7 @@ class NaiveGradientFillFormat(ApiBridgeBaseModel):
 
 class NaiveFallbackFormat(ApiBridgeBaseModel):
     type: int
+    data: None = None
     
     def apply_api(self, api):
         print("This FillFormat is out of scope", api.Type)
@@ -145,15 +148,37 @@ type NaiveTypeFormat = NaiveSolidFillFormat | NaivePatternedFillFormat | NaiveGr
 class FillFormatApiBridge(ApiBridgeBaseModel):
     api_data: NaiveTypeFormat
     
-    def apply_api(self, api):
+    def apply_api(self, api: COMObject):
         self.api_data.apply_api(api)
 
     @classmethod
-    def from_api(cls, api) -> Self:
+    def from_api(cls, api: COMObject) -> Self:
         cls_map = get_discriminator_mapping(NaiveTypeFormat, "type")
         type_ = api.Type
         data = cls_map[type_].from_api(api)
         return cls(api_data=data)
+    
+class FillApiApplicator:
+    @classmethod 
+    def apply_bool(cls, api: COMObject, value: bool) -> None:
+        api.Visible = constants.msoTrue if value else constants.msoFalse
+
+    @classmethod 
+    def apply_any(cls, api: COMObject, value: Any) -> None:
+        api.Visible = constants.msoTrue
+        color = Color(value)
+        api.ForeColor.RGB = color.as_int()
+        api.Transparency = 1.0 - color.alpha
+        api.Solid()
+        
+    @classmethod
+    def apply(cls, api: COMObject, value: Any) -> None:
+        if isinstance(value, bool):
+            cls.apply_bool(api, value)
+        elif value is None:
+            api.Visible = False
+        else:
+            cls.apply_any(api, value)
 
 
 class FillFormat:
@@ -162,41 +187,38 @@ class FillFormat:
     (2020-04-19) Currently, it is far from perfect.
     Only ``Patterned`` / ``Solid`` is handled.
     """
-    def __init__(self, api):
+    def __init__(self, api: COMObject):
         self._api = api
     
     @property
-    def api(self): 
+    def api(self) -> COMObject: 
         return self._api
 
     @property
-    def color(self):
+    def color(self) -> Color | None:
         rgb_value = self.api.ForeColor.RGB
         # Currently, `ForeColor.RGB` is required.
         if rgb_value:
             return Color(rgb_value)
         else:
             return None
+        
+    def apply(self, value: bool | ColorLike | Self) -> None:
+        if isinstance(value, FillFormat):
+            api_bridge = FillFormatApiBridge.from_api(value.api)
+            api_bridge.apply_api(self.api)
+        else:
+            FillApiApplicator.apply(self.api, value)
+        
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, FillFormat):
+            return NotImplemented
+        return FillFormatApiBridge.from_api(self.api) == FillFormatApiBridge.from_api(other.api)
 
-    def __eq__(self, other):
-        api_bridge = FillFormatApiBridge.from_api(self.api)
-        api_bridge1 = FillFormatApiBridge.from_api(other.api)
-        return api_bridge.model_dump(exclude_defaults=True)  == api_bridge1.model_dump(exclude_defaults=True)
 
 class FillFormatProperty:
-    def __get__(self, shape, objtype=None):
+    def __get__(self, shape: "Shape", objtype: type | None = None) -> FillFormat:
         return FillFormat(shape.api.Fill)
 
-    def __set__(self, shape, value):
-        Fill = shape.api.Fill
-        if value is None:
-            Fill.Visible = constants.msoFalse
-        elif isinstance(value, FillFormat):
-            api_bridge = FillFormatApiBridge.from_api(value.api)
-            api_bridge.apply_api(shape.api.Fill)
-        else:
-            Fill.Visible = constants.msoTrue
-            color = Color(value)
-            Fill.ForeColor.RGB = color.as_int()
-            Fill.Transparency = 1.0 - color.alpha
-            Fill.Solid()
+    def __set__(self, shape: "Shape", value: bool | FillFormat | ColorLike | None) -> None:
+        FillFormat(shape.api.Fill).apply(value)
