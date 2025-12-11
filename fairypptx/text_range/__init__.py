@@ -6,9 +6,7 @@ from collections.abc import Sequence
 from fairypptx.registry_utils import BaseModelRegistry
 
 from fairypptx import Application
-from fairypptx import object_utils
-from fairypptx.object_utils import is_object, upstream
-from fairypptx import registry_utils
+from fairypptx.object_utils import upstream
 from fairypptx.core.application import Application
 from fairypptx import constants
 from fairypptx.font import FontProperty
@@ -76,11 +74,7 @@ class TextRange:
     def root(self) -> "TextRange":
         """Return the entire `TextRange`.
         """
-        try:
-            textframe_api = upstream(self.api, "TextFrame")
-        except Exception as e:
-            print(e)
-            raise e
+        textframe_api = upstream(self.api, "TextFrame")
         return TextRange(textframe_api)
 
     @property
@@ -282,5 +276,5 @@ class TextRange:
         return tr
 
 # For structure hierarchy.
-from fairypptx._text.editor import DefaultEditor 
-from fairypptx._text.editor import FontResizer 
+from fairypptx.text_range.editor import DefaultEditor 
+from fairypptx.text_range.editor import FontResizer 

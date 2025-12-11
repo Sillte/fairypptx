@@ -2,7 +2,7 @@
 
 """
 from fairypptx.text_range import TextRange
-from fairypptx._text.editor import guessers 
+from fairypptx.text_range.editor import guessers 
 from fairypptx import constants
 
 class TrimItemization: 
