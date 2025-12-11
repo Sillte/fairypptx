@@ -53,7 +53,7 @@ class NaiveTextRangeParagraphStyle(BaseModel):
             p_type = _to_paragraph_type(para)
             key = ParagraphKey(paragraph_type=p_type, indent_level=para.api.IndentLevel, line_number=line_number)
             font_param = NaiveFontEditParam.from_entity(para.font)
-            paragraphformat_param = NaiveParagraphFormatStyle.from_entity(para.paragraphformat)
+            paragraphformat_param = NaiveParagraphFormatStyle.from_entity(para.paragraph_format)
             data[key] = (font_param, paragraphformat_param)
         paragraph_keys, paragraph_settings = cls.from_format_mapping(data)
         return cls(paragraph_keys=paragraph_keys, paragraph_settings=paragraph_settings)
@@ -81,13 +81,13 @@ class NaiveTextRangeParagraphStyle(BaseModel):
             indent_level = para.api.IndentLevel
             if picked :=_pick(p_type, indent_level, line_number):
                 font_param, format_param = picked
-                format_param.apply(tr.paragraphformat)
+                format_param.apply(tr.paragraph_format)
                 font_param.apply(tr.font)
         return entity
 
 
 def _to_paragraph_type(para: TextRange) -> int:
-    f_api = para.paragraphformat.api
+    f_api = para.paragraph_format.api
     assert f_api
     if f_api.Bullet.Visible == constants.msoTrue:
         return f_api.Bullet.Type

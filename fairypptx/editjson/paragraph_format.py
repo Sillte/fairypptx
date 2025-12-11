@@ -10,7 +10,7 @@ from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
 from fairypptx.core.models import BaseApiModel
 from fairypptx.core.utils import CrudeApiAccesssor, crude_api_read, crude_api_write, get_discriminator_mapping, remove_invalidity
 from fairypptx.object_utils import setattr, getattr
-from fairypptx._text.paragraph_format import ParagraphFormat
+from fairypptx.paragraph_format import ParagraphFormat
 from pprint import pprint
 from fairypptx.enums import MsoFillType
 from fairypptx.editjson.protocols import EditParamProtocol
@@ -89,13 +89,13 @@ class NaiveParagraphFormatStyle(BaseModel):
 if __name__ == "__main__":
     from fairypptx import Shape  
     shape = Shape()
-    target = NaiveParagraphFormatStyle.from_entity(shape.textrange.paragraphformat)
+    target = NaiveParagraphFormatStyle.from_entity(shape.textrange.paragraph_format)
     data = target.model_dump_json()
     import time 
     for _ in range(20):
         print(_)
         time.sleep(2)
 
-    target.apply(shape.textrange.paragraphformat)
+    target.apply(shape.textrange.paragraph_format)
 
 

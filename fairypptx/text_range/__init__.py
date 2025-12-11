@@ -11,8 +11,8 @@ from fairypptx.object_utils import is_object, upstream
 from fairypptx import registry_utils
 from fairypptx.core.application import Application
 from fairypptx import constants
-from fairypptx._text import  Font, ParagraphFormat
-from fairypptx._text.textrange_stylist import ParagraphTextRangeStylist
+from fairypptx.font import FontProperty
+from fairypptx.paragraph_format import ParagraphFormatProperty
 
 from fairypptx.core.resolvers import resolve_text_range
 from fairypptx.core.types import COMObject
@@ -21,6 +21,9 @@ if TYPE_CHECKING:
     from fairypptx.shape import Shape
 
 class TextRange:
+    font = FontProperty()
+    paragraph_format =  ParagraphFormatProperty()
+
     def __init__(self, arg=None) -> None:
         self.app = Application()
         self._api = resolve_text_range(arg)
@@ -206,25 +209,17 @@ class TextRange:
         self.api.Text = arg
 
 
-    @property
-    def font(self):
-        return Font(self.api.Font)
+    #@property
+    #def font(self):
+    #    return Font(self.api.Font)
 
-    @font.setter
-    def font(self, param):
-        font = Font(self.api.Font)
-        font.apply(param)
+    #@font.setter
+    #def font(self, param):
+    #    font = Font(self.api.Font)
+    #    font = param
+    #    font.apply(param)
 
 
-    @property
-    def paragraphformat(self):
-        result =  ParagraphFormat(self.api.ParagraphFormat)
-        return result
-
-    @paragraphformat.setter
-    def paragraphformat(self, param):
-        paragraph_format = ParagraphFormat(param)
-        paragraph_format.apply(self.api.ParagraphFormat)
 
     
     def itemize(self):

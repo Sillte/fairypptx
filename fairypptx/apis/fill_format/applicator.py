@@ -1,3 +1,18 @@
+"""Fill Format API Applicator: Strategy for applying values to COMObject.
+
+This module applies FillFormatApiModel instances (Pydantic models) to Win32 COM Fill objects.
+
+Responsibility:
+  - Convert Pydantic models → COMObject mutations
+  - Handle domain-level convenience types (bool, Color, Sequence) as a transition layer
+    
+Note on design layers:
+  - API layer (here): Pydantic ↔ COMObject conversion
+  - Domain layer: Should ideally convert (bool, Color, etc.) → COMObject/PPTXObjectProtocol
+    before calling apply(). Currently, this applicator also handles these types for convenience.
+  - COM layer: Direct COMObject access (Win32 constants like msoTrue, msoFalse)
+"""
+
 from fairypptx import constants
 from fairypptx.color import Color
 from fairypptx.core.types import COMObject

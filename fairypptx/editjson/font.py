@@ -4,7 +4,8 @@ from typing import Mapping, Any, Self, Sequence, ClassVar
 from pywintypes import com_error
 from fairypptx import constants
 
-from fairypptx._text.font import Font, FontApiBridgeBaseModel
+from fairypptx.apis.font.api_model import FontApiModel
+from fairypptx.font import Font
 
 
 
@@ -12,7 +13,7 @@ class NaiveFontEditParam(BaseModel):
     """Naive font edit parameter that owns dict<->Font conversion.
 
     """
-    api_bridge: FontApiBridgeBaseModel
+    api_bridge: FontApiModel
 
 
     @classmethod
@@ -25,7 +26,7 @@ class NaiveFontEditParam(BaseModel):
           one of the MSO tri-state constants to avoid storing mixed/missing values.
         """
         api = entity.api
-        api_bridge = FontApiBridgeBaseModel.from_api(api)
+        api_bridge = FontApiModel.from_api(api)
         return cls(api_bridge=api_bridge)
 
     def apply(self, entity: Font) -> Font:

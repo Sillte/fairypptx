@@ -1,3 +1,24 @@
+"""Fill Format API Schema.
+
+FillFormat API holds different attribute sets depending on Fill Type 
+(Solid/Patterned/Gradient). This module uses tagged union (discriminated union)
+to represent these variants clearly:
+
+- NaiveSolidFillFormat: RGB, Transparency, Visible
+- NaivePatternedFillFormat: Pattern, ForeColor, BackColor, Visible  
+- NaiveGradientFillFormat: GradientStyle, GradientStops, GradientVariant, ...
+- NaiveFallbackFormat: Fallback for unsupported fill types
+
+Pydantic discriminator (via 'type' field) ensures that from_api() correctly 
+selects the appropriate variant based on api.Type. This provides type safety 
+and clear schema validation.
+
+Design rationale:
+  - A single FillFormatApiModel(type, data) would obscure which keys are valid
+  - Tagged union makes the schema explicit and Pydantic-compatible
+  - Each variant documents its own responsibility: what COMObject keys to read/write
+"""
+
 from pywintypes import com_error
 from fairypptx.core.models import BaseApiModel
 from fairypptx.core.types import COMObject

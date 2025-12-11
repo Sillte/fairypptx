@@ -229,7 +229,7 @@ class Converter:
             cls = self.elements[block["t"]]
             cls.from_tag(block, markdown, self)
         markdown.shape.tighten()
-        markdown.shape.textrange.paragraphformat.api.Alignment = constants.ppAlignLeft
+        markdown.shape.textrange.paragraph_format.api.Alignment = constants.ppAlignLeft
         print("aFAFAF", markdown.shape.textrange.text)
         return markdown
 

@@ -1,4 +1,4 @@
-from typing import Literal, Annotated, cast
+from typing import Literal, Annotated, cast, Self, Any
 
 from fairypptx.apis.line_format.applicator import LineFormatApplicator
 from fairypptx.color import Color
@@ -43,7 +43,7 @@ class LineFormat:
         self.api.Visible = True
         self.api.Weight = value
         
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if type(self) is not type(other):
             return NotImplemented
         api_bridge = LineFormatApiModel.from_api(self.api)

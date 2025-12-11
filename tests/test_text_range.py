@@ -196,10 +196,10 @@ def test_font():
 def test_paragraphformat():
     tr = TextRange.make_itemization(["P-ITEM1", "P-ITEM2", "P-ITEM3"])
     tr.api.ParagraphFormat.Bullet.Type = constants.ppBulletUnnumbered
-    ph = tr.paragraphformat
+    ph = tr.paragraph_format
     assert ph.api.Bullet.Type == constants.ppBulletUnnumbered
     ph.api.Bullet.Type = constants.ppBulletNumbered
-    tr.paragraphformat = ph
+    tr.paragraph_format = ph
     assert tr.api.ParagraphFormat.Bullet.Type == constants.ppBulletNumbered
     tr.shape.tighten()
 
