@@ -7,7 +7,7 @@ from fairypptx._shape import LineFormat
 from fairypptx import constants
 
 from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
-from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.models import BaseApiModel
 from fairypptx.core.utils import CrudeApiAccesssor, crude_api_read, crude_api_write, get_discriminator_mapping, remove_invalidity
 from fairypptx.object_utils import setattr, getattr
 from fairypptx._text.paragraph_format import ParagraphFormat

@@ -13,7 +13,7 @@ from fairypptx import constants
 from fairypptx.color import Color
 
 from typing import Any, Mapping, ClassVar, Sequence, Self
-from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.models import BaseApiModel
 from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
 from fairypptx.core.types import COMObject
 
@@ -21,7 +21,7 @@ from fairypptx.object_utils import to_api2, getattr, is_object, setattr
 from fairypptx.object_utils import getattr as f_getattr
 
 
-class FontApiBridgeBaseModel(ApiBridgeBaseModel):
+class FontApiBridgeBaseModel(BaseApiModel):
     """Naive font edit parameter that owns dict<->Font conversion.
 
     Responsibilities:

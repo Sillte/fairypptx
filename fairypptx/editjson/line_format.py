@@ -7,21 +7,21 @@ from fairypptx._shape import LineFormat
 from fairypptx import constants
 
 from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
-from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.models import BaseApiModel
 from fairypptx.core.utils import CrudeApiAccesssor, crude_api_read, crude_api_write, get_discriminator_mapping, remove_invalidity
 from pprint import pprint
 from fairypptx.enums import MsoFillType
 from fairypptx.editjson.protocols import EditParamProtocol
 from pywintypes import com_error
-from fairypptx.apis.line_format.bridge import LineFormatApiBridge
+from fairypptx.apis.line_format.api_model import LineFormatApiModel
 
 
 class NaiveLineFormatStyle(BaseModel):
-    api_bridge: LineFormatApiBridge
+    api_bridge: LineFormatApiModel
 
     @classmethod
     def from_entity(cls, entity: LineFormat) -> Self:
-        api_bridge = LineFormatApiBridge.from_api(entity.api)
+        api_bridge = LineFormatApiModel.from_api(entity.api)
         return cls(api_bridge=api_bridge)
 
     def apply(self, entity: LineFormat) -> LineFormat:

@@ -5,17 +5,17 @@ from fairypptx._shape import FillFormat
 from pprint import pprint
 from fairypptx.enums import MsoFillType
 from pywintypes import com_error
-from fairypptx.apis.fill_format.bridge import FillFormatApiBridge
+from fairypptx.apis.fill_format.api_model import FillFormatApiModel
 
 
 class NaiveFillFormatStyle(BaseModel):
-    api_bridge: FillFormatApiBridge
+    api_bridge: FillFormatApiModel
 
     @classmethod
     def from_entity(cls, entity: FillFormat) -> Self:
         """Generate itself from the entity of `fairpptx.PPTXObject`
         """
-        api_bridge = FillFormatApiBridge.from_api(entity.api)
+        api_bridge = FillFormatApiModel.from_api(entity.api)
         return cls(api_bridge=api_bridge)
 
     def apply(self, entity: FillFormat) -> FillFormat:

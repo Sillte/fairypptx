@@ -1,7 +1,6 @@
 from typing import Any  
-from fairypptx.core.protocols import PPTXObjectProtocol
+from fairypptx.core.protocols import  COMObject, ObjectLike, PPTXObjectProtocol
 
-type COMObject = Any
-type ObjectLike = COMObject | PPTXObjectProtocol
+
 
  

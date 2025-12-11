@@ -38,8 +38,9 @@ class ShapeApiFactory:
         Returns:
             The COM shape object.
         """
-        shapes_api = shapes_api or resolve_shapes() 
-        assert shapes_api
+        if shapes_api is None:
+            shapes_api = resolve_shapes() 
+        assert shapes_api is not None
         # Set defaults for required COM parameters
         left = kwargs.pop("Left", 0)
         top = kwargs.pop("Top", 0)
@@ -63,7 +64,8 @@ class ShapeApiFactory:
         Returns:
             The COM picture shape object.
         """
-        shapes_api = shapes_api or resolve_shapes() 
+        if shapes_api is None:
+            shapes_api = resolve_shapes() 
         assert shapes_api
 
         if isinstance(image_or_path, Image.Image):
@@ -98,7 +100,8 @@ class ShapeApiFactory:
         Returns:
             The COM shape object (textbox).
         """
-        shapes_api = shapes_api or resolve_shapes()
+        if shapes_api is None:
+            shapes_api = resolve_shapes()
         # Create the rectangle shape (pass through shapes_api and kwargs so
         # position/size can be controlled by the caller)
         shape = ShapeApiFactory.add_shape_from_type(

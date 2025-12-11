@@ -1,4 +1,4 @@
-from fairypptx.apis.fill_format.bridge import FillFormatApiBridge
+from fairypptx.apis.fill_format.api_model import FillFormatApiModel
 from fairypptx.apis.fill_format.applicator import FillApiApplicator
 from fairypptx.color import Color, ColorLike
 from fairypptx.core.types import COMObject
@@ -33,7 +33,7 @@ class FillFormat:
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, FillFormat):
             return NotImplemented
-        return FillFormatApiBridge.from_api(self.api) == FillFormatApiBridge.from_api(other.api)
+        return FillFormatApiModel.from_api(self.api) == FillFormatApiModel.from_api(other.api)
 
 
 class FillFormatProperty:

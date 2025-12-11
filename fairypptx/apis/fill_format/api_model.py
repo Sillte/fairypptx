@@ -1,5 +1,5 @@
 from pywintypes import com_error
-from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.models import BaseApiModel
 from fairypptx.core.types import COMObject
 from fairypptx.core.utils import CrudeApiAccesssor, get_discriminator_mapping
 from fairypptx.enums import MsoFillType
@@ -8,7 +8,7 @@ from fairypptx.enums import MsoFillType
 from typing import Any, ClassVar, Literal, Mapping, Self, Sequence
 
 
-class NaiveSolidFillFormat(ApiBridgeBaseModel):
+class NaiveSolidFillFormat(BaseApiModel):
     type: Literal[MsoFillType.FillSolid] = MsoFillType.FillSolid
     data: Mapping[str, Any]
     _keys: ClassVar[Sequence[str]] = ["ForeColor.RGB", "Visible", "Transparency"]
@@ -23,7 +23,7 @@ class NaiveSolidFillFormat(ApiBridgeBaseModel):
         return cls(data=data)
 
 
-class NaivePatternedFillFormat(ApiBridgeBaseModel):
+class NaivePatternedFillFormat(BaseApiModel):
     type: Literal[MsoFillType.FillPatterned] = MsoFillType.FillPatterned
     data: Mapping[str, Any]
     pattern: int
@@ -41,7 +41,7 @@ class NaivePatternedFillFormat(ApiBridgeBaseModel):
         self._accessor.write(api, self.data)
 
 
-class NaiveGradientFillFormat(ApiBridgeBaseModel):
+class NaiveGradientFillFormat(BaseApiModel):
     type: Literal[MsoFillType.FillGradient] = MsoFillType.FillGradient
     data: Mapping[str, Any]
 
@@ -117,7 +117,7 @@ class NaiveGradientFillFormat(ApiBridgeBaseModel):
         return api
 
 
-class NaiveFallbackFormat(ApiBridgeBaseModel):
+class NaiveFallbackFormat(BaseApiModel):
     type: int
     data: None = None
 
@@ -134,7 +134,7 @@ class NaiveFallbackFormat(ApiBridgeBaseModel):
 type NaiveTypeFormat = NaiveSolidFillFormat | NaivePatternedFillFormat | NaiveGradientFillFormat | NaiveFallbackFormat
 
 
-class FillFormatApiBridge(ApiBridgeBaseModel):
+class FillFormatApiModel(BaseApiModel):
     api_data: NaiveTypeFormat
 
     def apply_api(self, api: COMObject):

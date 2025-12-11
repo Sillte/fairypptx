@@ -1,6 +1,7 @@
 from fairypptx import constants
-from fairypptx.core.models import ApiBridgeBaseModel
+from fairypptx.core.models import BaseApiModel
 from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
+from fairypptx.core.types import COMObject
 from fairypptx.object_utils import getattr
 
 
@@ -8,7 +9,7 @@ from collections.abc import Sequence
 from typing import Any, ClassVar, Mapping, Self, Sequence
 
 
-class LineFormatApiBridge(ApiBridgeBaseModel):
+class LineFormatApiModel(BaseApiModel):
     api_data: Mapping[str, Any]
 
     _common_keys: ClassVar[Sequence[str]] = [
@@ -23,7 +24,7 @@ class LineFormatApiBridge(ApiBridgeBaseModel):
             "Style"]
 
     @classmethod
-    def from_api(cls, api) -> Self:
+    def from_api(cls, api: COMObject) -> Self:
         data = dict()
         data["Style"] = constants.msoLineSingle
         data["ForeColor.RGB"] = 0
@@ -41,6 +42,6 @@ class LineFormatApiBridge(ApiBridgeBaseModel):
         data = remove_invalidity(api, data)
         return cls(api_data=data)
 
-    def apply_api(self, api):
+    def apply_api(self, api: COMObject) -> None:
         crude_api_write(api, self.api_data)
         return api
