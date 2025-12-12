@@ -11,7 +11,6 @@ class SlideRange:
                        Self | Sequence[Slide] | None = None):
         self._slides: list[Slide] = self._solve_slides(arg)
 
-    # --------------------------------------------
 
     def __len__(self):
         return len(self._slides)

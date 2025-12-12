@@ -159,14 +159,6 @@ def _to_single_fontsize(textrange):
     return result 
 
 
-class Guesser:
-    def __init__(self, ):
-        pass
-
-
-    def __call__(self, ):
-        pass
-
 
 if __name__ == "__main__":
     from fairypptx import Markdown, TextRange

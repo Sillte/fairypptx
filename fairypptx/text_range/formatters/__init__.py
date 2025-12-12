@@ -1,6 +1,8 @@
 """There are codes related to modify `TextRange`.
 
 """
+from typing import Sequence, Literal
+import itertools
 from fairypptx.text_range import TextRange
 from fairypptx.text_range.formatters import guessers
 from fairypptx import constants
@@ -14,11 +16,11 @@ class TrimItemization:
     """
 
     ITEMIZATION_TYPES = {constants.ppBulletUnnumbered, constants.ppBulletNumbered}
-    def __init__(self, head_spaces=1, tail_spaces=1):
+    def __init__(self, head_spaces: int =1, tail_spaces: int=1):
         self.head_spaces = head_spaces
         self.tail_spaces = tail_spaces
 
-    def __call__(self, textrange: TextRange):
+    def __call__(self, textrange: TextRange) -> TextRange:
         if not textrange.text.strip("\r\013"):
             return textrange
         paragraphs = textrange.paragraphs
@@ -36,7 +38,6 @@ class TrimItemization:
 
         # Since `Delete` is performed, so re-getting is mandatory.
         paragraphs = textrange.paragraphs
-        import itertools
         groups = [(key, list(paras)) for key, paras
                                      in itertools.groupby(paragraphs, key=self._is_itemization)
                                      if  key]
@@ -59,11 +60,11 @@ class LineSpacer:
     reduces to `n_space`. 
     """
 
-    def __init__(self, n_spaces=1):
+    def __init__(self, n_spaces: int =1):
         self.n_spaces = n_spaces
         pass
 
-    def __call__(self, textrange):
+    def __call__(self, textrange: TextRange) -> TextRange:
         if not textrange.text.strip("\r\013"):
             return textrange
 
@@ -74,19 +75,6 @@ class LineSpacer:
             textrange.editor.set_head_newlines(self.n_spaces + 1)
         return textrange
 
-class PageSpacer:
-    """Modify the start of `textrange` and end of `textrange`. 
-    This functions related to `Header` and `Footer`. 
-
-    """
-    def __init__(self, head_spaces=0, tail_spaces=0):
-        self.head_spaces = head_spaces
-        self.tail_spaces = tail_spaces
-
-    def __call__(self, textrange):
-        textrange.editor.set_head_newlines(self.head_spaces)
-        textrange.editor.set_tail_newlines(self.tail_spaces)
-        return textrange
 
 
 class HeaderSpacer:
@@ -119,7 +107,6 @@ class HeaderSpacer:
                 header.editor.set_tail_newlines(self.tail_spaces + 1)
         return textrange
 
-from typing import Sequence
 class Composer:
     def __init__(self, *args):
         if len(args) == 1 and isinstance(args, Sequence): 
@@ -145,7 +132,6 @@ class DefaultFormatter:
         editors.append(TrimItemization(head_spaces=1, tail_spaces=1))
         editors.append(HeaderSpacer(head_spaces=1, tail_spaces=1))
         editors.append(LineSpacer(n_spaces=1))
-        editors.append(PageSpacer(head_spaces=0, tail_spaces=0))
         caller = Composer(editors)
 
         textrange =  caller(textrange)
@@ -158,11 +144,10 @@ class FontResizer:
         pass
     """
     def __init__(self,
-                 fontsize=18,
-                 mode="min"):
+                 fontsize: int =18,
+                 mode: Literal["min", "all"]="min"):
         self.fontsize = fontsize
-        self.mode = mode.lower()
-        assert self.mode in {"min", "all"}
+        self.mode = mode
 
     def __call__(self, textrange: TextRange) -> TextRange:
         textrange = TextRange(textrange)
@@ -218,80 +203,7 @@ python setup.py install
 This library uses [COM Object](https://docs.microsoft.com/en-us/windows/win32/com/the-component-object-model) for automatic operation of Powerpoint.    
 Therefore, automatic operations are performed at your computer. Don't be panick!   
 
-### Usage
-
-In short, **rasterize** convert artists to an image while **transcribe** convert them to Objects of Powerpoint.
-
-
-#### Paste the image to slide  
-
-```python
-import matplotlib.pyplot as plt
-import figpptx
-
-fig, ax = plt.subplots()
-ax.plot([0, 1], [1, 0], color="C2")
-figpptx.rasterize(fig)
-```
-
-#### Attempt to convert Artist to Object of Powerpoint.     
-
-```python
-import matplotlib.pyplot as plt
-import figpptx
-
-fig, ax = plt.subplots()
-ax.plot([0, 1], [1, 0], color="C3")
-figpptx.transcribe(fig)
-```
-
-#### Some artists are rasterized and the others are converted to Objects of PowerPoint.
-
-```python
-import matplotlib.pyplot as plt
-import figpptx
-
-fig, ax = plt.subplots()
-ax.plot([0, 1], [1, 0], color="C3")
-ax.set_title("Title. This is a TextBox.", fontsize=16)
-figpptx.send(fig)
-```
-
-For details, please see [documents](https://sillte.github.io/figpptx/). 
-
-### Gallery
-
-If you would like to know difference between ``rasterize`` and ``transcribe``, please execute below. 
-You can see some examples.
-
-```bat
-python gallery.py
-```
-
-### Test
-
-#### Unit Test
-```bat
-python setup.py test
-```
-
-#### Regression Test 
-```bat
-pytest
-```
-
-* Tests include automatic operation of PowerPoint.    
-* You must close the files of PowerPoint beforehand.   
-
-
-### Comment and Policy
-
-* This library is mainly for my personal practice.  
-* It is yet highly possible to change specifications. 
-* ``transcribe`` is far from perfection.
-* I'd like not to pursue perfection for ``transcrbe``. 
-    - I feel it takes much cost but the benefit is not so large. 
-    """
+"""
     from fairypptx import Markdown, TextRange, Shape
     #shape = Markdown.make(TEXT).shape
     shape = Shape()
@@ -308,7 +220,3 @@ pytest
 
     DefaultFormatter()(shape.textrange)
     print("end")
-
-
-
-

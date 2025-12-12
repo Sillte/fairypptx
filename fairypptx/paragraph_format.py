@@ -11,24 +11,20 @@ from fairypptx.object_utils import to_api2, is_object
 class ParagraphFormat:
     """Represents the Font Information. """
 
-    def __init__(self, api):
+    def __init__(self, api: COMObject) -> None:
         if isinstance(api, ParagraphFormat):
             api = api.api
         assert is_object(api)
         self._api = api
         
     @property
-    def api(self):
+    def api(self) -> COMObject:
         return self._api
 
     @property
-    def api2(self):
+    def api2(self) -> COMObject:
         return to_api2(self._api)
     
-    def apply(self, other: Self) -> None:
-        api_bridge = ParagraphFormatApiModel.from_api(other)
-        api_bridge.apply_api(self.api)
-
 
 class ParagraphFormatProperty:
     def __get__(self, parent: COMObject, objtype=None):

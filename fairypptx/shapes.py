@@ -1,4 +1,4 @@
-from typing import Iterator, Self
+from typing import Iterator, Self, TYPE_CHECKING
 
 from fairypptx.constants import msoFalse
 
@@ -10,6 +10,9 @@ from fairypptx.shape import Shape
 from fairypptx.shape_range import ShapeRange
 
 from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner
+
+if TYPE_CHECKING:
+    from fairypptx.slide import Slide
 
 
 class Shapes:
@@ -37,8 +40,8 @@ class Shapes:
             return ShapeRange(shapes)
 
     def add(self, shape_type: int, **kwargs) -> Shape:
-        ret_object = self.api.AddShape(shape_type, Left=0, Top=0, Width=100, Height=100)
-        return Shape(ret_object)
+        shape_object = self.api.AddShape(shape_type, Left=0, Top=0, Width=100, Height=100, **kwargs)
+        return Shape(shape_object)
 
     @property
     def slide(self) -> "Slide":
@@ -65,7 +68,6 @@ class Shapes:
     def tighten(self) -> None:
         for shape in self:
             shape.tighten()
-        return self
 
 
 

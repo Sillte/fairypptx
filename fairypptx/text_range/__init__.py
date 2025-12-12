@@ -70,7 +70,7 @@ class TextRange:
         """Return the entire `TextRange`.
         """
         textframe_api = upstream(self.api, "TextFrame")
-        return TextRange(textframe_api)
+        return TextRange(textframe_api.TextRange)
 
     @property
     def paragraph_index(self) -> int:

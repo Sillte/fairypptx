@@ -1,6 +1,7 @@
 import re
 import pytest
 from fairypptx import TextRange
+from fairypptx.text_range import TextRangeEditor
 from fairypptx import Color
 from fairypptx import Shape
 from fairypptx import constants
@@ -219,6 +220,62 @@ def test_find():
     result = tr.find("ITEM")
     assert len(result) == 3
     assert all(elem.text == "ITEM" for elem in result)
+
+
+def test_editor():
+    tr = TextRange.make("ABC\r\r")
+    assert TextRangeEditor(tr).n_tail_newlines == 2  
+
+    tr = TextRange.make("ABC")
+    assert TextRangeEditor(tr).n_tail_newlines == 0
+
+    tr = TextRange.make("\r\rABC")
+    assert TextRangeEditor(tr).n_head_newlines == 2
+
+def test_editor_multiline_tail_across_paragraph():
+    tr = TextRange.make("AAA\rBBB\r\rCCC")
+
+    paras = tr.paragraphs
+    assert len(paras) == 4  # PowerPoint では段落数は CR の数+1
+    # Para2 の末尾（BBB）には「\r\r」が続く
+    tr2 = paras[1]  # Paragraph of "BBB"
+    assert TextRangeEditor(tr2).n_tail_newlines == 2
+
+def test_set_tail_newlines_no_paragraph_break():
+    tr = TextRange.make("AAA\rBBB")
+
+    # Para1 ("AAA") の末尾改行を 2 にする
+    para1 = tr.paragraphs[0]
+    editor = TextRangeEditor(para1)
+
+    editor.set_tail_newlines(2)
+
+    # root.text で直接確認
+    full = tr.root.text
+    assert full.startswith("AAA\r\rBBB")
+
+def test_set_head_newlines_no_paragraph_break():
+    tr = TextRange.make("AAA\rBBB")
+
+    para2 = tr.paragraphs[1]  # "BBB"
+    editor = TextRangeEditor(para2)
+
+    editor.set_head_newlines(2)
+
+    # 2 つの改行が挿入されているか？
+    full = tr.root.text
+    assert full == "AAA\r\rBBB"
+
+
+def test_paragraph_boundary_variation():
+    tr = TextRange.make("AAA\r\rBBB")
+
+    # Paragraph 分解は PowerPoint の仕様に依存するため可変
+    # しかし n_tail_newlines は常に 2 を返すべき
+    para1 = tr.paragraphs[0]
+    editor = TextRangeEditor(para1)
+
+    assert editor.n_tail_newlines == 2
 
 
 if __name__ == "__main__":
