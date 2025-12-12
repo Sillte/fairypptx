@@ -5,7 +5,7 @@ from typing import Any, Literal, TYPE_CHECKING, Sequence, Self
 
 from PIL import Image
 from fairypptx import constants
-from fairypptx._shape.mixins import LocationMixin
+from fairypptx.shape.mixins import LocationMixin
 from fairypptx.registry_utils import BaseModelRegistry
 
 from fairypptx.box import Box
@@ -267,7 +267,6 @@ class ShapeFactory:
 from fairypptx._shape.replace import replace
 from fairypptx._shape.editor import (
         ShapesEncloser, TitleProvider, BoundingResizer, ShapesResizer)
-from fairypptx._shape.selector import ShapesSelector as Selector
 from fairypptx._shape.maker import PaletteMaker
 
 

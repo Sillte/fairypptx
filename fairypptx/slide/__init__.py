@@ -96,4 +96,4 @@ class Slide:
     def select(self) -> None:
         self.api.Select()
 
-from fairypptx._slide.grid_handler import GridHandler
+from fairypptx.slide.grid_handler import GridHandler

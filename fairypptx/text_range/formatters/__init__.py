@@ -2,7 +2,7 @@
 
 """
 from fairypptx.text_range import TextRange
-from fairypptx.text_range.editor import guessers 
+from fairypptx.text_range.formatters import guessers
 from fairypptx import constants
 
 class TrimItemization: 
@@ -18,7 +18,7 @@ class TrimItemization:
         self.head_spaces = head_spaces
         self.tail_spaces = tail_spaces
 
-    def __call__(self, textrange):
+    def __call__(self, textrange: TextRange):
         if not textrange.text.strip("\r\013"):
             return textrange
         paragraphs = textrange.paragraphs
@@ -32,7 +32,7 @@ class TrimItemization:
         for para in paragraphs:
             if self._is_itemization(para):
                 if not self._is_empty(para):
-                    para.set_tail_newlines(1)
+                    para.editor.set_tail_newlines(1)
 
         # Since `Delete` is performed, so re-getting is mandatory.
         paragraphs = textrange.paragraphs
@@ -41,8 +41,8 @@ class TrimItemization:
                                      in itertools.groupby(paragraphs, key=self._is_itemization)
                                      if  key]
         for key, paras in reversed(groups):
-            paras[0].set_head_newlines(self.head_spaces + 1)
-            paras[-1].set_tail_newlines(self.tail_spaces + 1)
+            paras[0].editor.set_head_newlines(self.head_spaces + 1)
+            paras[-1].editor.set_tail_newlines(self.tail_spaces + 1)
         return textrange
 
 
@@ -68,10 +68,10 @@ class LineSpacer:
             return textrange
 
         for para in textrange.paragraphs:
-            if para.n_tail_newlines >= self.n_spaces + 2:
-                para.set_tail_newlines(self.n_spaces + 1)
-        if textrange.n_head_newlines >= self.n_spaces + 2:
-            textrange.set_head_newlines(self.n_spaces + 1)
+            if para.editor.n_tail_newlines >= self.n_spaces + 2:
+                para.editor.set_tail_newlines(self.n_spaces + 1)
+        if textrange.editor.n_head_newlines >= self.n_spaces + 2:
+            textrange.editor.set_head_newlines(self.n_spaces + 1)
         return textrange
 
 class PageSpacer:
@@ -84,8 +84,8 @@ class PageSpacer:
         self.tail_spaces = tail_spaces
 
     def __call__(self, textrange):
-        textrange.set_head_newlines(self.head_spaces)
-        textrange.set_tail_newlines(self.tail_spaces)
+        textrange.editor.set_head_newlines(self.head_spaces)
+        textrange.editor.set_tail_newlines(self.tail_spaces)
         return textrange
 
 
@@ -107,7 +107,7 @@ class HeaderSpacer:
         self.ignore_beginning = ignore_beginning
 
 
-    def __call__(self, textrange):
+    def __call__(self, textrange: TextRange) -> TextRange:
         groups = guessers.guess_header_paragraphs(textrange)
         for level, headers in groups:
             for header in headers:
@@ -115,8 +115,8 @@ class HeaderSpacer:
                 if p_index == 0 and self.ignore_beginning is True:
                     pass
                 else:
-                    header.set_head_newlines(self.head_spaces + 1)
-                header.set_tail_newlines(self.tail_spaces + 1)
+                    header.editor.set_head_newlines(self.head_spaces + 1)
+                header.editor.set_tail_newlines(self.tail_spaces + 1)
         return textrange
 
 from typing import Sequence
@@ -134,7 +134,7 @@ class Composer:
 
 
 
-class DefaultEditor:
+class DefaultFormatter:
     """Based on authors' experience and fairies' capricious, 
     modify TextRange. 
     """
@@ -164,7 +164,7 @@ class FontResizer:
         self.mode = mode.lower()
         assert self.mode in {"min", "all"}
 
-    def __call__(self, textrange):
+    def __call__(self, textrange: TextRange) -> TextRange:
         textrange = TextRange(textrange)
         if not textrange.text:
             raise ValueError("Empty Textrange.")
@@ -301,12 +301,12 @@ pytest
     #exit(0)
 
 
-    PageSpacer()(shape.textrange); exit(0)
+    PageSpacer()(shape.textrange); 
     #groups = guessers.guess_header_paragraphs(shape.textrange)
     # print(groups)
     print(shape.text)
 
-    DefaultEditor()(shape.textrange)
+    DefaultFormatter()(shape.textrange)
     print("end")
 
 

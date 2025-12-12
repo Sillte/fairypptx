@@ -16,7 +16,7 @@ def replace(src, dst, **kwargs):
     It is important to `dst` can behave like `src`, after this function.
     (Since normally you ask your friend to replace some machines, 
      then you expect them to work as before? )
-P
+
     Maybe what should be transferred depends on type of `dst`.
 
     * `AnimationEffect` (Not Yet implemented)

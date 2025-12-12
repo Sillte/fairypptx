@@ -101,7 +101,8 @@ class ShapesEncloser:
         if self.linecolor:
             shape.line = self.linecolor 
         shape.api.Zorder(constants.msoSendToBack)
-        return Shapes(list(shapes) + [shape])
+        from fairypptx import ShapeRange
+        return ShapeRange(list(shapes) + [shape])
 
 
 class TitleProvider:

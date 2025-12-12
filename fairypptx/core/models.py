@@ -40,7 +40,7 @@ class ApiApplicator[T]:
         api_bridge = self._api_model_type.from_api(value)
         api_bridge.apply_api(api)
 
-    def apply(self, api: COMObject, value: Any) -> None:
+    def apply(self, api: COMObject, value: T) -> None:
         if isinstance(value, PPTXObjectProtocol):
             self.apply_api(api, value.api)
         elif is_object(value):
