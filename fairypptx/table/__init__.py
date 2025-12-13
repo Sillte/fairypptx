@@ -10,32 +10,33 @@ Desire:
 
 """
 
-from typing import cast
+from typing import cast, Sequence, Any
 import numpy as np
-from fairypptx._table.table_api_writer import TableApiWriter
-
+from fairypptx.apis.table.table_api_writer import TableApiWriter
+from fairypptx.apis.table import TableApiModel, TableApiApplicator
+from fairypptx.apis.table import CellApiApplicator
 
 from fairypptx.core.resolvers import resolve_table, resolve_shapes
-from fairypptx.core.types import COMObject
+from fairypptx.core.types import COMObject, PPTXObjectProtocol
 
 from fairypptx import registry_utils
 
-from fairypptx._table import Cell, Rows, Columns, Row, Column
-from fairypptx._table.table_api_writer import TableApiWriter 
+from fairypptx.table.cell_containers import Rows, Columns, Row, Column, Cell
+from fairypptx.table.cell import Cell
 from fairypptx.registry_utils import BaseModelRegistry
 
 class Table:
-    def __init__(self, arg=None):
+    def __init__(self, arg: COMObject | PPTXObjectProtocol=None) -> None:
         self._api = resolve_table(arg)
+
+    @property
+    def api(self) -> COMObject:
+        return self._api
 
     @property
     def shape(self) -> "Shape":
         from fairypptx.shape import Shape
         return Shape(self.api.Parent)
-
-    @property
-    def api(self) -> COMObject:
-        return self._api
 
     @property
     def size(self) -> tuple[int, int]:
@@ -50,14 +51,31 @@ class Table:
     def columns(self) -> Columns:
         return Columns(self.api.Columns)
 
-    def __setitem__(self, key, value):
-        writer = TableApiWriter(self.api)
-        writer.write(key, value)
+    def __setitem__(self, key: tuple[int, int], value):
+        cell = self[key]
+        assert isinstance(cell, Cell)
+        cell.shape.text = str(value)
 
-    def __getitem__(self, key):
-        i_row, i_column = key
-        cell_object = self.api.Cell(i_row + 1, i_column + 1)
-        return Cell(cell_object)
+
+    def __getitem__(self, key: tuple[int, int] | tuple[slice, int] | tuple[int | slice] | tuple[slice | slice]) -> Cell | Sequence[Cell] | Sequence[Sequence[Cell]]:
+        if isinstance(key, tuple):
+            r_size, c_size = self.size
+            if len(key) == 2:
+                if isinstance(key[0], int) and isinstance(key[1], int):
+                    i_row, i_column = key
+                    cell_object = self.api.Cell(i_row + 1, i_column + 1)
+                    return Cell(cell_object)
+                elif isinstance(key[0], slice) and isinstance(key[1], int):
+                    column = self.columns[key[1]]
+                    return column[key[0]]
+                elif isinstance(key[0], int) and isinstance(key[1], slice):
+                    row = self.rows[key[0]]
+                    return row[key[1]]
+                elif isinstance(key[0], slice) and isinstance(key[1], slice):
+                    r_indices, c_indices = range(*key[0].indices(r_size)), range(*key[1].indices(c_size))
+                    return [[Cell(self.api.Cell(r_index + 1, c_index + 1)) for c_index in c_indices] for r_index in r_indices] 
+
+        raise ValueError(f"`{key=}` cannot be interpreted.")
 
     @staticmethod
     def make(arg=None, size:tuple[int, int] | None = None, **kwargs) -> "Table":
@@ -74,7 +92,7 @@ class Table:
             column.tighten()
 
     def tolist(self):
-        data = [[str(cell.text) for cell in row.cells] for row in self.rows]
+        data = [[str(cell.text) for cell in row] for row in self.rows]
         return data
 
     def to_numpy(self):
@@ -102,8 +120,6 @@ class Table:
         edit_param.apply(self)
 
 
-
-
 class TableFactory:
 
     @staticmethod
@@ -128,10 +144,9 @@ class TableFactory:
         n_row, n_col = arr.shape
 
         table = TableFactory.empty(n_row, n_col)
-        writer = TableApiWriter(table.api)
         for r in range(n_row):
             for c in range(n_col):
-                writer.write((r, c), arr[r, c])
+                table[r, c] = arr[r, c]
         return table
 
     @staticmethod
@@ -139,7 +154,14 @@ class TableFactory:
         shapes_api = resolve_shapes()
         shape_api = shapes_api.AddTable(NumRows=n_row, NumColumns=n_col)
         return Table(shape_api.Table)
-        
+
+class TableProperty:
+    def __get__(self, parent: PPTXObjectProtocol, objtype=None):
+        return Table(parent.api.Table)
+
+    def __set__(self, parent: PPTXObjectProtocol, value: Any) -> None:
+        TableApiApplicator.apply(parent.api.Table, value)
+
         
 
 if __name__ == "__main__":

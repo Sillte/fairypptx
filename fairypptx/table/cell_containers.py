@@ -1,8 +1,8 @@
 #from fairypptx.core.resolvers import 
 import numpy as np
-from typing import Sequence, Self, TYPE_CHECKING
+from typing import Sequence, Self, TYPE_CHECKING, Iterator, cast
 from fairypptx.core.types import COMObject, PPTXObjectProtocol
-from fairypptx._table import Cell
+from fairypptx.table.cell import Cell, CellRange
 from fairypptx.object_utils import ObjectItems
 
 if TYPE_CHECKING:
@@ -12,17 +12,16 @@ class RowColumnMixin(PPTXObjectProtocol):
     """Common Implementation for Row and Column.
     """
 
-    def __getitem__(self, index: int) -> Cell:
-        if isinstance(index, int):
-            return Cell(self.api.Cells.Item(index + 1))
-        raise TypeError(f"Type of index is invalid; ")
+    def __getitem__(self, index: int | Sequence[int] | slice) -> Cell | CellRange:
+        return CellRange(self.api.Cells)[index]
+
 
     def __len__(self):
         return self.api.Cells.Count
     
-    def __iter__(self: Self):
+    def __iter__(self: Self) -> Iterator[Cell]:
         for index in range(len(self)):
-            yield self[index]
+            yield cast(Cell, self[index])
 
     def delete(self) -> None:
         self.api.Delete()
@@ -96,7 +95,6 @@ class Column(RowColumnMixin):
             self.api.Width = max(max_width, 0.1) 
             
         except AttributeError as e:
-
             raise AttributeError(f"Failed to calculate required width for a cell in the column. Inner error: {e}")
 
 class RowsColumnsBase[T: RowColumnMixin](PPTXObjectProtocol):
@@ -117,12 +115,16 @@ class RowsColumnsBase[T: RowColumnMixin](PPTXObjectProtocol):
     def delete(self, obj: int | slice | Sequence[int]) -> None:
         obj = self.items.normalize(obj)
         if isinstance(obj, int): 
-            self[obj].delete()
+            item = self.items[obj]
+            assert not isinstance(item, Sequence)
+            item.delete()
         else:
             # It's necessary to `delete` in decreading order.
             indices = np.sort(obj)[::-1]
             for index in indices:
-                self[index].delete()
+                item = self[index]
+                assert not isinstance(item, Sequence)
+                item.delete()
 
     def insert(self, obj: int | slice | Sequence[int], values: None =None):
         """
@@ -198,3 +200,5 @@ class Rows(RowsColumnsBase[Row]):
 class Columns(RowsColumnsBase[Column]):
     def __init__(self, api: COMObject) -> None:
         super().__init__(api, Column)
+
+
