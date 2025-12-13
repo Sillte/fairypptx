@@ -1,18 +1,8 @@
-from pydantic import BaseModel, JsonValue, TypeAdapter, Field
+from pydantic import BaseModel
 
-from enum import IntEnum
 from typing import Any, Mapping, Literal, ClassVar, Sequence, Self, Annotated, cast
-from fairypptx._shape import FillFormat
-from fairypptx._shape import LineFormat
-from fairypptx import constants
+from fairypptx.line_format import LineFormat
 
-from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
-from fairypptx.core.models import BaseApiModel
-from fairypptx.core.utils import CrudeApiAccesssor, crude_api_read, crude_api_write, get_discriminator_mapping, remove_invalidity
-from pprint import pprint
-from fairypptx.enums import MsoFillType
-from fairypptx.editjson.protocols import EditParamProtocol
-from pywintypes import com_error
 from fairypptx.apis.line_format.api_model import LineFormatApiModel
 
 

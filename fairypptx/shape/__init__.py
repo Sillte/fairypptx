@@ -16,10 +16,11 @@ from fairypptx.core.resolvers import resolve_shape
 from fairypptx.core.utils import swap_props 
 from fairypptx._shape.api_factory import ShapeApiFactory
 
-from fairypptx._shape import FillFormatProperty
-from fairypptx._shape import LineFormatProperty
-from fairypptx._shape import TextProperty, TextsProperty
+from fairypptx.fill_format import FillFormatProperty
+from fairypptx.line_format import LineFormatProperty
 from fairypptx._shape import api_functions
+from fairypptx.text_range import TextRange
+from fairypptx.text_frame import TextFrameProperty
 
 if TYPE_CHECKING:
     from fairypptx import ShapeRange
@@ -29,8 +30,8 @@ if TYPE_CHECKING:
 class Shape(LocationMixin):
     line = LineFormatProperty()
     fill = FillFormatProperty()
-    text = TextProperty()
-    texts = TextsProperty()
+    text_frame = TextFrameProperty()
+
 
     def __new__(cls, arg: Any = None) -> "Shape":
         api = resolve_shape(arg)
@@ -81,14 +82,30 @@ class Shape(LocationMixin):
         return Slide(upstream(self.api, "Slide"))
 
     @property
-    def textrange(self):
-        # Return `TextRange`.
-        from fairypptx import TextRange
-        return TextRange(self.api.TextFrame.TextRange)
+    def text_range(self) -> TextRange:
+        return self.text_frame.text_range
+
+    @text_range.setter
+    def text_range(self, value: TextRange):
+        self.text_frame.text_range = value
+
+    # For backward compatibility, 
+    @property
+    def textrange(self) -> TextRange:
+        return self.text_frame.text_range
 
     @textrange.setter
-    def textrange(self, value):
-        self.text = value
+    def textrange(self, value: TextRange):
+        self.text_frame.text_range = value
+
+    @property
+    def text(self) -> str:
+        return self.text_range.text
+
+    @text.setter
+    def text(self, value: str | TextRange):
+        self.text_frame.text_range = value
+
 
     @classmethod
     def make(cls, arg, **kwargs) -> "Shape":
@@ -264,7 +281,6 @@ class ShapeFactory:
 
 # High-level APIs are loaded here.
 #
-from fairypptx._shape.replace import replace
 from fairypptx._shape.editor import (
         ShapesEncloser, TitleProvider, BoundingResizer, ShapesResizer)
 from fairypptx._shape.maker import PaletteMaker

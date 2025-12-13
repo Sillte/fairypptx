@@ -33,6 +33,7 @@ class TextRange:
         shape_api = upstream(self._api, "Shape")
         return shape_api.TextFrame2.TextRange.GetCharacters(start, length)
 
+
     @property
     def shape(self) -> "Shape":
         from fairypptx.shape import Shape
@@ -143,10 +144,10 @@ class TextRange:
 
 
 class TextRangeProperty:
-    def __get__(self, parent: PPTXObjectProtocol, objtype=None):
+    def __get__(self, parent: PPTXObjectProtocol, objtype=None) -> TextRange:
         return TextRange(parent.api.TextRange)
 
-    def __set__(self, parent: PPTXObjectProtocol, value: str) -> None:
+    def __set__(self, parent: PPTXObjectProtocol, value: str | TextRange) -> None:
         TextRangeApplicator.apply(parent.api.TextRange, value)
 
 

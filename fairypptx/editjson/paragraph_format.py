@@ -2,8 +2,6 @@ from pydantic import BaseModel, JsonValue, TypeAdapter, Field
 
 from enum import IntEnum
 from typing import Any, Mapping, Literal, ClassVar, Sequence, Self, Annotated, cast
-from fairypptx._shape import FillFormat
-from fairypptx._shape import LineFormat
 from fairypptx import constants
 
 from fairypptx.constants import msoFillSolid, msoFillPatterned, msoFillGradient
