@@ -38,7 +38,8 @@ class ShapeRangeAligner:
             align_cmd = self.align_config
         else:
             align_cmd = self._to_align_cmd(shape_range, self.align_config)
-        shape_range.api.Align(from_align_cmd(align_cmd), False)
+        if 1 < len(shape_range):
+            shape_range.api.Align(from_align_cmd(align_cmd), False)
 
     def _to_align_cmd(self, shape_range:ShapeRange, param: AlignParam) -> AlignCMD:
         def _param_to_cost(param: AlignParam):

@@ -9,7 +9,7 @@ from fairypptx.shape import Shape, GroupShape
 from fairypptx.object_utils import is_object
 from fairypptx.core.resolvers import resolve_shape_range
 
-from fairypptx._shape.location import ShapesAdjuster, ShapesAligner, ClusterAligner
+from fairypptx._shape.location import ShapesAdjuster
 
 from fairypptx.shape_range.types import AlignCMD, AlignParam
 

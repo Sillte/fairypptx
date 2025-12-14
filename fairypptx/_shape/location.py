@@ -2,7 +2,6 @@
 
 """
 
-from typing import Union
 import numpy as np
 from collections import defaultdict
 from fairypptx.box import Box
@@ -214,69 +213,6 @@ class ShapesAdjuster:
             raise RuntimeError("Bug.")
 
 
-class AlignMode:
-    """Specify the mode used for aligning.
-    Here,
-    * (0, start, left, top): The starting edge position is aligned.
-    * (1, center, right, bottom): The ending edge position is aligned.
-    * (0.5, end, center, middle): The center position is aligned.
-    """
-
-    START = "start"
-    CENTER = "center"
-    END = "end"
-
-    def __init__(self, mode):
-        self._mode = self._to_mode(mode)
-
-    @property
-    def mode(self):
-        return self._mode
-
-    def is_start(self):
-        return self.mode == AlignMode.START
-
-    def is_center(self):
-        return self.mode == AlignMode.CENTER
-
-    def is_end(self):
-        return self.mode == AlignMode.END
-
-    def _to_mode(self, arg):
-        if isinstance(arg, AlignMode):
-            return arg.mode
-        elif isinstance(arg, (float, int)):
-            if arg == 0:
-                return AlignMode.START
-            elif arg == 0.5:
-                return AlignMode.CENTER
-            elif arg == 1:
-                return AlignMode.END
-        elif isinstance(arg, str):
-            arg = arg.lower().strip()
-            if arg in {"start", "left", "top"}:
-                return AlignMode.START
-            elif arg in {"half", "center", "middle"}:
-                return AlignMode.CENTER
-            elif arg in {"end", "right", "bottom"}:
-                return AlignMode.END
-        raise ValueError("Cannot convert to Mode.", arg)
-
-    @staticmethod
-    def __call__(arg) -> Union["AlignMode.START", "AlignMode.CENTER", "AlignMode.END"]:
-        if isinstance(arg, (float, int)):
-            if arg == 0:
-                return AlignMode.START
-            elif arg == 0.5:
-                return AlignMode.CENTER
-            elif arg == 1:
-                return AlignMode.END
-        elif isinstance(arg, str):
-            pass
-
-    def __eq__(self, other):
-        return self.mode == AlignMode(other).mode
-
 
 class ShapesAligner:
     """Align Shapes.
@@ -441,33 +377,6 @@ class ClusterMaker:
         return self._cluster(shapes, axis)
 
 
-class ClusterAligner:
-    def __init__(self, axis=None, mode=None, iou_thresh=0.10):
-        self.axis = axis
-        self.mode = mode
-        self.iou_thresh = iou_thresh
-
-    def _yield_axis(self, axis, shapes):
-        if axis == "width":
-            axis = 1
-        if axis == "height":
-            axis = 0
-        if axis is None:
-            # `c_axis` should be the one whose number of gropu is smaller.
-            c_axis = ClusterMaker.suggest_axis(shapes, iou_thresh=self.iou_thresh)
-            axis = 0 if c_axis == 1 else 1
-        assert axis in {0, 1}
-        return axis
-
-    def __call__(self, shapes):
-        axis = self._yield_axis(self.axis, shapes)
-        c_axis = 0 if axis == 1 else 1
-        aligner = ShapesAligner(axis=axis, mode=self.mode)
-        cluster_maker = ClusterMaker(axis=c_axis, iou_thresh=self.iou_thresh)
-        clusters = cluster_maker(shapes)
-        for cluster in clusters:
-            aligner(cluster)
-        return clusters
 
 
 class ShapesArranger:

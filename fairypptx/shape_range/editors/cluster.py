@@ -18,7 +18,7 @@ class UnionFind:
         if self._parent[x] == x:
             return x
         else:
-            self._parent[x] = self._find_root(x)
+            self._parent[x] = self._find_root(self._parent[x])
             return self._parent[x]
 
     def union(self, x:int, y:int) -> None:
