@@ -111,7 +111,7 @@ class ShapeRange:
         """ Perform alignment. `align` is applied 
         by the unit of group(cluster).
         """
-        return ClusterAligner(axis=axis, mode=mode, iou_thresh=iou_thresh)(self)
+        assert False
 
     @property
     def cluster(self) -> "ShapeCluster":
@@ -126,7 +126,7 @@ class ShapeRange:
     def align(self, axis=None, align_cmd: AlignCMD | AlignParam="center"):
         """Align (Make the edge coordination). 
         """
-        from fairypptx.shape_range.editors import ShapeRangeAligner
+        from fairypptx.shape_range.aligner import ShapeRangeAligner
         return ShapeRangeAligner()(self)
 
     def adjust(self, axis=None):

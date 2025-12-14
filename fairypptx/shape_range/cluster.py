@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import Sequence, Self
 from fairypptx.shape_range import ShapeRange 
 from fairypptx.shape import Shape 
-from fairypptx.box import Box 
+from fairypptx.box import Box, Interval
 from fairypptx.shape_range.types import AlignCMD, AlignParam
 from fairypptx.shape_range.aligner import ShapeRangeAligner
 
@@ -34,6 +34,8 @@ class UnionFind:
         for ind in range(len(self._parent)):
             groups[self._find_root(ind)].append(ind)
         return sorted(groups.values())
+
+
 
 
 class ShapeCluster:
@@ -107,10 +109,36 @@ class ShapeCluster:
         return cls(shape_range)
 
 
+
+def get_layout_distance(box1: Box, box2: Box, interval_iou_thresh=0.50) -> float:
+    """Distance of layout, assume that the distance is normalized, and   
+    if the value is 1, then the distance is the length of the `box`.
+    """
+    if Box.intersection_over_union(box1, box2) > 0:
+        return 0
+    result = 0
+
+    if Interval.intersection_over_union(box1.x_interval, box2.x_interval) >= interval_iou_thresh:
+        result += 0
+    else:
+        dist = min(abs(box1.left - box2.right), abs(box1.right - box2.left))
+        base = min(box1.width, box2.width)
+        result += dist / base
+
+    if Interval.intersection_over_union(box1.y_interval, box2.y_interval) >= interval_iou_thresh:
+        result += 0
+    else:
+        dist = min(abs(box1.bottom - box2.top), abs(box1.top - box2.bottom))
+        base = min(box1.height, box2.height)
+        result += dist / base
+    return result
+
+
 class ClusterMaker:
-    def __init__(self, iou_thresh: float = 0.1, background_thresh: float=0.9) -> None: 
+    def __init__(self, iou_thresh: float = 0.1, background_thresh: float=0.9, layout_distance_thresh: float=0.5) -> None: 
         self.iou_thresh = iou_thresh
         self.background_thresh = background_thresh
+        self.layout_distance_thresh = layout_distance_thresh
 
 
     def __call__(self, shape_range: ShapeRange) -> Sequence[ShapeCluster]:
@@ -147,7 +175,7 @@ class ClusterMaker:
         union_find = UnionFind(N)
         for i in range(N):
             for j in range(i + 1, N):
-                if Box.intersection_over_union(clusters[i].box, clusters[j].box) >= self.iou_thresh:
+                if get_layout_distance(clusters[i].box, clusters[j].box) <= self.layout_distance_thresh:
                     union_find.union(i, j)
         return [ShapeCluster.from_clusters([clusters[ind] for ind in group]) for group in union_find.groups]
 
