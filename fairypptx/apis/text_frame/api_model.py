@@ -1,23 +1,18 @@
-from fairypptx import constants
 from fairypptx.core.models import BaseApiModel
-from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
 from fairypptx.core.types import COMObject
-from fairypptx.object_utils import getattr
 
 
-from collections.abc import Sequence
-from typing import Any, ClassVar, Mapping, Self, Sequence
+from typing import Self
+from fairypptx.apis.text_range import TextRangeApiModel
 
 
 class TextFrameApiModel(BaseApiModel):
-        # [TODO] To be implemented.
-    api_data: Mapping[str, Any]
+    text_range: TextRangeApiModel 
 
     @classmethod
     def from_api(cls, api: COMObject) -> Self:
-        data = dict()
-        return cls(api_data=data)
+        tr = TextRangeApiModel.from_api(api.TextRange)
+        return cls(text_range=tr)
 
     def apply_api(self, api: COMObject) -> None:
-        crude_api_write(api, self.api_data)
-        return api
+        self.text_range.apply_api(api.TextRange)

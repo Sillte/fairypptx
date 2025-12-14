@@ -1,6 +1,6 @@
 """Text Frame API layer exports."""
 
-from fairypptx.apis.text_frame.api_model import TextFrameApiModel
-from fairypptx.apis.text_frame.applicator import TextFrameApplicator
+from fairypptx.apis.text_range.api_model import TextRangeApiModel
+from fairypptx.apis.text_range.applicator import TextRangeApplicator
 
-__all__ = ["TextFrameApiModel", "TextFrameApplicator"]
+__all__ = ["TextRangeApiModel", "TextRangeApplicator"]

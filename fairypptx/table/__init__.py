@@ -12,9 +12,7 @@ Desire:
 
 from typing import cast, Sequence, Any
 import numpy as np
-from fairypptx.apis.table.table_api_writer import TableApiWriter
-from fairypptx.apis.table import TableApiModel, TableApiApplicator
-from fairypptx.apis.table import CellApiApplicator
+from fairypptx.apis.table import TableApiApplicator
 
 from fairypptx.core.resolvers import resolve_table, resolve_shapes
 from fairypptx.core.types import COMObject, PPTXObjectProtocol

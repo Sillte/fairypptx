@@ -1,26 +1,38 @@
-from fairypptx import constants
+from pydantic import BaseModel
 from fairypptx.core.models import BaseApiModel
-from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
 from fairypptx.core.types import COMObject
-from fairypptx.object_utils import getattr
 
 from fairypptx.apis.paragraph_format.api_model import ParagraphFormatApiModel
+from fairypptx.apis.font.api_model import FontApiModel
 
 
 from collections.abc import Sequence
-from typing import Any, ClassVar, Mapping, Self
+from typing import Self, Sequence
 
-
-class TextRangeApiModel(BaseApiModel):
+class TextRangeRunModel(BaseModel):
     text: str
     paragraph_format: ParagraphFormatApiModel
+    font: FontApiModel
+    
+
+class TextRangeApiModel(BaseApiModel):
+    runs: Sequence[TextRangeRunModel]
+
 
     @classmethod
     def from_api(cls, api: COMObject) -> Self:
-        return cls(text=str(api.Text),
-                   paragraph_format=ParagraphFormatApiModel.from_api(api.ParagraphFormat))
+        runs = []
+        for run_api in api.Runs():
+            text = run_api.Text
+            paragraph_format = ParagraphFormatApiModel.from_api(run_api.ParagraphFormat)
+            font = FontApiModel.from_api(run_api.Font)
+            runs.append(TextRangeRunModel(text=text, paragraph_format=paragraph_format, font=font))
+        return cls(runs=runs)
 
     def apply_api(self, api: COMObject) -> None:
-        api.Text = self.text
-        self.paragraph_format.apply_api(api.ParagraphFormat)
+        api.Text = ""
+        for run in self.runs:
+            run_api = api.InsertAfter(run.text)
+            run.paragraph_format.apply_api(run_api.ParagraphFormat)
+            run.font.apply_api(run_api.Font)
         return api
