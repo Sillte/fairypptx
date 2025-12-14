@@ -14,11 +14,11 @@ from fairypptx.core.types import COMObject
 
 from fairypptx.core.resolvers import resolve_shape 
 from fairypptx.core.utils import swap_props 
-from fairypptx._shape.api_factory import ShapeApiFactory
+from fairypptx.apis.shape.api_factory import ShapeApiFactory
 
 from fairypptx.fill_format import FillFormatProperty
 from fairypptx.line_format import LineFormatProperty
-from fairypptx._shape import api_functions
+from fairypptx.apis.shape import api_functions
 from fairypptx.text_range import TextRange
 from fairypptx.text_frame import TextFrameProperty
 
@@ -226,8 +226,9 @@ class ShapeFactory:
             raise ValueError(f"Unsupported arg type: {type(arg)}, value: {arg}")
 
         shape = Shape(shape_api)
-        from fairypptx._shape.location import ShapesLocator
-        ShapesLocator(mode="center")(shape)
+        y, x = shape.slide.box.center
+        shape.top = y - shape.width  / 2
+        shape.left = x - shape.height / 2
         return shape
 
     @staticmethod
@@ -299,12 +300,6 @@ class ShapeFactory:
         shape_api = ShapeApiFactory.make_arrow(direction, **kwargs)
         return Shape(shape_api)
 
-
-# High-level APIs are loaded here.
-#
-from fairypptx._shape.editor import (
-        ShapesEncloser, TitleProvider, BoundingResizer, ShapesResizer)
-from fairypptx._shape.maker import PaletteMaker
 
 
 if __name__ == "__main__":

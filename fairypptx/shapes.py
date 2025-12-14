@@ -9,7 +9,6 @@ from fairypptx.core.types import COMObject
 from fairypptx.shape import Shape
 from fairypptx.shape_range import ShapeRange
 
-from fairypptx._shape.location import ShapesAdjuster, ShapesAligner
 
 if TYPE_CHECKING:
     from fairypptx.slide import Slide

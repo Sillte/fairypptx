@@ -9,12 +9,11 @@ from fairypptx.shape import Shape, GroupShape
 from fairypptx.object_utils import is_object
 from fairypptx.core.resolvers import resolve_shape_range
 
-from fairypptx._shape.location import ShapesAdjuster
 
 from fairypptx.shape_range.types import AlignCMD, AlignParam
 
 if TYPE_CHECKING:
-    from fairypptx.shape_range.editors.cluster import ShapeCluster
+    from fairypptx.shape_range.cluster import ShapeCluster
 
 class ShapeRange:
     def __init__(self, arg: COMObject | Sequence[COMObject] |
@@ -116,12 +115,12 @@ class ShapeRange:
 
     @property
     def cluster(self) -> "ShapeCluster":
-        from fairypptx.shape_range.editors.cluster import ShapeCluster
+        from fairypptx.shape_range.cluster import ShapeCluster
         return ShapeCluster(self)
 
     @property
     def clusters(self) -> "Sequence[ShapeCluster]":
-        from fairypptx.shape_range.editors.cluster import ClusterMaker
+        from fairypptx.shape_range.cluster import ClusterMaker
         return ClusterMaker()(self)
 
     def align(self, axis=None, align_cmd: AlignCMD | AlignParam="center"):
@@ -133,6 +132,7 @@ class ShapeRange:
     def adjust(self, axis=None):
         """Adjust (keeping the equivalent distance.)
         """
+        from fairypptx.parts.location import ShapesAdjuster
         return ShapesAdjuster(axis=axis)(self)
 
     @property

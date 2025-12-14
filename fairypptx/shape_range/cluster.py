@@ -4,7 +4,7 @@ from fairypptx.shape_range import ShapeRange
 from fairypptx.shape import Shape 
 from fairypptx.box import Box 
 from fairypptx.shape_range.types import AlignCMD, AlignParam
-from fairypptx.shape_range.editors.aligner import ShapeRangeAligner
+from fairypptx.shape_range.aligner import ShapeRangeAligner
 
 
 class UnionFind:
