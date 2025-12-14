@@ -1,4 +1,4 @@
-from typing import cast
+from typing import cast, Self, Any
 from collections import UserString
 from pywintypes import com_error
 from typing import Any, Literal, TYPE_CHECKING, Sequence, Self
@@ -50,6 +50,14 @@ class Shape(LocationMixin):
     def __init__(self, arg=None):
         self._api = resolve_shape(arg) 
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Shape):
+            return NotImplemented
+        return self.api.Id == other.api.Id
+
+    def __hash__(self):
+        return hash(self.api.Id)
+
 
     @property
     def api(self) -> COMObject:
@@ -63,6 +71,9 @@ class Shape(LocationMixin):
     def box(self):
         return Box.from_api(self.api)
 
+    @box.setter
+    def box(self, box: Box):
+        self.left, self.top, self.width, self.height = box.left, box.top, box.width, box.height
 
     def select(self, replace_: bool=True):
         return self.api.Select(replace_)
@@ -106,6 +117,9 @@ class Shape(LocationMixin):
     def text(self, value: str | TextRange):
         self.text_frame.text_range = value
 
+    @classmethod
+    def from_box(cls, box: Box):
+        return ShapeFactory.from_box(box)
 
     @classmethod
     def make(cls, arg, **kwargs) -> "Shape":
@@ -230,6 +244,13 @@ class ShapeFactory:
         shape_api = ShapeApiFactory.add_textbox(text, **kwargs)
         shape = Shape(shape_api)
         shape.tighten()
+        return shape
+
+    @staticmethod
+    def from_box(box: Box) -> Shape:
+        shape_api = ShapeApiFactory.add_shape_from_type(1)
+        shape = Shape(shape_api)
+        shape.box = box
         return shape
 
     @staticmethod

@@ -125,8 +125,16 @@ class Box:
         return Interval(start=self.top, end=self.top + self.height)
 
     @property
+    def y_length(self) -> float:
+        return self.y_interval.length
+
+    @property
     def x_interval(self) -> Interval:
         return Interval(start=self.left, end=self.left + self.width)
+
+    @property
+    def x_length(self) -> float:
+        return self.x_interval.length
 
     @classmethod
     def from_intervals(cls, y_interval: Interval, x_interval: Interval) -> Self:
@@ -227,5 +235,25 @@ class Box:
     @classmethod
     def intersection_over_cover(cls, box1: Self, box2: Self, *, axis: Literal["y", 0, "x", 1] | None = None) -> float:
         return cls.intersection_over_union(box1, box2, axis=axis, instead_cover=True)
+
+
+    @classmethod
+    def center_distance(cls, box1: Self, box2: Self, *, axis: Literal["y", 0, "x", 1] | None = None) -> float:
+        if axis == "y":
+            axis = 0
+        if axis == "x":
+            axis = 1
+
+        match axis:
+            case 0:
+                return abs(box1.center[0] - box2.center[0])
+            case 1:
+                return abs(box1.center[1] - box2.center[1])
+            case None:
+                return abs(box1.center[0] - box2.center[0]) + abs(box1.center[1] - box2.center[1])
+            case _ as unreachable:
+                assert_never(unreachable)
+        
+
 
 

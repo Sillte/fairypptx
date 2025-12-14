@@ -1,4 +1,4 @@
-from typing import Iterator, Self, TYPE_CHECKING
+from typing import Iterator, Self, TYPE_CHECKING, overload
 
 from fairypptx.constants import msoFalse
 
@@ -31,6 +31,14 @@ class Shapes:
     def __iter__(self) -> Iterator[Shape]:
         for index in range(len(self)):
             yield Shape(self.api.Item(index + 1))
+
+    @overload
+    def __getitem__(self, key: int) -> Shape:
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> 'ShapeRange':
+        ...
 
     def __getitem__(self, key: int | slice) -> Shape | ShapeRange:
         if isinstance(key, int):
