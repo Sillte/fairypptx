@@ -53,11 +53,14 @@ class Shape(LocationMixin):
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Shape):
             return NotImplemented
-        return self.api.Id == other.api.Id
+        return self.id == other.id
 
     def __hash__(self):
-        return hash(self.api.Id)
+        return hash(self.id)
 
+    @property
+    def id(self) -> int:
+        return self.api.Id
 
     @property
     def api(self) -> COMObject:
