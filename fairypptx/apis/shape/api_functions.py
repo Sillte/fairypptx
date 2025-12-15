@@ -29,6 +29,15 @@ def tighten(api: COMObject, *, oneline: bool=False):
             api.TextFrame.AutoSize = constants.ppAutoSizeShapeToFitText
             api.TextFrame.WordWrap = constants.msoFalse
 
+def is_tight(api: COMObject, *, oneline: bool=False):
+    assert oneline is False
+    width, height = api.Width, api.Height
+    with stored(api, ("Width", "Height", "Left", "Top")):
+        tighten(api, oneline=False)
+        if abs(width - api.Width) <= 5 and abs(height - api.Height) <= 5:
+            return True
+    return False
+
 def to_image(api:COMObject, mode: Literal["RGBA", "RGB"] ="RGBA") -> Image.Image:
     with registry_utils.yield_temporary_path(suffix=".png") as path:
         api.Export(path, constants.ppShapeFormatPNG)

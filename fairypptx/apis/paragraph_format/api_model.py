@@ -27,12 +27,10 @@ class ParagraphFormatApiModel(BaseApiModel):
     api2_data: Mapping[str, Any] = {}
 
     _common_keys: ClassVar[Sequence[str]] = [
-            "FarEastLineBreakControl", "Alignment",
+            "FarEastLineBreakControl",
+            "Alignment",
             "BaseLineAlignment",
             "HangingPunctuation",
-            "LineRuleAfter",
-            "LineRuleBefore",
-            "LineRuleWithin",
             "SpaceAfter",
             "SpaceBefore",
             "SpaceWithin"]

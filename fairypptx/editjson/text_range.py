@@ -76,13 +76,14 @@ class NaiveTextRangeParagraphStyle(BaseModel):
             return format_mapping[key] if key else  None
  
         tr = entity
+
         for line_number, para in enumerate(tr.paragraphs):
             p_type = _to_paragraph_type(para)
             indent_level = para.api.IndentLevel
             if picked :=_pick(p_type, indent_level, line_number):
                 font_param, format_param = picked
-                format_param.apply(tr.paragraph_format)
-                font_param.apply(tr.font)
+                format_param.apply(para.paragraph_format)
+                font_param.apply(para.font)
         return entity
 
 

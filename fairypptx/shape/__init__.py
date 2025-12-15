@@ -132,7 +132,7 @@ class Shape(LocationMixin):
 
     @classmethod
     def make_arrow(cls, arg: Literal["right", "left", "up", "down", "both"] = "right"):
-        return ShapeFactory.make_textbox(arg)
+        return ShapeFactory.make_arrow(arg)
 
 
     def like(self, style: str):
@@ -161,6 +161,9 @@ class Shape(LocationMixin):
             oneline: Modify so that text becomes 1 line.
         """
         api_functions.tighten(self.api, oneline=oneline)
+
+    def is_tight(self) -> bool:
+        return api_functions.is_tight(self.api)
 
 
     def swap(self, other: Self):

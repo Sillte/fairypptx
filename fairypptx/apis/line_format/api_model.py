@@ -1,7 +1,3 @@
-
-
-
-
 """Line Format API Schema.
 
 LineFormatApiModel represents a mapping of Line COM properties to Pydantic.
@@ -48,11 +44,6 @@ class LineFormatApiModel(BaseApiModel):
     @classmethod
     def from_api(cls, api: COMObject) -> Self:
         data = dict()
-        data["Style"] = constants.msoLineSingle
-        data["ForeColor.RGB"] = 0
-        data["Visible"] = constants.msoTrue
-        data["Transparency"] = 0
-
         keys = list(cls._common_keys)
 
         if getattr(api, "BeginArrowheadStyle") != constants.msoArrowheadNone:

@@ -25,9 +25,6 @@ class NaiveParagraphFormatStyle(BaseModel):
             "FarEastLineBreakControl", "Alignment",
             "BaseLineAlignment",
             "HangingPunctuation",
-            "LineRuleAfter",
-            "LineRuleBefore",
-            "LineRuleWithin",
             "SpaceAfter",
             "SpaceBefore",
             "SpaceWithin"]

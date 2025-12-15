@@ -3,7 +3,6 @@ from fairypptx.apis.paragraph_format.applicator import ParagraphFormatApplicator
 from fairypptx.core.types import COMObject
 from fairypptx.object_utils import to_api2
 
-from typing import Literal, Self, Annotated, cast
 
 from fairypptx.object_utils import to_api2, is_object
 

@@ -100,9 +100,9 @@ class _Color:
 
     @classmethod
     def _from_int(cls, value: int) -> Self:
-        r = (value >> 16) & 0xFF
+        b = (value >> 16) & 0xFF
         g = (value >> 8) & 0xFF
-        b = value & 0xFF
+        r = value & 0xFF
         return cls(r, g, b)
 
     @classmethod
@@ -206,7 +206,7 @@ class Color:
         return h
 
     def as_int(self) -> int:
-        return (self.r << 16) | (self.g << 8) | self.b
+        return (self.b << 16) | (self.g << 8) | self.r
 
     # ============================================================
     #                     Color transforms
