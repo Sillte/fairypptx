@@ -1,17 +1,17 @@
-from fairypptx.editjson.protocols import EditParamProtocol
-from fairypptx.editjson.shape import NaiveShapeStyle
-from fairypptx.editjson.text_range import NaiveTextRangeParagraphStyle
-from fairypptx.editjson.table import NaiveTableStyle
+from fairypptx.styles.protocols import StyleModelProtocol
+from fairypptx.styles.shape import NaiveShapeStyle
+from fairypptx.styles.text_range import NaiveTextRangeParagraphStyle
+from fairypptx.styles.table import NaiveTableStyle
 
 
 class PPTXObjectStyleTypeRegistry:
-    def __init__(self, default_type: type[EditParamProtocol]) -> None:
-        self.registry: dict[str, type[EditParamProtocol]] = {}
+    def __init__(self, default_type: type[StyleModelProtocol]) -> None:
+        self.registry: dict[str, type[StyleModelProtocol]] = {}
         self.default_type = default_type
 
     def register(
         self,
-        edit_param_cls: type[EditParamProtocol],
+        edit_param_cls: type[StyleModelProtocol],
         cls_name: str | None = None,
         *,
         override_default: bool = False
@@ -26,7 +26,7 @@ class PPTXObjectStyleTypeRegistry:
         if override_default:
             self.default_type = edit_param_cls
 
-    def fetch(self, cls_name: str | None = None) -> type[EditParamProtocol]:
+    def fetch(self, cls_name: str | None = None) -> type[StyleModelProtocol]:
         if cls_name is None:
             return self.default_type
         if cls_name not in self.registry:

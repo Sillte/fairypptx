@@ -5,7 +5,7 @@ from fairypptx.core.utils import crude_api_read
 from fairypptx.shape import Box
 from typing import Protocol
 from fairypptx.table import Table
-from fairypptx.editjson.text_range import NaiveTextRangeParagraphStyle
+from fairypptx.styles.text_range import NaiveTextRangeParagraphStyle
 from fairypptx.core.utils import crude_api_write   
 
 # * Generate the parameters for `ParamItself`.

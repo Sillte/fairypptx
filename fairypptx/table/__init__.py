@@ -104,7 +104,7 @@ class Table:
         return self.to_numpy()  
 
     def register(self, style: str, style_type: str | None | type = None) -> None:
-        from fairypptx.editjson.style_type_registry import TableStyleTypeRegistry
+        from fairypptx.styles.style_type_registry import TableStyleTypeRegistry
         if not isinstance(style_type, type): 
             style_type = TableStyleTypeRegistry.fetch(style_type)
         edit_param = style_type.from_entity(self)
@@ -112,9 +112,9 @@ class Table:
 
 
     def like(self, style: str):
-        from fairypptx.editjson.protocols import EditParamProtocol
+        from fairypptx.styles.protocols import StyleModelProtocol
         edit_param = BaseModelRegistry.fetch("Table", style)
-        edit_param = cast(EditParamProtocol, edit_param)
+        edit_param = cast(StyleModelProtocol, edit_param)
         edit_param.apply(self)
 
 

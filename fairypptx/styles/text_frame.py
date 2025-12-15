@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from fairypptx.text_frame import TextFrame 
 from fairypptx.apis.text_frame.api_model import to_style_api_data, apply_style_api_data
 from fairypptx.apis.text_frame.api_model import to_style_api2_data, apply_style_api2_data
-from fairypptx.editjson.text_range import NaiveTextRangeParagraphStyle
+from fairypptx.styles.text_range import NaiveTextRangeParagraphStyle
 from typing import Self, Any, Mapping
 
 

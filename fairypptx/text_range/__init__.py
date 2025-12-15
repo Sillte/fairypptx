@@ -121,7 +121,7 @@ class TextRange:
 
 
     def register(self, style: str, style_type: str | None | type = None) -> None:
-        from fairypptx.editjson.style_type_registry import TextRangeStyleTypeRegistry
+        from fairypptx.styles.style_type_registry import TextRangeStyleTypeRegistry
         if not isinstance(style_type, type): 
             style_type = TextRangeStyleTypeRegistry.fetch(style_type)
         edit_param = style_type.from_entity(self)
@@ -129,9 +129,9 @@ class TextRange:
 
 
     def like(self, style: str) -> None:
-        from fairypptx.editjson.protocols import EditParamProtocol
+        from fairypptx.styles.protocols import StyleModelProtocol
         edit_param = BaseModelRegistry.fetch("TextRange", style)
-        edit_param = cast(EditParamProtocol, edit_param)
+        edit_param = cast(StyleModelProtocol, edit_param)
         edit_param.apply(self)
 
     @classmethod

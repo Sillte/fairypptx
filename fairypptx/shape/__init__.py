@@ -136,13 +136,13 @@ class Shape(LocationMixin):
 
 
     def like(self, style: str):
-        from fairypptx.editjson.protocols import EditParamProtocol
+        from fairypptx.styles.protocols import StyleModelProtocol
         basemodel = BaseModelRegistry.fetch("Shape", style)
-        basemodel = cast(EditParamProtocol[Shape], basemodel)
+        basemodel = cast(StyleModelProtocol[Shape], basemodel)
         basemodel.apply(self)
 
     def register(self, sytle: str, style_type: None | str | type=None):
-        from fairypptx.editjson.style_type_registry import ShapeStyleTypeRegistry 
+        from fairypptx.styles.style_type_registry import ShapeStyleTypeRegistry 
         if not isinstance(style_type, type):
             style_type = ShapeStyleTypeRegistry.fetch(style_type) 
         basemodel = style_type.from_entity(self) 

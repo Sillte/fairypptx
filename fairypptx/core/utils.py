@@ -8,7 +8,7 @@ from fairypptx.core.types import COMObject
 from fairypptx.object_utils import getattr as f_getattr, setattr as f_setattr
 
 
-def get_discriminator_mapping(klass: UnionType, field_name: str):
+def get_discriminator_mapping(klass: UnionType | Annotated, field_name: str):
     """Return {discriminator_value: BaseModel class} mapping."""
     adapter = TypeAdapter(klass)
     core_schema = cast(dict[str, Any], adapter.core_schema)

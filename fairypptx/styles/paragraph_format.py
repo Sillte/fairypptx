@@ -11,7 +11,7 @@ from fairypptx.object_utils import setattr, getattr
 from fairypptx.paragraph_format import ParagraphFormat
 from pprint import pprint
 from fairypptx.enums import MsoFillType
-from fairypptx.editjson.protocols import EditParamProtocol
+from fairypptx.styles.protocols import StyleModelProtocol
 from pywintypes import com_error
 
 

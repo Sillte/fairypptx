@@ -4,7 +4,7 @@ from fairypptx.core.types import PPTXObjectProtocol
 
 
 @runtime_checkable
-class EditParamProtocol[T: PPTXObjectProtocol](Protocol):
+class StyleModelProtocol[T: PPTXObjectProtocol](Protocol):
     @classmethod
     def from_entity(cls, entity: T) -> Self:
         """Generate itself from the entity of `fairpptx.PPTXObject`

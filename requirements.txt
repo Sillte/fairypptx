@@ -1,7 +1,0 @@
-numpy
-pandas
-matplotlib
-Pillow
-pywin32
-premailer
-toml

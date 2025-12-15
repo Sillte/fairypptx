@@ -4,11 +4,11 @@ from typing import Self
 from fairypptx import Shape
 from fairypptx.shape import Box
 from typing import Literal
-from fairypptx.editjson.protocols import EditParamProtocol
-from fairypptx.editjson.line_format import NaiveLineFormatStyle
-from fairypptx.editjson.fill_format import NaiveFillFormatStyle
-from fairypptx.editjson.text_range import NaiveTextRangeParagraphStyle
-from fairypptx.editjson.text_frame import NaiveTextFrameStyle
+from fairypptx.styles.protocols import StyleModelProtocol
+from fairypptx.styles.line_format import NaiveLineFormatStyle
+from fairypptx.styles.fill_format import NaiveFillFormatStyle
+from fairypptx.styles.text_range import NaiveTextRangeParagraphStyle
+from fairypptx.styles.text_frame import NaiveTextFrameStyle
 
 from fairypptx.core.utils import get_discriminator_mapping
 from fairypptx.enums import MsoShapeType
@@ -81,11 +81,11 @@ class FallbackShapeStyle(BaseModel):
         warnings.warn(msg)
         return entity
 
-ShapeStyle = AutoShapeStyle | TextBoxStyle | FallbackShapeStyle
+ShapeStyle = AutoShapeStyle | TextBoxStyle
 
 
 class NaiveShapeStyle(BaseModel):
-    selector: ShapeStyle 
+    selector: ShapeStyle | FallbackShapeStyle
 
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
@@ -112,10 +112,4 @@ if __name__ == "__main__":
     shape = Shape()
     target = NaiveTextRangeParagraphStyle.from_entity(shape.textrange)
     target.apply(shape.textrange)
-    data = target.model_dump_json()
-    print(data)
-    #import time 
-    #for _ in range(20):
-    #    print(_)
-    #    time.sleep(2)
 
