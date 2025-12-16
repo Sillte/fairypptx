@@ -25,6 +25,7 @@ from fairypptx.text_frame import TextFrameProperty
 if TYPE_CHECKING:
     from fairypptx import ShapeRange
     from fairypptx import Slide
+    from fairypptx import Table
 
 
 class Shape(LocationMixin):
@@ -43,6 +44,8 @@ class Shape(LocationMixin):
         match t:
             case constants.msoGroup:
                 klass = GroupShape
+            case constants.msoTable:
+                klass = TableShape
             case _:
                 klass = cls
         return object.__new__(klass)
@@ -200,8 +203,10 @@ class GroupShape(Shape):
         return ShapeRange([elem for elem in self.api.GroupItems])
 
 class TableShape(Shape):
-    pass
-
+    @property
+    def table(self) -> "Table":
+        from fairypptx import Table
+        return Table(self.api.Table)
 
 class ShapeFactory:
     """High-level factory for creating Shape wrappers.
@@ -261,7 +266,7 @@ class ShapeFactory:
         return shape
 
     @staticmethod
-    def make_shape_from_type(type_: int, **kwargs) -> Shape:
+    def make_auto_shape(auto_shape_type: int, **kwargs) -> Shape:
         """Create a shape of the specified type.
 
         Args:
@@ -271,7 +276,7 @@ class ShapeFactory:
         Returns:
             A Shape wrapper.
         """
-        shape_api = ShapeApiFactory.add_shape_from_type(type_, **kwargs)
+        shape_api = ShapeApiFactory.add_shape_from_type(auto_shape_type, **kwargs)
         return Shape(shape_api)
 
     @staticmethod

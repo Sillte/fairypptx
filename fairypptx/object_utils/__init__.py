@@ -3,7 +3,7 @@
 Utility functions for handling Objects.
 
 """
-from typing import Sequence, Any, cast
+from typing import Sequence, Any, cast, overload
 import builtins
 from win32com.client import DispatchBaseClass, CoClassBaseClass
 from pywintypes import com_error
@@ -216,6 +216,14 @@ class ObjectItems[T]:
 
     def __len__(self) -> int:
         return self.api.Count
+
+    @overload
+    def __getitem__(self, key: int) -> T:
+        ...
+
+    @overload
+    def __getitem__(self, key: slice | Sequence[int]) -> list[T]:
+        ...
 
     def __getitem__(self, key: int | slice | Sequence[int]) -> T | list[T]:
         if isinstance(key, (int, np.number)):

@@ -1,9 +1,5 @@
-from pydantic import BaseModel
-
 from fairypptx.core.models import BaseApiModel
 from fairypptx.core.types import COMObject
-from fairypptx.core.utils import crude_api_read, crude_api_write, remove_invalidity
-from fairypptx.object_utils import getattr
 from fairypptx.apis.text_frame.api_model import TextFrameApiModel
 
 from collections.abc import Mapping, Sequence
@@ -87,16 +83,18 @@ class ColumnApiModel(BaseApiModel):
         return len(self.cells)
 
 def _apply_collection_to_api(row_or_column_api, collection: Sequence[RowApiModel | ColumnApiModel]):
-    Items = row_or_column_api.Items
-    desired = len(Items)
-    actual = len(collection)
+    api = row_or_column_api
+    Item = api.Item
+    actual = len(row_or_column_api)
+    desired = len(collection)
 
     for _ in range(actual, desired):
-        Items.Add()
+        Item.Add()
     for i in range(actual, desired, -1):
-        Items(i).Delete()
-    for Elem, item in zip(Items, collection):
-        item.apply_api(Elem)
+        Item(i).Delete()
+
+    for i, item in enumerate(collection, start=1):
+        item.apply_api(Item(i))
 
     return row_or_column_api
 
@@ -112,6 +110,9 @@ class RowsApiModel(BaseApiModel):
 
     def __len__(self) -> int:
         return len(self.rows)
+
+    def __getitem__(self, index: int) -> RowApiModel:
+        return self.rows[index]
     
 
 class ColumnsApiModel(BaseApiModel):
@@ -127,14 +128,17 @@ class ColumnsApiModel(BaseApiModel):
     def __len__(self) -> int:
         return len(self.columns)
 
+    def __getitem__(self, index: int) -> ColumnApiModel:
+        return self.columns[index]
+
 
 class TableApiModel(BaseApiModel):
     rows: RowsApiModel
 
     @classmethod
     def from_api(cls, api: COMObject) -> Self:
-        rows = RowsApiModel.from_api(api)
+        rows = RowsApiModel.from_api(api.Rows)
         return cls(rows=rows)
 
     def apply_api(self, api: COMObject) -> None:
-        self.rows.apply_api(api)
+        self.rows.apply_api(api.Rows)

@@ -73,7 +73,7 @@ class CrudeApiAccesssor:
         return {key: f_getattr(api, key) for key in self.props}
 
 
-def crude_api_read(api: COMObject, props: Sequence[str]) -> Mapping[str, Any]:
+def crude_api_read(api: COMObject, props: Sequence[str]) -> dict[str, Any]:
     return {key: f_getattr(api, key) for key in props}
 
 

@@ -106,6 +106,9 @@ class RowsColumnsBase[T: RowColumnMixin](PPTXObjectProtocol):
     def api(self) -> COMObject:
         return self._api
 
+    def __iter__(self) -> Iterator[T]:
+        return iter(self.items)
+
     def __getitem__(self, key: int | slice | Sequence[int]) -> T | Sequence[T]:
         return self.items[key]
         
