@@ -1,4 +1,4 @@
-from typing import Self, Sequence, Iterator, TYPE_CHECKING
+from typing import Self, Sequence, Iterator, TYPE_CHECKING, overload
 from collections.abc import Sequence as SeqABC
 
 from fairypptx.core.types import COMObject
@@ -25,6 +25,14 @@ class ShapeRange:
 
     def __iter__(self) -> Iterator[Shape]:
         yield from self._shapes
+
+    @overload
+    def __getitem__(self, key: int) -> "Shape":
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> "ShapeRange":
+        ...
 
     def __getitem__(self, key: int | slice) -> "Shape | ShapeRange":
         if isinstance(key, int):

@@ -1,4 +1,5 @@
-from fairypptx.shape import Shape, TableShape
+from fairypptx.shape import Shape, TableShape, GroupShape
+from fairypptx.shape_range import ShapeRange
 from fairypptx.table import Table
 from fairypptx.states.shape import ShapeStateModel
 from fairypptx.states.context import Context
@@ -26,6 +27,36 @@ def test_table_shape():
     other = cast(TableShape, model.create_entity(context))
     assert np.all(other.table.to_numpy() == shape.table.to_numpy()) 
 
+def test_group_shape_create():
+    # For `GroupShape`, both tests for  `apply` and `create_entity` is necessary.
+    child1 = Shape.make(1) 
+    child1.text = "Child1"
+    child2 = Shape.make(1) 
+    child2.text = "Child2"
+    group_shape = ShapeRange([child1, child2]).group()
+    model = ShapeStateModel.from_entity(group_shape)
+
+    context = Context(slide=group_shape.slide)
+    other = cast(GroupShape, model.create_entity(context))
+    group_shape = cast(GroupShape, group_shape)
+
+    assert len(other.children) == len(group_shape.children)
+    assert other.children[0].text == child1.text
+    assert other.children[1].text == child2.text
+
+def test_group_shape_apply():
+    # For `GroupShape`, both tests for  `apply` and `create_entity` is necessary.
+    child1 = Shape.make(1) 
+    child1.text = "Child1"
+    child2 = Shape.make(1) 
+    child2.text = "Child2"
+    group_shape = ShapeRange([child1, child2]).group()
+    model = ShapeStateModel.from_entity(group_shape)
+    model.impl.children[0].text_frame.api_model.text_range.runs[0].text = "AAA1"  #type: ignore
+    model.impl.children[1].text_frame.api_model.text_range.runs[0].text = "AAA2"  #type: ignore
+    model.apply(group_shape)
+    assert group_shape.children[0].text == "AAA1" #type: ignore
+    assert group_shape.children[1].text == "AAA2" #type: ignore
 
 if __name__ == "__main__":
     pass
