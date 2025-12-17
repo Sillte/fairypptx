@@ -14,7 +14,13 @@ _normalize_softbreaks_pattern1 = re.compile(r'(?:\n+\r+\n*)')
 _normalize_softbreaks_pattern2 = re.compile(r'(?:\n*\r+\n+)')
 
 def normalize_paragraph_breaks(text: str) -> str:
-    """The meaningless `LF` like `\n\r\n` is converted to the unique `\r`.
+    """
+    Normalize paragraph breaks for PowerPoint TextRange.
+
+    - `\r` represents an explicit paragraph break (Enter).
+    - Consecutive `\r` (empty paragraphs) are preserved.
+    - Any `\n` adjacent to `\r` is considered meaningless and removed.
+    - Soft line breaks (`\n`) inside a paragraph are preserved.
     """
     text = _normalize_softbreaks_pattern1.sub("\r", text)
     text = _normalize_softbreaks_pattern2.sub("\r", text)

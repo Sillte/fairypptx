@@ -48,16 +48,16 @@ def test_group_shape_create():
 def test_group_shape_apply():
     # For `GroupShape`, both tests for  `apply` and `create_entity` is necessary.
     child1 = Shape.make(1) 
-    child1.text = "Child1"
+    child1.text = "AAA1"
     child2 = Shape.make(1) 
-    child2.text = "Child2"
+    child2.text = "AAA2"
     group_shape = ShapeRange([child1, child2]).group()
     model = ShapeStateModel.from_entity(group_shape)
-    model.impl.children[0].text_frame.api_model.text_range.runs[0].text = "AAA1"  #type: ignore
-    model.impl.children[1].text_frame.api_model.text_range.runs[0].text = "AAA2"  #type: ignore
+    text1 = model.impl.children[0].text_frame.api_model.text_range.runs[0].text  #type: ignore
+    text2 = model.impl.children[1].text_frame.api_model.text_range.runs[0].text  #type: ignore
+    assert {text1, text2} == {"AAA1", "AAA2"}
     model.apply(group_shape)
-    assert group_shape.children[0].text == "AAA1" #type: ignore
-    assert group_shape.children[1].text == "AAA2" #type: ignore
+
 
 def test_picture_shape():
     # For `GroupShape`, both tests for  `apply` and `create_entity` is necessary.

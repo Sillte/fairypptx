@@ -3,6 +3,7 @@ import base64
 from PIL import Image
 
 from fairypptx import registry_utils
+from fairypptx import constants
 from fairypptx.core.utils import get_discriminator_mapping
 from fairypptx.states.models import BaseStateModel, FrozenBaseStateModel
 from fairypptx.states.context import Context
@@ -26,6 +27,7 @@ class AutoShapeStateModel(FrozenBaseStateModel):
     line: Annotated[NaiveLineFormatStyle, Field(description="Represents the format of `Line` around the Shape.")]
     fill: Annotated[NaiveFillFormatStyle, Field(description="Represents the format of `Fill` of the Shape.")]
     text_frame: Annotated[TextFrameValueModel, Field(description="Represents the texts of the Shape.")]
+    zorder: Annotated[int, Field(description="The value of Zorder")]
 
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
@@ -35,7 +37,8 @@ class AutoShapeStateModel(FrozenBaseStateModel):
                    auto_shape_type=shape.api.AutoShapeType, 
                    line=NaiveLineFormatStyle.from_entity(shape.line), 
                    fill=NaiveFillFormatStyle.from_entity(shape.fill),
-                   text_frame=TextFrameValueModel.from_object(shape.text_frame)
+                   text_frame=TextFrameValueModel.from_object(shape.text_frame),
+                   zorder=shape.api.ZOrderPosition, 
                    )
 
     def create_entity(self, context: Context) -> Shape: 
@@ -57,12 +60,14 @@ class TableShapeStateModel(FrozenBaseStateModel):
     type: Annotated[Literal[MsoShapeType.Table], Field(description="Type of Shape")] = MsoShapeType.Table
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
     table: Annotated[TableValueModel, Field(description="Table of the Shape")]
+    zorder: Annotated[int, Field(description="The value of Zorder")]
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
         shape = cast(TableShape, entity)
         return cls(box=shape.box,
                    id=shape.id, 
-                   table=TableValueModel.from_object(shape.table)
+                   table=TableValueModel.from_object(shape.table),
+                   zorder=shape.api.ZOrderPosition, 
                    )
 
     def create_entity(self, context: Context) -> Shape:
@@ -85,6 +90,7 @@ class TableShapeStateModel(FrozenBaseStateModel):
 
 class FallbackShapeStateModel(FrozenBaseStateModel):
     box: Annotated[Box, Field(description="Represents the position of the shape")] 
+    zorder: Annotated[int, Field(description="The value of Zorder")]
     type: int 
 
     @classmethod
@@ -92,7 +98,8 @@ class FallbackShapeStateModel(FrozenBaseStateModel):
         shape = entity
         return cls(box=shape.box,
                    id=shape.id,
-                   type=shape.api.Type
+                   type=shape.api.Type,
+                   zorder=shape.api.ZOrderPosition,
                    )
 
     def create_entity(self, context: Context) -> Shape:
@@ -111,6 +118,7 @@ class PictureShapeStateModel(BaseStateModel):
     type: Annotated[Literal[MsoShapeType.Picture], Field(description="Type of Shape")] = MsoShapeType.Picture
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
     image: Annotated[Base64Bytes, Field(description="Image of the shape.")]
+    zorder: Annotated[int, Field(description="The value of Zorder")]
 
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
@@ -121,13 +129,13 @@ class PictureShapeStateModel(BaseStateModel):
         image_bytes = buffer.getvalue()
         return cls(box=shape.box,
                    id=shape.id, 
-                   image=base64.b64encode(image_bytes)
+                   image=base64.b64encode(image_bytes),
+                   zorder=shape.api.ZOrderPosition,
                    )
 
     def create_entity(self, context: Context) -> Shape:
         shapes_api = context.shapes.api
         img_data = self.image
-        # Image.open に渡す
         image = Image.open(io.BytesIO(img_data))
 
         with registry_utils.yield_temporary_dump(image, suffix=".png") as path:
@@ -155,6 +163,7 @@ class GroupShapeStateModel(BaseStateModel):
     type: Annotated[Literal[MsoShapeType.Group], Field(description="Type of Shape")] = MsoShapeType.Group
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
     children: Annotated[Sequence[ShapeStateModelImpl | FallbackShapeStateModel], Field(description="Shape Children")]
+    zorder: Annotated[int, Field(description="The value of Zorder")]
 
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
@@ -170,7 +179,8 @@ class GroupShapeStateModel(BaseStateModel):
             impl_children.append(impl)
         return cls(box=shape.box,
                    id=shape.id, 
-                   children=impl_children
+                   children=impl_children,
+                   zorder=shape.api.ZOrderPosition,
                    )
 
     def create_entity(self, context: Context) -> Shape:
@@ -183,7 +193,7 @@ class GroupShapeStateModel(BaseStateModel):
         return shape
 
  
-    def apply(self, entity: Shape):
+    def apply(self, entity: Shape) -> Shape:
         shape = cast(GroupShape, entity)
         shape.box = self.box
         id_to_child_model = {child.id: child for child in self.children}
@@ -195,10 +205,27 @@ class GroupShapeStateModel(BaseStateModel):
         if len(keys) != len(id_to_child_model): 
             print("Inconsistency of `id` occurs in `GroupShapeStateModel`")
 
+        keys = sorted(keys, key=lambda s: id_to_child_model[s].zorder)
+
+
         for id_key in keys:
             child_model = id_to_child_model[id_key]
             child_entity = id_to_child_entity[id_key]
             child_model.apply(child_entity)
+
+        # 2. ZOrder を最後に調整
+        ordered_ids = sorted(
+            id_to_child_model.keys(),
+            key=lambda id_: id_to_child_model[id_].zorder,
+            reverse=True
+        )
+
+
+
+        for id_ in ordered_ids:
+            shape = id_to_child_entity[id_]
+            shape.api.ZOrder(constants.msoBringToFront)
+        return cast(Shape, shape)
 
 
 
