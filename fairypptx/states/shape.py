@@ -1,10 +1,16 @@
+import io
+import base64
+from PIL import Image
+
+from fairypptx import registry_utils
 from fairypptx.core.utils import get_discriminator_mapping
-from fairypptx.states.models import BaseStateModel
+from fairypptx.states.models import BaseStateModel, FrozenBaseStateModel
 from fairypptx.states.context import Context
+from fairypptx.constants import msoTrue, msoFalse
 from fairypptx.shape import Shape, TableShape, GroupShape
 from fairypptx.shape_range import ShapeRange
 from fairypptx.box import Box 
-from pydantic import Field
+from pydantic import Field, Base64Bytes
 from typing import Annotated, Self, Literal, cast, Sequence
 from fairypptx.styles.line_format import NaiveLineFormatStyle
 from fairypptx.styles.fill_format import NaiveFillFormatStyle
@@ -13,7 +19,7 @@ from fairypptx.states.text_frame import TextFrameValueModel
 from fairypptx.table import Table
 from fairypptx.enums import MsoShapeType
 
-class AutoShapeStateModel(BaseStateModel):
+class AutoShapeStateModel(FrozenBaseStateModel):
     type: Annotated[Literal[MsoShapeType.AutoShape], Field(description="Type of Shape")] = MsoShapeType.AutoShape
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
     auto_shape_type: Annotated[int, Field(description="Represents MSOAutoShapeType.")]
@@ -38,15 +44,16 @@ class AutoShapeStateModel(BaseStateModel):
         self.apply(shape)
         return shape
 
-    def apply(self, entity: Shape):
+    def apply(self, entity: Shape) -> Shape:
         shape = entity
         shape.box = self.box
         shape.api.AutoShapeType = self.auto_shape_type
         self.line.apply(shape.line)
         self.fill.apply(shape.fill)
         self.text_frame.apply(shape.text_frame)
+        return shape
 
-class TableShapeStateModel(BaseStateModel):
+class TableShapeStateModel(FrozenBaseStateModel):
     type: Annotated[Literal[MsoShapeType.Table], Field(description="Type of Shape")] = MsoShapeType.Table
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
     table: Annotated[TableValueModel, Field(description="Table of the Shape")]
@@ -68,14 +75,15 @@ class TableShapeStateModel(BaseStateModel):
         self.apply(shape)
         return table.shape
  
-    def apply(self, entity: Shape):
+    def apply(self, entity: Shape) -> Shape:
         shape = cast(TableShape, entity)
         shape.box = self.box
         self.table.apply(shape.table)
+        return shape
 
 
 
-class FallbackShapeStateModel(BaseStateModel):
+class FallbackShapeStateModel(FrozenBaseStateModel):
     box: Annotated[Box, Field(description="Represents the position of the shape")] 
     type: int 
 
@@ -94,11 +102,49 @@ class FallbackShapeStateModel(BaseStateModel):
         self.apply(shape)
         return shape
 
-    def apply(self, entity: Shape):
+    def apply(self, entity: Shape) -> Shape:
         shape = entity
         shape.box = self.box
+        return shape
 
-ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel
+class PictureShapeStateModel(BaseStateModel):
+    type: Annotated[Literal[MsoShapeType.Picture], Field(description="Type of Shape")] = MsoShapeType.Picture
+    box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
+    image: Annotated[Base64Bytes, Field(description="Image of the shape.")]
+
+    @classmethod
+    def from_entity(cls, entity: Shape) -> Self:
+        shape = entity
+        image=shape.to_image()
+        buffer = io.BytesIO()
+        image.save(buffer, format="PNG")
+        image_bytes = buffer.getvalue()
+        return cls(box=shape.box,
+                   id=shape.id, 
+                   image=base64.b64encode(image_bytes)
+                   )
+
+    def create_entity(self, context: Context) -> Shape:
+        shapes_api = context.shapes.api
+        img_data = self.image
+        # Image.open に渡す
+        image = Image.open(io.BytesIO(img_data))
+
+        with registry_utils.yield_temporary_dump(image, suffix=".png") as path:
+            shape = Shape(shapes_api.AddPicture(str(path), msoFalse, msoTrue, Left=self.box.left, Width=self.box.width, Top=self.box.top, Height=self.box.height))
+        return shape
+
+    def apply(self, entity: Shape) -> Shape:
+        orig_shape = entity
+        context = Context(slide=orig_shape.slide)
+        shape = self.create_entity(context)
+        shape.box = self.box
+        self.id = shape.id # NOTE: Since the new object is created, this is ineviable.
+        orig_shape.api.Delete()
+        return shape
+
+
+ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel
 
 
 class GroupShapeStateModel(BaseStateModel):
@@ -175,8 +221,8 @@ class ShapeStateModel(BaseStateModel):
             impl = FallbackShapeStateModel.from_entity(entity)
         return cls(impl=impl, id=impl.id)
 
-    def apply(self, entity: Shape):
-        self.impl.apply(entity)
+    def apply(self, entity: Shape) -> Shape:
+        return self.impl.apply(entity)
 
 
 if __name__ == "__main__":

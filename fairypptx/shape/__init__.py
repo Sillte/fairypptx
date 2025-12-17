@@ -1,3 +1,4 @@
+from PIL import Image 
 from typing import cast, Self, Any
 from collections import UserString
 from pywintypes import com_error
@@ -207,6 +208,8 @@ class TableShape(Shape):
     def table(self) -> "Table":
         from fairypptx import Table
         return Table(self.api.Table)
+
+
 
 class ShapeFactory:
     """High-level factory for creating Shape wrappers.

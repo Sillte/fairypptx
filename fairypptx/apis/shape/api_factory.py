@@ -66,7 +66,7 @@ class ShapeApiFactory:
         """
         if shapes_api is None:
             shapes_api = resolve_shapes() 
-        assert shapes_api
+        assert shapes_api is not None
 
         if isinstance(image_or_path, Image.Image):
             with registry_utils.yield_temporary_dump(image_or_path) as path:

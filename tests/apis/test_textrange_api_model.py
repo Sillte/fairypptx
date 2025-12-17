@@ -2,7 +2,7 @@ from fairypptx.apis.text_range import TextRangeApiModel
 
 
 def test_text_range_simple_paragraphs():
-    from fairypptx import Shape, TextRange
+    from fairypptx import Shape
     shape = Shape.make(1)
     text_range = shape.text_range
     text_range.text = "Hello\rWorld"
@@ -17,7 +17,7 @@ def test_text_range_simple_paragraphs():
 
 
 def test_text_range_empty_paragraphs():
-    from fairypptx import Shape, TextRange
+    from fairypptx import Shape
     shape = Shape.make(1)
     text_range = shape.text_range
     text_range.text = "Hello\r\rWorld"
@@ -28,7 +28,17 @@ def test_text_range_empty_paragraphs():
     api_model.apply_api(shape.text_range.api)
     assert shape.text_range.text == "Hello\r\rWorld"
 
+    shape.text_range.text = "Hello\r\r\r\rWorld"
+    assert shape.text_range.text == "Hello\r\r\r\rWorld"
 
+    api_model = TextRangeApiModel.from_api(shape.text_range.api)
+    assert len(api_model.paragraphs) == 5
+    api_model.apply_api(shape.text_range.api)
+    assert shape.text_range.text == "Hello\r\r\r\rWorld"
+
+
+def test_text_range_interval_lfs():
+    from fairypptx import Shape
     shape = Shape.make(1)
     text_range = shape.text_range
     text_range.text = "Hello\rWo\nrld"
@@ -52,14 +62,26 @@ def test_text_range_empty_paragraphs():
     
     shape = Shape.make(1)
     text_range = shape.text_range
+    # `\n\r` is normalized to `\r`.
     text_range.text = "Hello\n\rWorld"
     assert text_range.text == "Hello\rWorld"
     api_model = TextRangeApiModel.from_api(text_range.api)
     assert len(api_model.paragraphs) == 2
     api_model.apply_api(text_range.api)
     assert text_range.text == "Hello\rWorld"
-    
-    
 
+def test_text_range_object():
+    from fairypptx import Shape
+    shape = Shape.make(1)
+    text_range = shape.text_range
+    text_range.text = "Hello\rWorld"
+    assert text_range.text == "Hello\rWorld"
+    api_model = TextRangeApiModel.from_api(text_range.api)
+
+    text_range.text = "Dummy"
+    assert text_range.text == "Dummy"
+
+    api_model.apply_api(text_range.api)
+    assert text_range.text == "Hello\rWorld"
 
 

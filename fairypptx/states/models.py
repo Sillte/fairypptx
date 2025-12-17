@@ -4,7 +4,7 @@ from fairypptx.core.protocols import PPTXObjectProtocol
 
 from typing import Any,  Annotated
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 from abc import ABC, abstractmethod
@@ -43,11 +43,14 @@ class BaseStateModel[T: PPTXEntityProtocol](BaseModel, ABC):
 
 
     @abstractmethod
-    def apply(self, entity: T):
+    def apply(self, entity: T) -> T:
         ...
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, self.__class__):
             return False
         return self.id == other.id
+
+class FrozenBaseStateModel(BaseStateModel):
+    model_config = ConfigDict(frozen=True)
         
