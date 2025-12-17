@@ -11,6 +11,8 @@ from fairypptx.paragraph_format import ParagraphFormatProperty
 from fairypptx.core.resolvers import resolve_text_range
 from fairypptx.core.types import COMObject, PPTXObjectProtocol
 from fairypptx.apis.text_range.applicator import TextRangeApplicator
+from fairypptx.apis.text_range import normalize_paragraph_breaks
+
 
 if TYPE_CHECKING:
     from fairypptx.shape import Shape
@@ -99,7 +101,7 @@ class TextRange:
 
     @text.setter
     def text(self, text: str):
-        self.api.Text = text
+        self.api.Text = normalize_paragraph_breaks(text)
 
     def itemize(self) -> None:
         for elem in self.paragraphs:

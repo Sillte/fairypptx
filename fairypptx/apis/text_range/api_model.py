@@ -1,3 +1,4 @@
+import re
 from pydantic import BaseModel
 from fairypptx.core.models import BaseApiModel
 from fairypptx.core.types import COMObject
@@ -8,6 +9,17 @@ from fairypptx.apis.font.api_model import FontApiModel
 
 from collections.abc import Sequence
 from typing import Self, Sequence
+
+_normalize_softbreaks_pattern1 = re.compile(r'(?:\n+\r+\n*)')
+_normalize_softbreaks_pattern2 = re.compile(r'(?:\n*\r+\n+)')
+
+def normalize_paragraph_breaks(text: str) -> str:
+    """The meaningless `LF` like `\n\r\n` is converted to the unique `\r`.
+    """
+    text = _normalize_softbreaks_pattern1.sub("\r", text)
+    text = _normalize_softbreaks_pattern2.sub("\r", text)
+    return text
+
 
 class TextRangeRunModel(BaseModel):
     text: str
@@ -26,13 +38,23 @@ class TextRangeApiModel(BaseApiModel):
     paragraphs: Sequence[TextRangeParagraphModel]
 
     @classmethod
+    def _normalize_paragraph_text(cls, text: str) -> str:
+        # PowerPoint COM quirks:
+        # - '\n\r' or '\r\n' at paragraph boundary
+        text = text.replace("\n\r", "\r")
+        text = text.replace("\r\n", "\r")
+        return text
+
+    @classmethod
     def from_api(cls, api: COMObject) -> Self:
         paragraphs = []
         for paragraph_api in api.Paragraphs():
             paragraph_format = ParagraphFormatApiModel.from_api(paragraph_api.ParagraphFormat)
             runs = []
             for run_api in paragraph_api.Runs():
-                text = run_api.Text
+                text = normalize_paragraph_breaks(paragraph_api.Text)
+                if text.endswith("\r"):
+                    text = text[:-1]
                 font = FontApiModel.from_api(run_api.Font)
                 runs.append(TextRangeRunModel(text=text, font=font))
             paragraphs.append(TextRangeParagraphModel(runs=runs, paragraph_format=paragraph_format))
