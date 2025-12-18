@@ -30,7 +30,7 @@ class BaseValueModel[T: PPTXObjectProtocol](BaseModel, ABC):
 
 
 class BaseStateModel[T: PPTXEntityProtocol](BaseModel, ABC):
-    id: Annotated[int, Field(description="Indentifier of the entity.")]
+    id: Annotated[int | str, Field(description="Indentifier of the entity.")]
 
     @classmethod
     @abstractmethod

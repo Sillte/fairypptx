@@ -1,4 +1,4 @@
-from typing import Sequence, Self
+from typing import Sequence, Self, overload
 from collections.abc import Sequence as SeqABC
 from fairypptx.core.resolvers import resolve_slide_range
 from fairypptx.core.types import COMObject
@@ -18,7 +18,16 @@ class SlideRange:
     def __iter__(self):
         yield from self._slides
 
-    def __getitem__(self, key):
+    @overload
+    def __getitem__(self, key: int) -> "Slide":
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> "SlideRange":
+        ...
+
+
+    def __getitem__(self, key: int | slice) -> "Slide | SlideRange":
         if isinstance(key, int):
             return self._slides[key]
         elif isinstance(key, slice):
@@ -37,6 +46,7 @@ class SlideRange:
             slides_api = slides_api.Slides
         indices = [s.api.SlideIndex for s in self._slides]
         return slides_api.Range(indices)
+
 
     def _solve_slides(self, arg) -> list[Slide]:
         """Normalize input → list[Slide]"""

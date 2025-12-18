@@ -13,7 +13,7 @@ class SlideStateModel(FrozenBaseStateModel):
 
     note_text_frame: Annotated[TextFrameValueModel | None, Field(description="TextFrame for Notes of Slide.")] = None
 
-    # Read only attributes
+    # The below is Read only attributes...
     # For units of `Size` refer to `Slide.size` (Pt) 
     slide_size: Annotated[tuple[float, float], Field(description="Any value of PpSlideLayout.") ]
 

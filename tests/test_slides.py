@@ -1,7 +1,7 @@
 # tests/test_slides_integration.py
 import pytest
 from fairypptx.presentation import Presentation
-from fairypptx.slides import Slides   # ← いま書いてくれたクラス
+from fairypptx.slides import Slides 
 from fairypptx.slide import Slide
 from fairypptx.slide_range import SlideRange
 
@@ -69,3 +69,30 @@ def test_slides_iter(pres):
     assert all(isinstance(s, Slide) for s in collected)
     assert collected[0].api.SlideIndex == 1
     assert collected[1].api.SlideIndex == 2
+
+def test_full_presentation_reorder():
+    Slides().delete_all()
+    
+    # 1. 準備：全スライドを含むSlideRangeを作成
+    slides = Slides()
+    _ = slides.add()
+    _ = slides.add()
+    _ = slides.add()
+    assert len(slides) == 3
+
+    original_map = {s.index: s.api.Name for s in slides}
+    orig_indices = list(original_map.keys()) 
+
+    reorder_indices = list(reversed(orig_indices))
+
+    # 3. 実行
+    slides.reorder(reorder_indices)
+
+    for i, expected_old_index in enumerate(reorder_indices, start=1):
+        slide_api = slides.api.Item(i)
+        expected_name = original_map[expected_old_index]
+        
+        # 期待した名前のスライドが、その位置(i)にいるか
+        assert slide_api.Name == expected_name
+        # SlideIndex自体もiに更新されているか
+        assert slide_api.SlideIndex == i

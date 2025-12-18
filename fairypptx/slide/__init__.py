@@ -27,6 +27,10 @@ class Slide:
         return self.api.SlideID 
 
     @property
+    def index(self) -> int:
+        return self.api.SlideIndex
+
+    @property
     def shapes(self):
         from fairypptx.shapes import Shapes
 
