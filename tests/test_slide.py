@@ -23,6 +23,12 @@ def test_leaf_shapes():
     shapes = slide.leaf_shapes
     assert {shape.text for shape in shapes} == {"S1", "S2"}
 
+def test_note():
+    slide = Slides().add(layout=constants.ppLayoutBlank)
+    text_range = slide.note_text_frame.text_range
+    text_range.text = "HelloNote"
+    assert slide.note_text_frame.text_range.text == "HelloNote"
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "--capture=no"])

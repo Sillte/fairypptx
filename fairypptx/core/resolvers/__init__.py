@@ -56,7 +56,8 @@ def resolve_presentation(arg: PPTXObjectProtocol | COMObject | None | str | Path
             return path_to_pres[arg]
         assert arg.suffix in {".pptm", ".pptx"}, "Cannot handle this file."
         return App.Presentations.Open(str(arg))
-    elif arg is None:
+
+    if arg is None:
         App = get_application_api()
         try:
             return App.ActivePresentation
@@ -135,8 +136,9 @@ def resolve_slides(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObje
         msg = f"`{arg}` is not acceptable for `Slides`."
         raise ValueError(msg)
     if arg is None:
-        App = Application().api
-        return App.ActivePresentation.Slides
+        Presentation = resolve_presentation(arg)
+        return Presentation.Slides
+    raise NotImplementedError()
 
 def resolve_shape_range(arg: PPTXObjectProtocol | COMObject | None = None) -> COMObject:
     if isinstance(arg, PPTXObjectProtocol) or is_object(arg):

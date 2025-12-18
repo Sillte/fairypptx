@@ -214,13 +214,12 @@ class GroupShapeStateModel(BaseStateModel):
             child_model.apply(child_entity)
 
         # 2. ZOrder を最後に調整
+        # The large value of Zorder is the front. 
         ordered_ids = sorted(
             id_to_child_model.keys(),
             key=lambda id_: id_to_child_model[id_].zorder,
-            reverse=True
+            reverse=False
         )
-
-
 
         for id_ in ordered_ids:
             shape = id_to_child_entity[id_]
@@ -231,6 +230,10 @@ class GroupShapeStateModel(BaseStateModel):
 
 class ShapeStateModel(BaseStateModel):
     impl: Annotated[ShapeStateModelImpl | GroupShapeStateModel | FallbackShapeStateModel, Field(description="Based on `Type`, appropriate class is selected.")]
+
+    @property
+    def zorder(self) -> int:
+        return self.impl.zorder
 
     def create_entity(self, context: Context) -> Shape:
         return self.impl.create_entity(context)

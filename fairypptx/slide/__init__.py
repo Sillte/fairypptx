@@ -1,13 +1,17 @@
 from pywintypes import com_error
 from PIL import Image
+from typing import TYPE_CHECKING 
 
-from fairypptx.presentation import Presentation
 from fairypptx.core.resolvers import resolve_slide
 from fairypptx import constants
 
 from fairypptx.box import Box
 from fairypptx.registry_utils import yield_temporary_path
 from fairypptx.object_utils import is_object, upstream
+from fairypptx.text_frame import TextFrame
+
+if TYPE_CHECKING:
+    from fairypptx.presentation import Presentation
 
 
 class Slide:
@@ -45,11 +49,12 @@ class Slide:
         return ShapeRange(shape_list)
 
     @property
-    def presentation(self):
+    def presentation(self) -> "Presentation":
+        from fairypptx.presentation import Presentation
         return Presentation(upstream(self.api, "Presentation"))
 
     @property
-    def size(self):
+    def size(self) -> tuple[float, float]:
         """Return the size of the slide (Width, Height).
         """
         pres = self.presentation
@@ -100,4 +105,13 @@ class Slide:
     def select(self) -> None:
         self.api.Select()
 
+    @property
+    def note_text_frame(self) -> TextFrame:
+        for shape_api in self.api.NotesPage.Shapes.Placeholders:
+            if shape_api.PlaceholderFormat.Type == constants.ppPlaceholderBody:
+                return TextFrame(shape_api.TextFrame)
+        raise ValueError("TextFrame of Note is not found.")
+
+
 from fairypptx.slide.grid_handler import GridHandler
+
