@@ -26,5 +26,6 @@ class TextFrameProperty:
     def __get__(self, parent: PPTXObjectProtocol, objtype=None) -> TextFrame:
         return TextFrame(parent.api.TextFrame)
 
+
     def __set__(self, parent: PPTXObjectProtocol, value: str | TextRange) -> None:
         TextFrameApplicator.apply(parent.api.TextFrame, value)

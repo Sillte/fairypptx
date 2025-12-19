@@ -2,6 +2,7 @@ from fairypptx.apis.fill_format.api_model import FillFormatApiModel
 from fairypptx.apis.fill_format.applicator import FillApiApplicator
 from fairypptx.color import Color, ColorLike
 from fairypptx.core.types import COMObject
+from fairypptx.enums import MsoFillType
 
 from typing import Any, TYPE_CHECKING
 
@@ -23,12 +24,20 @@ class FillFormat:
 
     @property
     def color(self) -> Color | None:
+        if self.api.Type != MsoFillType.FillSolid:
+            return None
         rgb_value = self.api.ForeColor.RGB
-        # Currently, `ForeColor.RGB` is required.
-        if rgb_value:
+        if rgb_value is not None:
             return Color(rgb_value)
         else:
             return None
+
+    @color.setter
+    def color(self, value: ColorLike) -> None:
+        self.api.Solid()
+        color = Color.from_any(value)
+        self.api.ForeColor.RGB = color.as_int()
+        self.api.Transparency = 1 - color.alpha
         
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, FillFormat):

@@ -1,8 +1,11 @@
 from fairypptx.shape import Shape, TableShape, GroupShape
+from fairypptx.slide import Slide
 from fairypptx.shape_range import ShapeRange
 from fairypptx.table import Table
+from fairypptx.core.resolvers import resolve_shapes
 from fairypptx.states.shape import ShapeStateModel
 from fairypptx.states.context import Context
+from fairypptx.constants import msoTextOrientationHorizontal
 from typing import cast
 from PIL import Image
 import numpy as np
@@ -71,6 +74,22 @@ def test_picture_shape():
     shape = Shape.make(image)
     shape = model.apply(shape)
     assert np.allclose(np.array(orig_shape.to_image()), np.array(shape.to_image()), atol=1)
+
+def test_textbox_shape():
+    shapes_api = resolve_shapes()
+    shape_api = shapes_api.AddTextbox(msoTextOrientationHorizontal, Left=0, Top=0, Width=100, Height=100) 
+    shape = Shape(shape_api)
+    shape.text = "Hello"
+    shape.fill.color = (255, 0, 0)
+    shape.line.weight = 5
+    model = ShapeStateModel.from_entity(shape)
+
+    context = Context(slide=Slide(shapes_api.Parent))
+    g_shape = model.create_entity(context)
+    assert shape.box == g_shape.box
+    assert shape.text == g_shape.text
+    assert shape.fill.color == g_shape.fill.color
+    assert shape.line.weight == g_shape.line.weight
 
 
 

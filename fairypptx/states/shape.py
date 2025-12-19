@@ -19,6 +19,7 @@ from fairypptx.states.table import TableValueModel
 from fairypptx.states.text_frame import TextFrameValueModel
 from fairypptx.table import Table
 from fairypptx.enums import MsoShapeType
+from fairypptx import constants
 
 class AutoShapeStateModel(FrozenBaseStateModel):
     type: Annotated[Literal[MsoShapeType.AutoShape], Field(description="Type of Shape")] = MsoShapeType.AutoShape
@@ -87,33 +88,6 @@ class TableShapeStateModel(FrozenBaseStateModel):
         return shape
 
 
-
-class FallbackShapeStateModel(FrozenBaseStateModel):
-    box: Annotated[Box, Field(description="Represents the position of the shape")] 
-    zorder: Annotated[int, Field(description="The value of Zorder")]
-    type: int 
-
-    @classmethod
-    def from_entity(cls, entity: Shape) -> Self:
-        shape = entity
-        return cls(box=shape.box,
-                   id=shape.id,
-                   type=shape.api.Type,
-                   zorder=shape.api.ZOrderPosition,
-                   )
-
-    def create_entity(self, context: Context) -> Shape:
-        shapes = context.shapes
-        shape = shapes.add(1)
-        shape.text = f"Created, but `{self.type}` cannnot be handled."
-        self.apply(shape)
-        return shape
-
-    def apply(self, entity: Shape) -> Shape:
-        shape = entity
-        shape.box = self.box
-        return shape
-
 class PictureShapeStateModel(BaseStateModel):
     type: Annotated[Literal[MsoShapeType.Picture], Field(description="Type of Shape")] = MsoShapeType.Picture
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
@@ -151,8 +125,71 @@ class PictureShapeStateModel(BaseStateModel):
         orig_shape.api.Delete()
         return shape
 
+class TextBoxShapeStateModel(BaseStateModel):
+    type: Annotated[Literal[MsoShapeType.TextBox], Field(description="Type of Shape")] = MsoShapeType.TextBox
+    box: Annotated[Box, Field(description="Represents the position of the shape")]
+    line: Annotated[NaiveLineFormatStyle, Field(description="Represents the format of `Line` around the Shape.")]
+    fill: Annotated[NaiveFillFormatStyle, Field(description="Represents the format of `Fill` of the Shape.")]
+    text_frame: Annotated[TextFrameValueModel, Field(description="Represents the texts of the Shape.")]
+    zorder: Annotated[int, Field(description="The value of Zorder")]
 
-ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel
+    @classmethod
+    def from_entity(cls, entity: Shape) -> Self:
+        shape = entity
+        return cls(box=shape.box,
+                   id=shape.id, 
+                   line=NaiveLineFormatStyle.from_entity(shape.line),
+                   fill=NaiveFillFormatStyle.from_entity(shape.fill),
+                   text_frame=TextFrameValueModel.from_object(shape.text_frame),
+                   zorder=shape.api.ZOrderPosition,
+                   )
+
+    def create_entity(self, context: Context) -> Shape:
+        shapes_api = context.shapes.api
+        shape_api = shapes_api.AddTextbox(constants.msoTextOrientationHorizontal, Left=self.box.left, Top=self.box.top, Width=self.box.width, Height=self.box.height)
+        shape = Shape(shape_api)
+        self.apply(shape)
+        return shape
+
+    def apply(self, entity: Shape) -> Shape:
+        shape = entity
+        shape.box = self.box
+        self.line.apply(shape.line)
+        self.fill.apply(shape.fill)
+        self.text_frame.apply(shape.text_frame)
+        return shape
+
+
+ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel
+
+
+
+
+class FallbackShapeStateModel(FrozenBaseStateModel):
+    box: Annotated[Box, Field(description="Represents the position of the shape")] 
+    zorder: Annotated[int, Field(description="The value of Zorder")]
+    type: int 
+
+    @classmethod
+    def from_entity(cls, entity: Shape) -> Self:
+        shape = entity
+        return cls(box=shape.box,
+                   id=shape.id,
+                   type=shape.api.Type,
+                   zorder=shape.api.ZOrderPosition,
+                   )
+
+    def create_entity(self, context: Context) -> Shape:
+        shapes = context.shapes
+        shape = shapes.add(1)
+        shape.text = f"Created, but `{self.type}` cannnot be handled."
+        self.apply(shape)
+        return shape
+
+    def apply(self, entity: Shape) -> Shape:
+        shape = entity
+        shape.box = self.box
+        return shape
 
 
 class GroupShapeStateModel(BaseStateModel):

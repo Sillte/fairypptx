@@ -36,6 +36,7 @@ class NaiveSolidFillFormat(BaseApiModel):
     _accessor: ClassVar[CrudeApiAccesssor] = CrudeApiAccesssor(_keys)
 
     def apply_api(self, api):
+        api.Solid()
         self._accessor.write(api, self.data)
 
     @classmethod
