@@ -70,15 +70,24 @@ class TextRangeApiModel(BaseApiModel):
         api.Text = ""
         for i, paragraph in enumerate(self.paragraphs):
             paragraph_text = "".join([run.text for run in paragraph.runs])
-            if i > 0:
-                inserted_api = api.InsertAfter(f"\r{paragraph_text}")
+            if i == 0:
+                if paragraph_text:
+                    inserted_api = api.InsertAfter(paragraph_text)
+                else:
+                    inserted_api = api.InsertAfter("\r")
             else:
-                inserted_api = api.InsertAfter(paragraph_text)
+                if paragraph_text:
+                    inserted_api = api.InsertAfter(f"\r{paragraph_text}")
+                else:
+                    inserted_api = api.InsertAfter("\r")
+
             paragraph.paragraph_format.apply_api(inserted_api.ParagraphFormat)
 
             # 4. Run ごとに Font を適用
             current_insertion_point = inserted_api.Start # 挿入したテキストの先頭位置
             for run in paragraph.runs:
+                if not run.text:
+                    continue
                 # Runのテキスト範囲を計算
                 run_length = len(run.text)
                 # TextRange(Start, Length) で run_api を取得
