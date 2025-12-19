@@ -22,6 +22,7 @@ from fairypptx.line_format import LineFormatProperty
 from fairypptx.apis.shape import api_functions
 from fairypptx.text_range import TextRange
 from fairypptx.text_frame import TextFrameProperty
+from pywintypes import com_error
 
 if TYPE_CHECKING:
     from fairypptx import ShapeRange
@@ -73,6 +74,19 @@ class Shape(LocationMixin):
     @property
     def shapes_api(self) -> COMObject:
         return self.api.Parent.Shapes
+
+    @property
+    def style_index(self) -> int | None:
+        value = self.api.ShapeStyle
+        return value if value != 0 else None
+
+    @style_index.setter
+    def style_index(self, value: int | None):
+        value = value if value is not None else 0
+        try:
+            self.api.ShapeStyle = value
+        except com_error:
+            pass
 
     @property
     def box(self):

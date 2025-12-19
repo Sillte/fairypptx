@@ -23,6 +23,7 @@ from fairypptx import constants
 
 class AutoShapeStateModel(FrozenBaseStateModel):
     type: Annotated[Literal[MsoShapeType.AutoShape], Field(description="Type of Shape")] = MsoShapeType.AutoShape
+    style_index:Annotated[int | None, Field(description="Style of Shape")]
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
     auto_shape_type: Annotated[int, Field(description="Represents MSOAutoShapeType.")]
     line: Annotated[NaiveLineFormatStyle, Field(description="Represents the format of `Line` around the Shape.")]
@@ -35,6 +36,7 @@ class AutoShapeStateModel(FrozenBaseStateModel):
         shape = entity
         return cls(box=shape.box,
                    id=shape.id, 
+                   style_index=shape.style_index,
                    auto_shape_type=shape.api.AutoShapeType, 
                    line=NaiveLineFormatStyle.from_entity(shape.line), 
                    fill=NaiveFillFormatStyle.from_entity(shape.fill),
@@ -51,6 +53,7 @@ class AutoShapeStateModel(FrozenBaseStateModel):
     def apply(self, entity: Shape) -> Shape:
         shape = entity
         shape.box = self.box
+        shape.style_index = self.style_index
         shape.api.AutoShapeType = self.auto_shape_type
         self.line.apply(shape.line)
         self.fill.apply(shape.fill)
