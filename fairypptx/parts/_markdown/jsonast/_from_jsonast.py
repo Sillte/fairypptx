@@ -26,6 +26,9 @@ from fairypptx import constants
 from contextlib import contextmanager  
 import json 
 
+from pydantic import BaseModel, Field
+from typing import Annotated
+
 
 # [NOTE] 
 # This is temporary solution.  
@@ -73,19 +76,15 @@ class HeaderFormatter:
 
 
 class Converter:
-    """Convert `JsonAst` to `fairypptx.Markdown`. 
+    """Convert `Jsonast` to `fairypptx.Markdown`. 
 
     * Tag's interface.
     """
     elements = dict()
 
-    def __init__(self, config=None):
+    def __init__(self):
         self._formatters = [Formatter()]
         self.markdown = None
-
-        if config is None:
-            config = {}
-        self.config = config
         self._indent_level = 0
 
     # Register the `Element`. 
@@ -228,9 +227,9 @@ class Converter:
             pprint(block)
             cls = self.elements[block["t"]]
             cls.from_tag(block, markdown, self)
+
         markdown.shape.tighten()
         markdown.shape.textrange.paragraph_format.api.Alignment = constants.ppAlignLeft
-        print("aFAFAF", markdown.shape.textrange.text)
         return markdown
 
 
@@ -259,6 +258,12 @@ class Converter:
             return Path(content).exists()
         except OSError:
             return False
+
+class BaseElement(BaseModel):
+    t: Annotated[str, Field(description="Tag")]
+    c: Annotated[str, Field(description="text")]
+
+
 
 class Element: 
     def __init_subclass__(cls, **kwargs):
@@ -458,8 +463,9 @@ class RawInline(Element):
        format_, string  = tag["c"]
 
 
-def from_jsonast(content, config=None):
-    converter = Converter(config)
+def from_jsonast(content):
+    converter = Converter()
+
     return converter.parse(content)
 
 

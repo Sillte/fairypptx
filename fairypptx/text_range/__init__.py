@@ -76,6 +76,18 @@ class TextRange:
         return TextRange(textframe_api.TextRange)
 
     @property
+    def total_count(self) -> int:
+        """Return the total number of the length.
+        """
+        return self.root.api.Length
+
+    def get_range_from_root(self, start: int, length: int) -> "TextRange": 
+        """Return the TextRange. Note that `start` starts from `1`.
+        """
+        assert 0 <= start, "Per instruction, the indices starts from 1."
+        return TextRange(self.root.api.Characters(start, length))
+
+    @property
     def paragraph_index(self) -> int:
         """Return the index of `Paragraph`.
         where  the `Start` of `self` is included.

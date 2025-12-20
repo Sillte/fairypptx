@@ -20,11 +20,10 @@ This case the return is not Markdown, but shapes,
 because `Table` and `Texts` is separate. 
 * [link](https://ruru-jinro.net/)
 """.strip()
-    markdown = Markdown.make(text, engine="jsonast")
+    markdown = Markdown.make(text)
     # (2021/01/06) `JsonAst` does not include the `Table`. 
     # assert len(markdown.shapes) == 2, "Table and `Normal`. 
-    markdown = Markdown.make(text, engine="html")
-    assert len(markdown.shape_range) == 2, "Table and `Normal`."
+    #assert len(markdown.shape_range) == 2, "Table and `Normal`."
 
     text = """## Sample Header.  
 This case the return is  Markdown, since

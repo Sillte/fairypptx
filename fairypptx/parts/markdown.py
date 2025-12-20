@@ -62,10 +62,10 @@ class Markdown:
         return self.shape_range.api
 
     @classmethod
-    def make(cls, arg, slide=None, engine="jsonast"):
+    def make(cls, arg, slide=None):
+        from fairypptx.parts._markdown.jsonast.markdown_factory import MarkdownFactory
         if slide is None:
             slide = Slide()
-        engine = str(engine).lower()
 
         # Necessary to prevent deadlock.
         selection = Application().api.ActiveWindow.Selection
@@ -76,12 +76,7 @@ class Markdown:
         # generation interface is not compatible.
         # You should consider this.
 
-        if engine == "html":
-            return from_html(arg, slide=slide)
-        elif engine == "jsonast":
-            return from_jsonast(arg)
-        else:
-            raise NotImplementedError("Engine is not implemented.") 
+        return MarkdownFactory().from_document(arg)
 
 
     @property
