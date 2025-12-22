@@ -144,7 +144,7 @@ class NaiveFallbackFormat(BaseApiModel):
     data: None = None
 
     def apply_api(self, api):
-        print("This FillFormat is out of scope", api.Type)
+        print("This FillFormat is out of scope", self.type)
         #api.Type = self.type
 
     @classmethod

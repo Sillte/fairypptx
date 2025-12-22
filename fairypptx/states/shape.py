@@ -56,7 +56,10 @@ class AutoShapeStateModel(FrozenBaseStateModel):
         shape.style_index = self.style_index
         shape.api.AutoShapeType = self.auto_shape_type
         self.line.apply(shape.line)
-        self.fill.apply(shape.fill)
+        if self.fill.valid:
+            self.fill.apply(shape.fill)
+        else:
+            shape.fill = None
         self.text_frame.apply(shape.text_frame)
         return shape
 
@@ -297,8 +300,9 @@ class ShapeStateModel(BaseStateModel):
 
 if __name__ == "__main__":
     from fairypptx import Shape
-    model = ShapeStateModel.from_entity(Shape())
+    shape = Shape()
+    model = ShapeStateModel.from_entity(shape)
     model.create_entity(Context())
     print(model)
-    
+   # 
 
