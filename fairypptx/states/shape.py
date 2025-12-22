@@ -63,8 +63,10 @@ class AutoShapeStateModel(FrozenBaseStateModel):
             shape.fill = None
         self.text_frame.apply(shape.text_frame)
         return shape
+
     def _should_clear_fill(self) -> bool:
         return (not self.fill.valid) and (not self.style_index)
+
 
 class TableShapeStateModel(FrozenBaseStateModel):
     type: Annotated[Literal[MsoShapeType.Table], Field(description="Type of Shape")] = MsoShapeType.Table
@@ -168,8 +170,47 @@ class TextBoxShapeStateModel(BaseStateModel):
         self.text_frame.apply(shape.text_frame)
         return shape
 
+class PlaceHolderShapeStateModel(BaseStateModel):
+    type: Annotated[Literal[MsoShapeType.PlaceHolder], Field(description="Type of Shape")] = MsoShapeType.PlaceHolder
+    box: Annotated[Box, Field(description="Represents the position of the shape")]
+    line: Annotated[NaiveLineFormatStyle, Field(description="Represents the format of `Line` around the Shape.")]
+    fill: Annotated[NaiveFillFormatStyle, Field(description="Represents the format of `Fill` of the Shape.")]
+    text_frame: Annotated[TextFrameValueModel, Field(description="Represents the texts of the Shape.")]
+    zorder: Annotated[int, Field(description="The value of Zorder")]
 
-ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel
+    @classmethod
+    def from_entity(cls, entity: Shape) -> Self:
+        shape = entity
+        return cls(box=shape.box,
+                   id=shape.id, 
+                   line=NaiveLineFormatStyle.from_entity(shape.line),
+                   fill=NaiveFillFormatStyle.from_entity(shape.fill),
+                   text_frame=TextFrameValueModel.from_object(shape.text_frame),
+                   zorder=shape.api.ZOrderPosition,
+                   )
+
+    def create_entity(self, context: Context) -> Shape: 
+        print("PlaceHolderShape is unable to be created, so the alternative autoshape is generated")
+        # This is a naive substitution. 
+        shapes = context.shapes
+        shape = shapes.add(shape_type=1)
+        self.apply(shape)
+        return shape
+
+    def apply(self, entity: Shape) -> Shape:
+        shape = entity
+        shape.box = self.box
+        self.line.apply(shape.line)
+        if self.fill.valid:
+            self.fill.apply(shape.fill)
+        else:
+            shape.fill = None
+        self.text_frame.apply(shape.text_frame)
+        return shape
+
+
+
+ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel | PlaceHolderShapeStateModel
 
 
 

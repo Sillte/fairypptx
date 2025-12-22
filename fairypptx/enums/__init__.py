@@ -16,3 +16,4 @@ class MsoShapeType(IntEnum):
     Picture = 13
     Table = 19
     TextBox = 17
+    PlaceHolder = 14
