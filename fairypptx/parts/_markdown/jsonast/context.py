@@ -4,7 +4,7 @@ from fairypptx.parts._markdown.jsonast.models import BaseBlock, BaseInlineModel
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Iterator, Mapping, Type, TYPE_CHECKING
+from typing import Iterator, Mapping, Type, TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
     from fairypptx.parts._markdown.jsonast.editors import BlockEditProtocol, InlineEditProtocol
@@ -22,6 +22,12 @@ class FontState:
         text_range.font.underline = self.underline
         text_range.font.bold = self.bold
 
+    @classmethod
+    def from_text_range(cls, text_range:TextRange) -> Self:
+        font = text_range.font
+        return cls(underline=font.underline,
+                   bold=font.bold)
+
 @dataclass(frozen=True)
 class ParagraphState:
     indent_level: int = 1
@@ -33,6 +39,12 @@ class ParagraphState:
         """
         text_range.paragraph_format.indent_level = self.indent_level
         text_range.paragraph_format.bullet_type = self.bullet_type
+
+    @classmethod
+    def from_text_range(cls, text_range:TextRange) -> Self:
+        paragraph_format = text_range.paragraph_format
+        return cls(indent_level=paragraph_format.indent_level,
+                   bullet_type=paragraph_format.bullet_type)
 
 
 @dataclass

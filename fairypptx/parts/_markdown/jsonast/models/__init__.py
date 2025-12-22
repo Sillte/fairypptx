@@ -1,5 +1,8 @@
-from fairypptx import constants 
-from contextlib import contextmanager  
+"""
+Ref: 
+# https://hackage.haskell.org/package/pandoc-types-1.22.1/docs/Text-Pandoc-Definition.html
+"""
+
 import json 
 from fairypptx.parts._markdown.jsonast.utils import to_jsonast
 
@@ -11,7 +14,6 @@ from fairypptx.parts._markdown.jsonast.models.inlines import *
 
 from fairypptx.parts._markdown.jsonast.models.types import Attr
 from fairypptx.parts._markdown.jsonast.models.types import Attr, Alignment, ColSpec
-from fairypptx.parts._markdown.jsonast.models.inlines import BaseInlineModel
 
 
 class BaseBlock(BaseModel):
@@ -142,12 +144,15 @@ BlockElement = Annotated[ValidBlockElement | FallbackBlock, Field(description="B
 
 
 class PandocJsonAst(BaseModel):
-    api_version: Annotated[Sequence[str], Field(description="Version")] = []
+    model_config = {
+        "populate_by_name": True
+    }
+    pandoc_api_version: Annotated[Sequence[int], Field(alias="pandoc-api-version",
+                                                description="Pandoc API version")] = [1, 23, 1]
     meta: Annotated[Mapping[str, Any],Field(description="Meta data")] = {}
     blocks: Sequence[BlockElement]
 
-##PandocJsonAst.model_rebuild()
-
+##PandocJsonAst.model_rebuild() # It seems that it is not necessary.
 
 class InlineTester(BaseModel):
     inline: InlineElement

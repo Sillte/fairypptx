@@ -166,5 +166,5 @@ class FillFormatApiModel(BaseApiModel):
     def from_api(cls, api: COMObject) -> Self:
         cls_map = get_discriminator_mapping(NaiveTypeFormat, "type")
         type_ = api.Type
-        data = cls_map[type_].from_api(api)
+        data = cls_map.get(type_, NaiveFallbackFormat).from_api(api)
         return cls(api_data=data)

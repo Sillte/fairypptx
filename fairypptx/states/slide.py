@@ -77,3 +77,10 @@ class SlideStateModel(FrozenBaseStateModel):
             shape.api.ZOrder(constants.msoBringToFront)
         return slide
 
+
+if __name__ == "__main__":
+    slide = Slide()
+    model = SlideStateModel.from_entity(slide)
+    model.create_entity(Context())
+
+

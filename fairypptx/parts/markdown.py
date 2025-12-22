@@ -26,7 +26,6 @@ from fairypptx import constants
 
 from fairypptx.parts._markdown import toml_config
 from fairypptx.parts._markdown.html import from_html
-from fairypptx.parts._markdown.jsonast import from_jsonast
 
 
 class Markdown:

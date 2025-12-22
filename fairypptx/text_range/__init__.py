@@ -76,6 +76,20 @@ class TextRange:
         return TextRange(textframe_api.TextRange)
 
     @property
+    def start(self) -> int:
+        """Return the position of `TextRange`.
+        Note that it starts from ``1``. 
+        """
+        return self.api.Start
+
+    @property
+    def length(self) -> int:
+        """Return the position of 
+        """
+        return self.api.Length
+
+
+    @property
     def total_count(self) -> int:
         """Return the total number of the length.
         """

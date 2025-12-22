@@ -58,7 +58,7 @@ class TextRangeApiModel(BaseApiModel):
             paragraph_format = ParagraphFormatApiModel.from_api(paragraph_api.ParagraphFormat)
             runs = []
             for run_api in paragraph_api.Runs():
-                text = normalize_paragraph_breaks(paragraph_api.Text)
+                text = normalize_paragraph_breaks(run_api.Text)
                 if text.endswith("\r"):
                     text = text[:-1]
                 font = FontApiModel.from_api(run_api.Font)

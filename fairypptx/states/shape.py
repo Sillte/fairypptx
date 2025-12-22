@@ -297,6 +297,8 @@ class ShapeStateModel(BaseStateModel):
 
 if __name__ == "__main__":
     from fairypptx import Shape
-    shape_state = ShapeStateModel.from_entity(Shape())
-    print(shape_state)
+    model = ShapeStateModel.from_entity(Shape())
+    model.create_entity(Context())
+    print(model)
+    
 
