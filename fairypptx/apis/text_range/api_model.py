@@ -66,34 +66,48 @@ class TextRangeApiModel(BaseApiModel):
             paragraphs.append(TextRangeParagraphModel(runs=runs, paragraph_format=paragraph_format))
         return cls(paragraphs=paragraphs)
 
-    def apply_api(self, api: COMObject) -> None:
-        api.Text = ""
-        for i, paragraph in enumerate(self.paragraphs):
-            paragraph_text = "".join([run.text for run in paragraph.runs])
-            if i == 0:
-                if paragraph_text:
-                    inserted_api = api.InsertAfter(paragraph_text)
-                else:
-                    inserted_api = api.InsertAfter("\r")
-            else:
-                if paragraph_text:
-                    inserted_api = api.InsertAfter(f"\r{paragraph_text}")
-                else:
-                    inserted_api = api.InsertAfter("\r")
 
+    def apply_api(self, api: COMObject) -> None:
+        def _get_vba_len(text: str) -> int:
+            """VBA(UTF-16)基準での文字数を取得する"""
+            return len(text.encode('utf-16-le')) // 2
+
+        api.Text = ""
+
+        for i, paragraph in enumerate(self.paragraphs):
+            # 1. 段落テキストの構築
+            raw_text = "".join([run.text for run in paragraph.runs])
+            
+            # 2. 挿入する文字列の決定（改行コードの扱い）
+            if i == 0:
+                text_to_insert = raw_text if raw_text else "\r"
+            else:
+                text_to_insert = f"\r{raw_text}" if raw_text else "\r"
+
+            inserted_api = api.InsertAfter(text_to_insert)
             paragraph.paragraph_format.apply_api(inserted_api.ParagraphFormat)
 
+            # 3. 挿入後の「実際のVBA基準の開始位置」を特定
+            # InsertAfterの戻り値(Rangeオブジェクト)のStartプロパティを使うのが最も確実です
+            para_start_in_vba = inserted_api.Start 
+            
             # 4. Run ごとに Font を適用
-            current_insertion_point = inserted_api.Start # 挿入したテキストの先頭位置
+            # 文頭に \r を付けた場合はその分をスキップ
+            if text_to_insert[0] == "\r":
+                offset = 1  # `run.text` starts from `1` in this case.
+            else:
+                offset = 0
+
+            run_cursor = para_start_in_vba + offset
+
             for run in paragraph.runs:
                 if not run.text:
                     continue
-                # Runのテキスト範囲を計算
-                run_length = len(run.text)
-                # TextRange(Start, Length) で run_api を取得
-                run_api = api.Characters(current_insertion_point, run_length)
+                
+                run_length_vba = _get_vba_len(run.text)
+                run_api = api.Characters(run_cursor, run_length_vba)
                 run.font.apply_api(run_api.Font)
-                current_insertion_point += run_length
+                run_cursor += run_length_vba
 
     @property
     def runs(self) -> Sequence[TextRangeRunModel]:
