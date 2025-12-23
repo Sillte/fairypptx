@@ -1,11 +1,14 @@
 from fairypptx.shape import Shape, TableShape, GroupShape
 from fairypptx.slide import Slide
+from fairypptx.slides import Slides
 from fairypptx.shape_range import ShapeRange
 from fairypptx.table import Table
 from fairypptx.core.resolvers import resolve_shapes
 from fairypptx.states.shape import ShapeStateModel
 from fairypptx.states.context import Context
 from fairypptx.constants import msoTextOrientationHorizontal
+from fairypptx.enums import MsoShapeType
+from pywintypes import com_error 
 from typing import cast
 from PIL import Image
 import numpy as np
@@ -90,6 +93,38 @@ def test_textbox_shape():
     assert shape.text == g_shape.text
     assert shape.fill.color == g_shape.fill.color
     assert shape.line.weight == g_shape.line.weight
+
+def test_placeholder_shape():
+    targets = []
+    for ind in range(1, 32):
+        def _is_valid_target(shape) -> bool:
+            if shape.api.Type == MsoShapeType.PlaceHolder:
+                try:
+                    shape.api.TextFrame.TextRange.Text = ""
+                except com_error:
+                    return False
+            return True
+        slide = Slides().add(layout=ind)
+        targets = [shape for shape in slide.shapes if _is_valid_target(shape)]
+        if targets:
+            break
+    if not targets:
+        assert False, "Environment of powerpoint file is not appropriate."
+    target = targets[0]
+    assert target.api.Type == MsoShapeType.PlaceHolder
+    contained_type = target.api.PlaceholderFormat.ContainedType
+    target.text = "Hello, PlaceHolder."
+    model = ShapeStateModel.from_entity(target)
+    g_shape = model.create_entity(Context())
+    assert g_shape.api.Type == contained_type, "ContainedType is unwrapped."
+    assert g_shape.text == target.text, "Text is recovered."
+    while 1 < len(Slides()):
+        Slides().delete(len(Slides()) - 1)
+
+    
+    
+
+
 
 
 

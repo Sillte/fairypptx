@@ -5,7 +5,6 @@ from PIL import Image
 from fairypptx import registry_utils
 from fairypptx import constants
 from fairypptx.core.utils import get_discriminator_mapping
-from fairypptx.states.models import BaseStateModel, FrozenBaseStateModel
 from fairypptx.states.context import Context
 from fairypptx.constants import msoTrue, msoFalse
 from fairypptx.shape import Shape, TableShape, GroupShape
@@ -16,6 +15,7 @@ from typing import Annotated, Self, Literal, cast, Sequence
 from fairypptx.styles.line_format import NaiveLineFormatStyle
 from fairypptx.styles.fill_format import NaiveFillFormatStyle
 from fairypptx.states.table import TableValueModel
+from fairypptx.states.models import FrozenBaseStateModel, BaseStateModel
 from fairypptx.states.text_frame import TextFrameValueModel
 from fairypptx.table import Table
 from fairypptx.enums import MsoShapeType
@@ -46,14 +46,16 @@ class AutoShapeStateModel(FrozenBaseStateModel):
 
     def create_entity(self, context: Context) -> Shape: 
         shapes = context.shapes
-        shape = shapes.add(shape_type=self.auto_shape_type)
+        shape = shapes.add(auto_shape_type=self.auto_shape_type)
         self.apply(shape)
         return shape
 
     def apply(self, entity: Shape) -> Shape:
         shape = entity
         shape.box = self.box
-        shape.api.AutoShapeType = self.auto_shape_type
+
+        if self.auto_shape_type not in {constants.msoShapeNotPrimitive}:
+            shape.api.AutoShapeType = self.auto_shape_type
 
         shape.style_index = self.style_index
         self.line.apply(shape.line)
@@ -170,49 +172,6 @@ class TextBoxShapeStateModel(BaseStateModel):
         self.text_frame.apply(shape.text_frame)
         return shape
 
-class PlaceHolderShapeStateModel(BaseStateModel):
-    type: Annotated[Literal[MsoShapeType.PlaceHolder], Field(description="Type of Shape")] = MsoShapeType.PlaceHolder
-    box: Annotated[Box, Field(description="Represents the position of the shape")]
-    line: Annotated[NaiveLineFormatStyle, Field(description="Represents the format of `Line` around the Shape.")]
-    fill: Annotated[NaiveFillFormatStyle, Field(description="Represents the format of `Fill` of the Shape.")]
-    text_frame: Annotated[TextFrameValueModel, Field(description="Represents the texts of the Shape.")]
-    zorder: Annotated[int, Field(description="The value of Zorder")]
-
-    @classmethod
-    def from_entity(cls, entity: Shape) -> Self:
-        shape = entity
-        return cls(box=shape.box,
-                   id=shape.id, 
-                   line=NaiveLineFormatStyle.from_entity(shape.line),
-                   fill=NaiveFillFormatStyle.from_entity(shape.fill),
-                   text_frame=TextFrameValueModel.from_object(shape.text_frame),
-                   zorder=shape.api.ZOrderPosition,
-                   )
-
-    def create_entity(self, context: Context) -> Shape: 
-        print("PlaceHolderShape is unable to be created, so the alternative autoshape is generated")
-        # This is a naive substitution. 
-        shapes = context.shapes
-        shape = shapes.add(shape_type=1)
-        self.apply(shape)
-        return shape
-
-    def apply(self, entity: Shape) -> Shape:
-        shape = entity
-        shape.box = self.box
-        self.line.apply(shape.line)
-        if self.fill.valid:
-            self.fill.apply(shape.fill)
-        else:
-            shape.fill = None
-        self.text_frame.apply(shape.text_frame)
-        return shape
-
-
-
-ShapeStateModelImpl = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel | PlaceHolderShapeStateModel
-
-
 
 
 class FallbackShapeStateModel(FrozenBaseStateModel):
@@ -241,6 +200,39 @@ class FallbackShapeStateModel(FrozenBaseStateModel):
         shape.box = self.box
         return shape
 
+ShapeStateModelImplElements = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel | FallbackShapeStateModel
+
+
+class PlaceHolderShapeStateModel(BaseStateModel):
+    type: Annotated[Literal[MsoShapeType.PlaceHolder], Field(description="Type of Shape")] = MsoShapeType.PlaceHolder
+    impl: Annotated[ShapeStateModelImplElements, Field(description="Internal ShapeStateModel")]
+
+    @property
+    def zorder(self):
+        return self.impl.zorder
+
+    @classmethod
+    def from_entity(cls, entity: Shape) -> Self:
+        shape = entity
+        contained_type = shape.api.PlaceholderFormat.ContainedType
+        cls_mapping = get_discriminator_mapping(ShapeStateModelImpl, "type")
+        klass = cls_mapping.get(contained_type, FallbackShapeStateModel)
+        return cls(id=shape.id, impl=klass.from_entity(entity))
+
+
+    def create_entity(self, context: Context) -> Shape: 
+        print("PlaceHolderShape is unable to be created, so the alternative autoshape is generated")
+        return self.impl.create_entity(context)
+
+
+    def apply(self, entity: Shape) -> Shape:
+        shape = entity
+        self.impl.apply(shape)
+        return shape
+
+    @property
+    def box(self) -> Box:
+        return self.impl.box
 
 class GroupShapeStateModel(BaseStateModel):
     """
@@ -249,14 +241,14 @@ class GroupShapeStateModel(BaseStateModel):
     """
     type: Annotated[Literal[MsoShapeType.Group], Field(description="Type of Shape")] = MsoShapeType.Group
     box: Annotated[Box, Field(description="Represents the position of the shape")]  # (Note that this is jsonable).
-    children: Annotated[Sequence[ShapeStateModelImpl | FallbackShapeStateModel], Field(description="Shape Children")]
+    children: Annotated[Sequence[ShapeStateModelImplElements], Field(description="Shape Children")]
     zorder: Annotated[int, Field(description="The value of Zorder")]
 
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
         shape = cast(GroupShape, entity)
         cls_mapping = get_discriminator_mapping(ShapeStateModelImpl, "type")
-        impl_children: list[ShapeStateModelImpl | FallbackShapeStateModel] = []
+        impl_children: list[ShapeStateModelImplElements] = []
         for child in shape.children:
             klass = cls_mapping.get(child.api.Type)
             if klass:
@@ -313,10 +305,11 @@ class GroupShapeStateModel(BaseStateModel):
             shape.api.ZOrder(constants.msoBringToFront)
         return cast(Shape, shape)
 
+ShapeStateModelImpl = ShapeStateModelImplElements | PlaceHolderShapeStateModel | GroupShapeStateModel
 
 
 class ShapeStateModel(BaseStateModel):
-    impl: Annotated[ShapeStateModelImpl | GroupShapeStateModel | FallbackShapeStateModel, Field(description="Based on `Type`, appropriate class is selected.")]
+    impl: Annotated[ShapeStateModelImpl, Field(description="Based on `Type`, appropriate class is selected.")]
 
     @property
     def zorder(self) -> int:
@@ -332,14 +325,16 @@ class ShapeStateModel(BaseStateModel):
         klass = cls_mapping.get(entity.api.Type)
         if klass:
             impl = klass.from_entity(entity)
-        elif entity.api.Type == MsoShapeType.Group:
-            impl = GroupShapeStateModel.from_entity(entity)
         else:
             impl = FallbackShapeStateModel.from_entity(entity)
         return cls(impl=impl, id=impl.id)
 
     def apply(self, entity: Shape) -> Shape:
         return self.impl.apply(entity)
+
+    @property
+    def box(self) -> Box:
+        return self.impl.box
 
 
 if __name__ == "__main__":
@@ -348,5 +343,3 @@ if __name__ == "__main__":
     model = ShapeStateModel.from_entity(shape)
     model.create_entity(Context())
     print(model)
-   # 
-

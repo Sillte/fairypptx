@@ -32,7 +32,7 @@ from typing import Any, ClassVar, Literal, Mapping, Self, Sequence
 class NaiveSolidFillFormat(BaseApiModel):
     type: Literal[MsoFillType.FillSolid] = MsoFillType.FillSolid
     data: Mapping[str, Any]
-    _keys: ClassVar[Sequence[str]] = ["ForeColor.RGB", "Visible", "Transparency"]
+    _keys: ClassVar[Sequence[str]] = ["ForeColor.RGB", "Transparency", "Visible"]
     _accessor: ClassVar[CrudeApiAccesssor] = CrudeApiAccesssor(_keys)
 
     def apply_api(self, api):
@@ -144,12 +144,12 @@ class NaiveFallbackFormat(BaseApiModel):
     data: None = None
 
     def apply_api(self, api):
-        print("This FillFormat is out of scope", self.type)
+        print("[apply_api]: This FillFormat is out of scope", self.type)
         #api.Type = self.type
 
     @classmethod
     def from_api(cls, api) -> Self:
-        print("This FillFormat is out of scope", api.Type)
+        print("[from_api]: this FillFormat is out of scope", api.Type)
         return cls(type=api.Type)
 
 

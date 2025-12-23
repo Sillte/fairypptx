@@ -1,6 +1,6 @@
 from typing import Iterator, Self, TYPE_CHECKING, overload
 
-from fairypptx.constants import msoFalse
+from fairypptx.constants import msoFalse, msoShapeNotPrimitive
 
 from fairypptx.box import Box  # NOQA
 from fairypptx.core.application import Application
@@ -46,8 +46,11 @@ class Shapes:
             shapes = list(self)[key]
             return ShapeRange(shapes)
 
-    def add(self, shape_type: int, **kwargs) -> Shape:
-        shape_object = self.api.AddShape(shape_type, Left=0, Top=0, Width=100, Height=100, **kwargs)
+    def add(self, auto_shape_type: int, **kwargs) -> Shape:
+        if auto_shape_type == msoShapeNotPrimitive:
+            print(f"{auto_shape_type=} is not supported.")
+            auto_shape_type = 1
+        shape_object = self.api.AddShape(auto_shape_type, Left=0, Top=0, Width=100, Height=100, **kwargs)
         return Shape(shape_object)
 
     @property

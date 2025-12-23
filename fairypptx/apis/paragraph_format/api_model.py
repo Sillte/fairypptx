@@ -42,6 +42,8 @@ class ParagraphFormatApiModel(BaseApiModel):
         "Bullet.Visible",
         "Bullet.Character",
         "Bullet.Font.Name",
+        "Bullet.Font.Color.RGB",
+        "Bullet.RelativeSize",
         ]
 
     _api2_keys: ClassVar[Sequence[str]] = [

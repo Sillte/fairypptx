@@ -8,53 +8,89 @@ from fairypptx.core.types import COMObject
 from fairypptx.object_utils import getattr as f_getattr, setattr as f_setattr
 
 
-def get_discriminator_mapping(klass: UnionType | Annotated[Any, Any], field_name: str):
-    """Return {discriminator_value: BaseModel class} mapping."""
+def get_discriminator_mapping(klass: UnionType | Annotated, field_name: str) -> dict[Any, type]:
+    """Acquire the mapping of the discriminator to the class.
+    """
     adapter = TypeAdapter(klass)
     core_schema = cast(dict[str, Any], adapter.core_schema)
+    
+    definitions = core_schema.get("definitions", [])
+    def_map = {d["ref"]: d for d in definitions if "ref" in d}
 
-    def _to_choices(schema):
+    def _resolve_schema(schema: dict[str, Any]) -> dict[str, Any]:
+        """definition-ref を解決する。解決先が自分自身なら再帰を止める。"""
+        if not isinstance(schema, dict):
+            return schema
+
+        # 1. 参照キーを取得
+        ref = schema.get("schema_ref") or schema.get("ref")
+        
+        # 2. definition-ref 型、もしくは schema_ref を持つ場合
+        if (schema.get("type") == "definition-ref" or "schema_ref" in schema) and ref in def_map:
+            resolved = def_map[ref]
+            # 解決先が今の schema と同一オブジェクトなら、これ以上掘ると無限ループになる
+            if resolved is schema:
+                return resolved
+            # 解決先に対して再帰（ここで ref が解決された実体になる）
+            return _resolve_schema(resolved)
+        
+        # 3. default ラップの解決
+        if schema.get("type") == "default" and "schema" in schema:
+            return _resolve_schema(schema["schema"])
+            
+        return schema
+
+    def _extract_choices(schema: dict[str, Any]):
+        schema = _resolve_schema(schema)
+        # union系を掘る
         if schema.get("type") in ("union", "tagged-union") and "choices" in schema:
             return schema["choices"]
+        if schema.get("type") == "definitions" and "schema" in schema:
+            return _extract_choices(schema["schema"])
+        raise ValueError(f"Union schema not found. Type: {schema.get('type')}")
 
-        if schema.get("type") == "definitions":
-            return _to_choices(schema["schema"])
+    choices = _extract_choices(core_schema)
+    mapping = {}
 
-        raise ValueError(f"Unsupported schema type: {schema.get('type')}")
-
-    choices = _to_choices(core_schema)
-
-    # Case 1: tagged-union → Mapping
+    # --- 解析フェーズ ---
     if isinstance(choices, Mapping):
-        return {
-            tag: sub_schema["cls"]
-            for tag, sub_schema in choices.items()
-            if "cls" in sub_schema
-        }
-
-    # Case 2: plain union → Sequence
-    if isinstance(choices, Sequence):
-        mapping = {}
-        for elem in choices:
-            target_cls = elem["cls"]
-
-            fields = elem["schema"]["fields"]
-            field_info = fields[field_name]
-            assert field_info["type"] == "model-field"
-
-            literal_schema = field_info["schema"]
-
-            # unwrap default → literal
-            if literal_schema["type"] == "default":
-                literal_schema = literal_schema["schema"]
-
-            if literal_schema["type"] == "literal":
-                for item in literal_schema["expected"]:
-                    mapping[item] = target_cls
-
+        for tag, sub_schema in choices.items():
+            resolved = _resolve_schema(sub_schema)
+            if "cls" in resolved:
+                mapping[tag] = resolved["cls"]
         return mapping
 
-    raise TypeError(f"Unsupported schema type: {type(choices)}")
+    if isinstance(choices, Sequence):
+        for elem in choices:
+            resolved_elem = _resolve_schema(elem)
+            target_cls = resolved_elem.get("cls")
+            if not target_cls:
+                continue
+
+            inner_schema = _resolve_schema(resolved_elem.get("schema", {}))
+            
+            # モデルのフィールド定義 (fields) を探す
+            fields = inner_schema.get("fields", {})
+            if field_name not in fields:
+                # model-fields 型でラップされている場合があるため再度解決
+                if inner_schema.get("type") == "model-fields":
+                    fields = inner_schema.get("fields", {})
+                else:
+                    # それでもなければ、モデルの中身 (schema) をもう一段掘る
+                    inner_content = _resolve_schema(inner_schema.get("schema", {}))
+                    fields = inner_content.get("fields", {})
+
+            if field_name in fields:
+                field_info = _resolve_schema(fields[field_name])
+                literal_schema = _resolve_schema(field_info.get("schema", {}))
+
+                if literal_schema.get("type") == "literal":
+                    for item in literal_schema["expected"]:
+                        mapping[item] = target_cls
+
+        return mapping
+    raise TypeError(f"Unsupported choices type: {type(choices)}")
+
 
 
 class CrudeApiAccesssor:

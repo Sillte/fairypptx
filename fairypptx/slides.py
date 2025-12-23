@@ -63,6 +63,9 @@ class Slides:
         while self.api.Count >= 1:
             self.api.Item(self.api.Count).Delete()
 
+    def delete(self, index: int):
+        self.api.Item(index + 1).Delete()
+
     def swap(self, slide1: Slide, slide2: Slide) -> None:
         """Swap the orders of 2 slide. 
         """
