@@ -10,7 +10,8 @@ Desire:
 
 """
 
-from typing import cast, Sequence, Any
+from typing import cast, Sequence, Any, overload
+from collections import defaultdict
 import numpy as np
 from fairypptx.apis.table import TableApiApplicator
 
@@ -54,8 +55,19 @@ class Table:
         assert isinstance(cell, Cell)
         cell.shape.text = str(value)
 
+    @overload
+    def __getitem__(self, key: tuple[int, int]) -> Cell:
+        ...
 
-    def __getitem__(self, key: tuple[int, int] | tuple[slice, int] | tuple[int | slice] | tuple[slice | slice]) -> Cell | Sequence[Cell] | Sequence[Sequence[Cell]]:
+    @overload
+    def __getitem__(self, key: tuple[slice, int] | tuple[int | slice]) -> Sequence[Cell]:
+        ...
+
+    @overload
+    def __getitem__(self, key: tuple[slice,  slice]) -> Sequence[Sequence[Cell]]:
+        ...
+
+    def __getitem__(self, key: tuple[int, int] | tuple[slice, int] | tuple[int | slice] | tuple[slice,  slice]) -> Cell | Sequence[Cell] | Sequence[Sequence[Cell]]:
         if isinstance(key, tuple):
             r_size, c_size = self.size
             if len(key) == 2:
@@ -116,6 +128,31 @@ class Table:
         edit_param = BaseModelRegistry.fetch("Table", style)
         edit_param = cast(StyleModelProtocol, edit_param)
         edit_param.apply(self)
+
+
+    def unmerge_all(self):
+        table_api = self.api
+        n_rows = len(self.rows)
+        n_columns = len(self.columns)
+        
+        # 1. 結合状態を物理座標(Box)でグループ化する
+        box_to_positions = defaultdict(list)
+        for r in range(n_rows):
+            for c in range(n_columns):
+                box = self[r, c].shape.box
+                box_to_positions[box].append((r, c))
+                
+        # 2. 結合されている（複数ポジションを持つ）Boxに対してのみSplitを実行
+        for positions in box_to_positions.values():
+            if len(positions) > 1:
+                rs, cs = tuple(zip(*positions))
+                start_r, start_c = min(rs), min(cs)
+                count_r = max(rs) - start_r + 1
+                count_c = max(cs) - start_c + 1
+                try:
+                    table_api.Cell(start_r + 1, start_c + 1).Split(count_r, count_c)
+                except Exception as e:
+                    print(f"Error at ({start_r}, {start_c}): {e} in Table.")
 
 
 class TableFactory:
