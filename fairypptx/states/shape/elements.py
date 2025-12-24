@@ -46,17 +46,22 @@ class AutoShapeStateModel(FrozenBaseShapeStateModel):
 
     def create_entity(self, context: Context) -> Shape:
         shapes = context.shapes
-        shape = shapes.add(auto_shape_type=self.auto_shape_type)
+        if self.auto_shape_type not in {constants.msoShapeNotPrimitive, constants.msoShapeMixed}:
+            auto_shape_type = self.auto_shape_type
+        else:
+            print(f"`{self.box=}` AutoShapeType is invalid. `{self.auto_shape_type}`")
+            auto_shape_type = constants.msoShapeRectangle
+        shape = shapes.add(auto_shape_type=auto_shape_type)
         self.apply(shape)
         return shape
 
     def apply(self, entity: Shape) -> Shape:
         shape = entity
-        shape.box = self.box
 
-        if self.auto_shape_type not in {constants.msoShapeNotPrimitive}:
+        if self.auto_shape_type not in {constants.msoShapeNotPrimitive, constants.msoShapeMixed}:
             shape.api.AutoShapeType = self.auto_shape_type
-
+        else:
+            print(f"`{self.box=}` AutoShapeType is invalid. `{self.auto_shape_type}`")
         self.text_frame.apply(shape.text_frame)
 
         shape.style_index = self.style_index
@@ -65,6 +70,7 @@ class AutoShapeStateModel(FrozenBaseShapeStateModel):
             self.fill.apply(shape.fill)
         elif self._should_clear_fill():
             shape.fill = None
+        shape.box = self.box
         return shape
 
     def _should_clear_fill(self) -> bool:
