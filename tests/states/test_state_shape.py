@@ -1,4 +1,5 @@
 from fairypptx.shape import Shape, TableShape, GroupShape
+from fairypptx.shapes import Shapes
 from fairypptx.slide import Slide
 from fairypptx.slides import Slides
 from fairypptx.shape_range import ShapeRange
@@ -121,12 +122,60 @@ def test_placeholder_shape():
     while 1 < len(Slides()):
         Slides().delete(len(Slides()) - 1)
 
+def test_line_shape():
+    shape = Shape(Shapes().api.AddLine(10, 20, 50, 80))
+    shape.line = 5
+    model = ShapeStateModel.from_entity(shape)
+    context = Context(slide=shape.slide)
+    other = model.create_entity(context)
+    assert other.box == shape.box
+    assert other.line == shape.line
+
+def test_connector_best_effort_unresolved():
+    slide = Slide()
+    shapes = slide.shapes
+
+    a = Shape(shapes.api.AddShape(1, 0, 0, 100, 100))
+    b = Shape(shapes.api.AddShape(1, 200, 0, 100, 100))
+
+    line = Shape(shapes.api.AddLine(0, 0, 200, 0))
+    line.api.ConnectorFormat.BeginConnect(a.api, 1)
+    line.api.ConnectorFormat.EndConnect(b.api, 1)
+
+    model = ShapeStateModel.from_entity(line)
+    context = Context(slide=Slide())  # 別スライド＝解決不能
+    other = model.create_entity(context)
+
+    assert other is not None
+
+
+def test_connector_resolved():
+    slide = Slide()
+    shapes = slide.shapes
+
+    a = Shape(shapes.api.AddShape(1, 0, 0, 100, 100))
+    b = Shape(shapes.api.AddShape(1, 200, 0, 100, 100))
+
+    line = Shape(shapes.api.AddLine(0, 0, 200, 0))
+    line.api.ConnectorFormat.BeginConnect(a.api, 1)
+    line.api.ConnectorFormat.EndConnect(b.api, 1)
+
+    model = ShapeStateModel.from_entity(line)
+
+    new_slide = Slide()
+    context = Context(slide=new_slide)
+
+    # 先に Shape を作って mapping を用意
+    new_a = Shape(new_slide.shapes.api.AddShape(1, 0, 0, 100, 100))
+    new_b = Shape(new_slide.shapes.api.AddShape(1, 200, 0, 100, 100))
+
+    context.update_id_mapping(a.id, new_a.id)
+    context.update_id_mapping(b.id, new_b.id)
+
+    other = model.create_entity(context)
+
+    assert other.api.Connector
     
-    
-
-
-
-
 
 if __name__ == "__main__":
     pass

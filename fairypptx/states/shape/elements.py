@@ -1,5 +1,6 @@
 import io
 import base64
+from pydantic import BaseModel 
 from PIL import Image
 from fairypptx import Shape,  constants, registry_utils
 from fairypptx.shape import TableShape
@@ -7,6 +8,7 @@ from fairypptx.box import Box
 from fairypptx.constants import msoFalse, msoTrue
 from fairypptx.enums import MsoShapeType
 from fairypptx.shape import Shape
+from fairypptx.shapes import Shapes
 from fairypptx.states.context import Context
 from fairypptx.states.shape.base import BaseShapeStateModel, FrozenBaseShapeStateModel
 from fairypptx.states.table import TableValueModel
@@ -16,7 +18,7 @@ from fairypptx.styles.line_format import NaiveLineFormatStyle
 
 from pydantic import Base64Bytes, Field
 
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal, Self, Any, Mapping
 
 from fairypptx.table import Table, cast
 
@@ -168,6 +170,110 @@ class TextBoxShapeStateModel(FrozenBaseShapeStateModel):
         self.text_frame.apply(shape.text_frame)
         return shape
 
+class ConnectPair(BaseModel, frozen=True):
+    id: Annotated[int, Field(description="Shape Id")] 
+    site: Annotated[int, Field(description="Site number")] 
+
+class ConnectorFormatValue(BaseModel, frozen=True):
+    begin: Annotated[ConnectPair | None, Field(description="ShapeId of Start")] 
+    end: Annotated[ConnectPair | None, Field(description="Number of Site")] 
+
+    @classmethod
+    def from_shape_api(cls, shape_api: Any) -> Self: 
+        assert shape_api.Connector
+        c_format = shape_api.ConnectorFormat
+        if c_format.BeginConnected:
+            begin_id = c_format.BeginConnectedShape.Id
+            begin_site = c_format.BeginConnectionSite
+            begin = ConnectPair(id=begin_id, site=begin_site)
+        else:
+            begin = None
+
+        if c_format.EndConnected:
+            end_id = c_format.EndConnectedShape.Id
+            end_site = c_format.EndConnectionSite
+            end = ConnectPair(id=end_id, site=end_site)
+        else:
+            end = None
+        return cls(begin=begin, end=end)
+
+    def apply(self, line_shape: Shape, id_mapping:Mapping[int, int], shapes: Shapes) -> None: 
+        """Set the connector to `line_shape`, referring to `id_mapping` and `shapes`.
+        The stored `id` in `ConnectPair` is resolved with `id_mapping` for the ids of `Shapes`.
+        """
+        id_to_shape = {shape.id: shape for shape in shapes} 
+        c_format = line_shape.api.ConnectorFormat
+        try:
+            if self.begin:
+                shape_id = id_mapping[self.begin.id]
+                shape = id_to_shape[shape_id]
+                c_format.BeginConnect(shape.api, self.begin.site)
+            if self.end:
+                shape_id = id_mapping[self.end.id]
+                shape = id_to_shape[shape_id]
+                c_format.EndConnect(shape.api, self.end.site)
+        except KeyError as e:
+            print(e, "In ConnectorFormatValue, `connection` is tried, but Id is not resolved correctly.")
+
+
+
+class LineShapeStateModel(FrozenBaseShapeStateModel):
+    type: Annotated[
+        Literal[MsoShapeType.Line],
+        Field(description="Type of Shape")
+    ] = MsoShapeType.Line
+
+    line: Annotated[
+        NaiveLineFormatStyle,
+        Field(description="Represents the format of Line")
+    ]
+
+    connector: Annotated[ConnectorFormatValue | None, Field(description="Connector Format")] = None
+
+    @classmethod
+    def from_entity(cls, entity: Shape) -> Self:
+        shape = entity
+        if shape.api.Connector:
+            connector = ConnectorFormatValue.from_shape_api(shape.api)
+        else:
+            connector = None
+
+        return cls(
+            box=shape.box,
+            id=shape.id,
+            line=NaiveLineFormatStyle.from_entity(shape.line),
+            connector=connector,
+            zorder=shape.api.ZOrderPosition,
+        )
+
+    def _common_apply(self, shape: Shape):
+        shape.box = self.box
+        self.line.apply(shape.line)
+
+    def create_entity(self, context: Context) -> Shape:
+        shapes_api = context.shapes.api
+        box = self.box
+        shape_api = shapes_api.AddLine(
+            box.left,
+            box.top,
+            box.left + box.width,
+            box.top + box.height,
+        )
+        shape = Shape(shape_api)
+        self._common_apply(shape)
+        if self.connector:
+            self.connector.apply(shape, context.shape_id_mapping, context.shapes)
+        return shape
+
+    def apply(self, entity: Shape) -> Shape:
+        shape = entity
+        self._common_apply(shape)
+        # NOTE: In case of `apply`, the mapping of id is identical.
+        id_mapping = {shape.id: shape.id for shape in shape.slide.shapes}
+        if self.connector:
+            self.connector.apply(shape, id_mapping, shape.slide.shapes)
+        return shape
+
 
 class FallbackShapeStateModel(FrozenBaseShapeStateModel):
     type: int
@@ -193,5 +299,5 @@ class FallbackShapeStateModel(FrozenBaseShapeStateModel):
         shape.box = self.box
         return shape
 
-ShapeStateModelValidElements = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel
+ShapeStateModelValidElements = AutoShapeStateModel | TableShapeStateModel | PictureShapeStateModel | TextBoxShapeStateModel | LineShapeStateModel
 ShapeStateModelElements = ShapeStateModelValidElements | FallbackShapeStateModel
