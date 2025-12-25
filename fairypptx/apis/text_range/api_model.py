@@ -85,7 +85,10 @@ class TextRangeApiModel(BaseApiModel):
                 text_to_insert = f"\r{raw_text}" if raw_text else "\r"
 
             inserted_api = api.InsertAfter(text_to_insert)
-            paragraph.paragraph_format.apply_api(inserted_api.ParagraphFormat)
+            para_api = api.Paragraphs(api.Paragraphs().Count)
+
+            paragraph.paragraph_format.apply_api(para_api.ParagraphFormat)
+            #paragraph.paragraph_format.apply_api(inserted_api.ParagraphFormat)
 
             # 3. 挿入後の「実際のVBA基準の開始位置」を特定
             # InsertAfterの戻り値(Rangeオブジェクト)のStartプロパティを使うのが最も確実です
