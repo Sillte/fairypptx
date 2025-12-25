@@ -1,5 +1,6 @@
 import io
 import base64
+from enum import IntEnum
 from pydantic import BaseModel 
 from PIL import Image
 from fairypptx import Shape,  constants, registry_utils
@@ -11,6 +12,7 @@ from fairypptx.shape import Shape
 from fairypptx.shapes import Shapes
 from fairypptx.states.context import Context
 from fairypptx.states.shape.base import BaseShapeStateModel, FrozenBaseShapeStateModel
+from fairypptx.states.shape.invalid_auto_shape_value_model import InvalidAutoShapeValueModel, get_invalid_value_model
 from fairypptx.states.table import TableValueModel
 from fairypptx.states.text_frame import TextFrameValueModel
 from fairypptx.styles.fill_format import NaiveFillFormatStyle
@@ -30,10 +32,17 @@ class AutoShapeStateModel(FrozenBaseShapeStateModel):
     line: Annotated[NaiveLineFormatStyle, Field(description="Represents the format of `Line` around the Shape.")]
     fill: Annotated[NaiveFillFormatStyle, Field(description="Represents the format of `Fill` of the Shape.")]
     text_frame: Annotated[TextFrameValueModel, Field(description="Represents the texts of the Shape.")]
+    invalid_value_model: Annotated[InvalidAutoShapeValueModel | None, Field(description="If set, then it means the this `auto_shape_type` is not recognized as the apt one.(Mixed(-2).)")] = None
 
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
         shape = entity
+        auto_shape_type = shape.api.AutoShapeType
+        if auto_shape_type in {MsoShapeType.Mixed, MsoShapeType.NotPrimitive}:
+            invalid_value_model = get_invalid_value_model(shape)
+        else:
+            invalid_value_model = None
+
         return cls(box=shape.box,
                    id=shape.id,
                    style_index=shape.style_index,
@@ -42,17 +51,17 @@ class AutoShapeStateModel(FrozenBaseShapeStateModel):
                    fill=NaiveFillFormatStyle.from_entity(shape.fill),
                    text_frame=TextFrameValueModel.from_object(shape.text_frame),
                    zorder=shape.api.ZOrderPosition,
+                   invalid_value_model=invalid_value_model
                    )
 
     def create_entity(self, context: Context) -> Shape:
         shapes = context.shapes
-        if self.auto_shape_type not in {constants.msoShapeNotPrimitive, constants.msoShapeMixed}:
-            auto_shape_type = self.auto_shape_type
-        else:
+        if self.invalid_value_model:
             print(f"`{self.box=}` AutoShapeType is invalid. `{self.auto_shape_type}`")
-            auto_shape_type = constants.msoShapeRectangle
-        shape = shapes.add(auto_shape_type=auto_shape_type)
-        self.apply(shape)
+            return self.invalid_value_model.create_shape(self, context)
+        else:
+            shape = shapes.add(auto_shape_type=self.auto_shape_type)
+            self.apply(shape)
         return shape
 
     def apply(self, entity: Shape) -> Shape:
@@ -62,6 +71,7 @@ class AutoShapeStateModel(FrozenBaseShapeStateModel):
             shape.api.AutoShapeType = self.auto_shape_type
         else:
             print(f"`{self.box=}` AutoShapeType is invalid. `{self.auto_shape_type}`")
+
         self.text_frame.apply(shape.text_frame)
 
         shape.style_index = self.style_index

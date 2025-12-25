@@ -17,6 +17,7 @@ class NaiveLineFormatStyle(BaseModel):
     def apply(self, entity: LineFormat) -> LineFormat:
         """Apply this edit param to the entity.
         """
+        print("model", self.api_bridge)
         self.api_bridge.apply_api(entity.api)
         return entity
 

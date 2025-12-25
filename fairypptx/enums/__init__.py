@@ -17,3 +17,5 @@ class MsoShapeType(IntEnum):
     Table = 19
     TextBox = 17
     PlaceHolder = 14
+    Mixed = -2
+    NotPrimitive = 138
