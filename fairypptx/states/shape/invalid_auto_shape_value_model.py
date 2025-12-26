@@ -1,3 +1,9 @@
+"""This submodule handles the "invalid" AutoShapes.
+That is, `Type=1`  and `AutoShapeType=NotPrimitive or Mixed`.
+This module intends to rectify the peculiar specification of Powerpoint as much as possible.
+However, I do not think these modification is near to perfection.
+"""
+
 from fairypptx import Shape
 from fairypptx.enums import MsoShapeType
 from fairypptx.shape import Shape
@@ -55,7 +61,7 @@ class InvalidLineValueModel(BaseModel, frozen=True):
         else:
             begin_x, end_x = l, l + w
         # Y座標の決定
-        if vf: # 下から上の場合
+        if vf:  # 下から上の場合
             begin_y, end_y = t + h, t
 
         else:  # 上から下の場合
@@ -72,12 +78,16 @@ class InvalidLineValueModel(BaseModel, frozen=True):
 
 
 class InvalidTextBoxValueModel(BaseModel, frozen=True):
-    """TextBox, however, 
-    """
+    """TextBox, NotPrimitive"""
+
     @classmethod
     def predicator(cls, shape: Shape) -> bool:
         shape_api = shape.api
-        if shape_api.AutoShapeType == MsoShapeType.NotPrimitive and shape.text_frame.api.HasText:
+        if (
+            shape_api.AutoShapeType == MsoShapeType.NotPrimitive
+            and getattr(shape_api, "TextFrame")
+            and (not shape_api.Connector)
+        ):
             return True
         return False
 
@@ -94,6 +104,8 @@ class InvalidTextBoxValueModel(BaseModel, frozen=True):
         state_model.line.apply(shape.line)
         if state_model.fill.valid:
             state_model.fill.apply(shape.fill)
+        else:
+            shape.fill = None
         state_model.text_frame.apply(shape.text_frame)
         return shape
 

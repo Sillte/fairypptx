@@ -29,6 +29,7 @@ class Slides:
         # You may consider the branch processing.
         if index is None:
             index = len(self)
+        index = index % (len(self) + 1)
         assert 0 <= index <= len(self)
         if layout is None:
             layout = constants.ppLayoutBlank
