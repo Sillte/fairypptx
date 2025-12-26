@@ -14,6 +14,7 @@ from typing import cast, Sequence, Any, overload
 from collections import defaultdict
 import numpy as np
 from fairypptx.apis.table import TableApiApplicator
+from fairypptx.apis.table.api_model import  CellMergeValue, CellMergeValues, TableApiModel
 
 from fairypptx.core.resolvers import resolve_table, resolve_shapes
 from fairypptx.core.types import COMObject, PPTXObjectProtocol
@@ -129,31 +130,21 @@ class Table:
         edit_param = cast(StyleModelProtocol, edit_param)
         edit_param.apply(self)
 
+    @property
+    def merge_values(self) -> Sequence[CellMergeValue]:
+        model = TableApiModel.from_api(self.api)
+        return model.merge_values.items
+
+    def merge(self, start_row: int, start_column: int, n_rows: int, n_columns: int) -> None: 
+        """Merge the `Cell`. Here, index start from `0`.
+        """
+        if n_rows == 1 and n_columns == 1:
+            msg = f"(n_rows, n_columns)=(1, 1) cannot be accpeted."
+            raise ValueError(msg)
+        CellMergeValue.merge(self.api, start_row, start_column, n_rows, n_columns)
 
     def unmerge_all(self):
-        table_api = self.api
-        n_rows = len(self.rows)
-        n_columns = len(self.columns)
-        
-        # 1. 結合状態を物理座標(Box)でグループ化する
-        box_to_positions = defaultdict(list)
-        for r in range(n_rows):
-            for c in range(n_columns):
-                box = self[r, c].shape.box
-                box_to_positions[box].append((r, c))
-                
-        # 2. 結合されている（複数ポジションを持つ）Boxに対してのみSplitを実行
-        for positions in box_to_positions.values():
-            if len(positions) > 1:
-                rs, cs = tuple(zip(*positions))
-                start_r, start_c = min(rs), min(cs)
-                count_r = max(rs) - start_r + 1
-                count_c = max(cs) - start_c + 1
-                try:
-                    table_api.Cell(start_r + 1, start_c + 1).Split(count_r, count_c)
-                except Exception as e:
-                    print(f"Error at ({start_r}, {start_c}): {e} in Table.")
-
+        CellMergeValues.unmerge_all(self.api)
 
 class TableFactory:
 

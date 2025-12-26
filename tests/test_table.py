@@ -1,8 +1,9 @@
 import pytest
 import numpy as np
-import pandas as pd  
+import pandas as pd
 from fairypptx.df_table import DFTable
-from fairypptx.table import Table, Row, Rows
+from fairypptx.table import Table, Row, Rows, CellMergeValue
+
 
 def test_init():
     array = np.arange(8).reshape(2, 4)
@@ -12,6 +13,7 @@ def test_init():
     table[0, 1] = 10
     assert table[0, 1].text == str(10)
 
+
 def test_df_table():
     df = pd.DataFrame(np.arange(12).reshape(3, 4))
     df.index = pd.MultiIndex.from_tuples([("XX", "A"), ("YY", "B"), ("ZZ", "C")])
@@ -20,9 +22,9 @@ def test_df_table():
     read_df = table.to_df(index_nlevels=2, columns_nlevels=1)
     assert df.astype("U").equals(read_df.astype("U"))
 
+
 def test_insert():
-    """Check behavior of `insert` of `Row` / `Rows`.
-    """
+    """Check behavior of `insert` of `Row` / `Rows`."""
     # Check `insert` - for int.
     table = Table.empty((5, 2))
     shape = table.shape
@@ -60,10 +62,14 @@ def test_insert():
 
 
 def test_delete():
-    """Check behavior of `insert` of `Row` / `Rows`.
-    """
+    """Check behavior of `insert` of `Row` / `Rows`."""
+
     def _is_empty(table):
-        return all(table[i, j].shape.text == "" for i in range(table.size[0]) for j in range(table.size[1]))
+        return all(
+            table[i, j].shape.text == ""
+            for i in range(table.size[0])
+            for j in range(table.size[1])
+        )
 
     # Check `delete` - for int.
     table = Table.empty((4, 2))
@@ -83,9 +89,9 @@ def test_delete():
     table.rows.delete([2, 7])
     assert _is_empty(table)
 
+
 def test_tighten():
-    """Check behavior of `tighten`.
-    """
+    """Check behavior of `tighten`."""
     table = Table.empty((4, 2))
     table.rows[0].api.Height = 111
     assert table.rows[0].height == 111
@@ -96,16 +102,37 @@ def test_tighten():
     table.rows[1].shapes[0].text = "OneLine\nTwoLine\nThreeLine"
     table.rows.tighten()
 
+
 def test_like():
     # The case without texts.
     table = Table.empty((4, 2))
-    style_id = "{AF606853-7671-496A-8E4F-DF71F8EC918B}" # Non normal ID.
+    style_id = "{AF606853-7671-496A-8E4F-DF71F8EC918B}"  # Non normal ID.
     table.api.ApplyStyle(style_id)
     table.register("__pytest__")
     table = Table.empty((4, 2))
     assert table.api.Style.Id != style_id
     table.like("__pytest__")
     assert table.api.Style.Id == style_id
+
+
+def test_merge():
+    table = Table.empty((4, 3))
+    assert not table.merge_values
+    table.merge(0, 0, 1, 2)
+    print(len(table.rows))
+    assert table.merge_values == [
+        CellMergeValue(start_row=0, start_column=0, n_rows=1, n_columns=2)
+    ]
+    table.merge(1, 1, 2, 1)
+    assert set(table.merge_values) == set(
+        [
+            CellMergeValue(start_row=0, start_column=0, n_rows=1, n_columns=2),
+            CellMergeValue(start_row=1, start_column=1, n_rows=2, n_columns=1),
+        ]
+    )
+
+    table.unmerge_all()
+    assert not table.merge_values
 
 
 if __name__ == "__main__":

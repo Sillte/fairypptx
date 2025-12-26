@@ -57,9 +57,6 @@ class ParagraphFormatApiModel(BaseApiModel):
         else:
             bullet = None
 
-        #if api.Bullet.Type != constants.ppBulletUnnumbered:
-        #    keys -= {"Bullet.Character", "Bullet.Font.Name"}
-
         api_data = crude_api_read(api, list(keys))
         api2_data = crude_api_read(api2, cls._api2_keys)
 
@@ -70,13 +67,14 @@ class ParagraphFormatApiModel(BaseApiModel):
 
     def apply_api(self, api: COMObject) -> COMObject:
         crude_api_write(api, self.api_data)
-        api2 = to_api2(api)
-        crude_api_write(api2, self.api2_data)
 
         if self.bullet:
             self.bullet.apply_api(api.Bullet)
         else:
             api.Bullet.Type = constants.ppBulletNone
+        api2 = to_api2(api)
+        # The order is importance, since `Bullet` may break `Indent`.
+        crude_api_write(api2, self.api2_data)
 
         return api
 
