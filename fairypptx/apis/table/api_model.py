@@ -232,5 +232,5 @@ class TableApiModel(BaseApiModel):
         return cls(rows=rows, merge_values=merge_values)
 
     def apply_api(self, api: COMObject) -> None:
-        self.rows.apply_api(api.Rows)
         self.merge_values.apply_table_api(api)
+        self.rows.apply_api(api.Rows)

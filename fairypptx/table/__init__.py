@@ -10,7 +10,7 @@ Desire:
 
 """
 
-from typing import cast, Sequence, Any, overload
+from typing import cast, Sequence, Any, overload, Self
 from collections import defaultdict
 import numpy as np
 from fairypptx.apis.table import TableApiApplicator
@@ -135,13 +135,14 @@ class Table:
         model = TableApiModel.from_api(self.api)
         return model.merge_values.items
 
-    def merge(self, start_row: int, start_column: int, n_rows: int, n_columns: int) -> None: 
+    def merge(self, start_row: int, start_column: int, n_rows: int, n_columns: int) -> Self: 
         """Merge the `Cell`. Here, index start from `0`.
         """
         if n_rows == 1 and n_columns == 1:
             msg = f"(n_rows, n_columns)=(1, 1) cannot be accpeted."
             raise ValueError(msg)
         CellMergeValue.merge(self.api, start_row, start_column, n_rows, n_columns)
+        return self
 
     def unmerge_all(self):
         CellMergeValues.unmerge_all(self.api)

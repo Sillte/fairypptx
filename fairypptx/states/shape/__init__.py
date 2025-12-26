@@ -27,7 +27,6 @@ class ShapeStateModel(FrozenBaseStateModel):
     @classmethod
     def from_entity(cls, entity: Shape) -> Self:
         cls_mapping = get_discriminator_mapping(ShapeStateModelImpl, "type")
-        print("cls_mapping", cls_mapping)
         klass = cls_mapping.get(entity.api.Type)
         if klass:
             impl = klass.from_entity(entity)

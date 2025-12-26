@@ -116,7 +116,8 @@ def test_like():
 
 
 def test_merge():
-    table = Table.empty((4, 3))
+    array = np.arange(12).reshape(4, 3)
+    table = Table.make(array)
     assert not table.merge_values
     table.merge(0, 0, 1, 2)
     print(len(table.rows))
